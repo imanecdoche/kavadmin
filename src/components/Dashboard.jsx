@@ -614,18 +614,18 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
           </div>
 
           {/* Table Content */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto border border-fluent-border rounded-fluent">
+            <table className="min-w-full text-left text-sm">
               <thead className="bg-fluent-subtle text-fluent-textSecondary font-semibold border-b border-fluent-border text-xs uppercase tracking-wider">
                 <tr>
-                  <th className="py-3 px-4">No</th>
-                  <th className="py-3 px-4">Nama Siswa & Wali</th>
-                  <th className="py-3 px-4">Paket</th>
-                  <th className="py-3 px-4 text-center">Durasi</th>
-                  <th className="py-3 px-4 text-center">Jam Belajar</th>
-                  <th className="py-3 px-4">Jadwal Sesi</th>
-                  <th className="py-3 px-4 text-right">Status Bayar</th>
-                  <th className="py-3 px-4 text-center">Aksi</th>
+                  <th className="py-3 px-4 whitespace-nowrap">No</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Nama Siswa & Wali</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Paket</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">Durasi</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">Jam Belajar</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Jadwal Sesi</th>
+                  <th className="py-3 px-4 text-right whitespace-nowrap">Status Bayar</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-fluent-border">
@@ -648,10 +648,10 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
 
                     return (
                       <tr key={student.id} className="hover:bg-fluent-subtle/60 transition-colors">
-                        <td className="py-3 px-4 font-semibold text-fluent-textSecondary text-xs">
+                        <td className="py-3 px-4 font-semibold text-fluent-textSecondary text-xs whitespace-nowrap">
                           {idx + 1}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <button
                             onClick={() => setViewingStudent(student)}
                             className="font-bold text-fluent-blue hover:underline text-left block"
@@ -664,7 +664,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <span className="font-semibold text-fluent-text block">
                             {student.packageType}
                           </span>
@@ -672,7 +672,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                             {formatIDR(student.valPerMonth)}/bln
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
                           <span className="font-semibold text-fluent-text">
                             {student.durationMonths || 1} Bulan
                           </span>
@@ -680,7 +680,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                             ({totalSess} Sesi)
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
                           <span className="font-semibold text-purple-700">
                             {(totalMins / 60).toFixed(1)} Jam
                           </span>
@@ -688,12 +688,12 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                             ({student.minutesPerSession || 60}m/sesi)
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <span className="text-xs font-semibold text-fluent-text bg-blue-50 px-2 py-1 rounded border border-blue-200 inline-block">
                             {student.schedule || 'Belum diatur'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
                           <span className={`text-xs ${statusClass} block`}>
                             {statusLabel}
                           </span>
@@ -701,7 +701,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                             {formatIDR(student.paid)} / {formatIDR(totalInv)}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center space-x-1">
                             <button
                               onClick={() => setViewingStudent(student)}
