@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { CloudUpload, CheckCircle2, AlertCircle } from 'lucide-react'
 import Navigation from './components/Navigation'
 import Dashboard from './components/Dashboard'
 import InvoiceGenerator from './components/InvoiceGenerator'
@@ -141,6 +142,46 @@ export default function App() {
   }
 
   // Download JSON Backup
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false)
+  const [syncCloudSuccess, setSyncCloudSuccess] = useState(false)
+  const [toastMessage, setToastMessage] = useState(null)
+
+  const showToast = (text, type = 'success') => {
+    setToastMessage({ text, type })
+    setTimeout(() => {
+      setToastMessage(null)
+    }, 3500)
+  }
+
+  const handleSyncToFirebase = async () => {
+    setIsSyncingCloud(true)
+    setSyncCloudSuccess(false)
+    try {
+      const timeoutPromise = new Promise((resolve) =>
+        setTimeout(() => resolve(false), 5500)
+      )
+
+      const ok = await Promise.race([
+        seedAllStudentsToFirebase(students),
+        timeoutPromise
+      ])
+
+      if (ok) {
+        setIsFirebaseConnected(true)
+        setSyncCloudSuccess(true)
+        showToast('Data berhasil disimpan dan disinkronkan ke Cloud Firebase!', 'success')
+        setTimeout(() => setSyncCloudSuccess(false), 3500)
+      } else {
+        showToast('Koneksi ke Firebase Cloud diblokir/timeout. Silakan buka Firestore Security Rules di Console Firebase.', 'error')
+      }
+    } catch (err) {
+      console.error('Cloud sync error:', err)
+      showToast('Terjadi kesalahan saat menyinkronkan data ke Cloud.', 'error')
+    } finally {
+      setIsSyncingCloud(false)
+    }
+  }
+
   const handleDownloadBackupJSON = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(students, null, 2))
     const downloadAnchor = document.createElement('a')
@@ -180,17 +221,30 @@ export default function App() {
 
         <div className="flex items-center space-x-2">
           <button
+            onClick={handleSyncToFirebase}
+            disabled={isSyncingCloud}
+            className={`px-2.5 py-1 text-[11px] font-semibold rounded border transition-colors flex items-center space-x-1.5 ${
+              syncCloudSuccess
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                : 'bg-fluent-blue/10 hover:bg-fluent-blue/20 border-fluent-blue/30 text-fluent-blue'
+            }`}
+            title="Klik untuk mengunggah dan menyinkronkan semua data saat ini ke Firebase Cloud"
+          >
+            <CloudUpload className="w-3.5 h-3.5 text-fluent-blue" />
+            <span>
+              {isSyncingCloud
+                ? 'Menyinkronkan...'
+                : syncCloudSuccess
+                ? 'Tersinkronkan!'
+                : 'Simpan ke Cloud Firebase'}
+            </span>
+          </button>
+          <button
             onClick={handleDownloadBackupJSON}
             className="px-2.5 py-1 bg-fluent-subtle hover:bg-fluent-border text-fluent-text border border-fluent-border rounded-fluent text-[11px] font-medium"
           >
             Download Backup (.json)
           </button>
-          {/* <button
-            onClick={() => setShowConfigModal(true)}
-            className="px-2.5 py-1 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent text-[11px] font-medium"
-          >
-            Pengaturan Firebase Keys
-          </button> */}
         </div>
       </div>
 
@@ -243,6 +297,31 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Custom Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-50 animate-fadeIn">
+          <div className={`px-4 py-3 rounded-fluent shadow-fluent-modal border flex items-center space-x-3 text-xs font-semibold ${
+            toastMessage.type === 'error'
+              ? 'bg-rose-50 border-rose-300 text-rose-800'
+              : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+          }`}>
+            {toastMessage.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            )}
+            <span>{toastMessage.text}</span>
+            <button
+              type="button"
+              onClick={() => setToastMessage(null)}
+              className="text-slate-400 hover:text-slate-600 font-bold ml-2 text-xs"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   )

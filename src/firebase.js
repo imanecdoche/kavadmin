@@ -26,7 +26,8 @@ const getFirebaseConfig = () => {
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0731211118",
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gen-lang-client-0731211118.firebasestorage.app",
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1097982274898",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1097982274898:web:59939771464f15b331de8b"
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1097982274898:web:59939771464f15b331de8b",
+    databaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-09bff8b7-febf-4d2b-8f14-8d69d279f13d"
   }
 }
 
@@ -34,7 +35,11 @@ const firebaseConfig = getFirebaseConfig()
 
 // Initialize Firebase App
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
-export const db = getFirestore(app)
+
+// Support named Database ID (e.g. ai-studio-09bff8b7-febf-4d2b-8f14-8d69d279f13d)
+export const db = firebaseConfig.databaseId && firebaseConfig.databaseId !== '(default)'
+  ? getFirestore(app, firebaseConfig.databaseId)
+  : getFirestore(app)
 
 // Real-time Firestore Listener
 export const subscribeStudents = (onDataUpdate, onError) => {
@@ -79,16 +84,21 @@ export const deleteStudentFromFirebase = async (studentId) => {
   }
 }
 
-// Seed All Students (Bulk Upload / Backup Sync)
+// Seed All Students (Bulk Upload / Backup Sync) with Timeout
 export const seedAllStudentsToFirebase = async (studentsList) => {
-  if (!Array.isArray(studentsList) || studentsList.length === 0) return
+  if (!Array.isArray(studentsList) || studentsList.length === 0) return false
   try {
     const batch = writeBatch(db)
     studentsList.forEach(student => {
       const ref = doc(db, 'students', student.id)
       batch.set(ref, student, { merge: true })
     })
-    await batch.commit()
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Firebase timeout (5s)')), 5000)
+    )
+
+    await Promise.race([batch.commit(), timeoutPromise])
     return true
   } catch (e) {
     console.error('Error seeding data to Firebase:', e)
