@@ -5,12 +5,14 @@ import {
   Check,
   FileText,
   Printer,
-  Share2
+  Share2,
+  Palette
 } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import { PACKAGE_RATES } from './Dashboard'
 import { generateInvoiceShareLink } from '../utils/invoiceShare'
+import InvoiceThemerStudio, { BUILTIN_THEMES } from './InvoiceThemerStudio'
 
 export default function InvoiceGenerator({ students = [], selectedStudent, onSaveInvoiceToHistory, onSaveToDashboard }) {
   const invoiceRef = useRef(null)
@@ -58,6 +60,23 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   const [copied, setCopied] = useState(false)
   const [copiedShareLink, setCopiedShareLink] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+
+  // Invoice Themer State (Desktop Only)
+  const [isThemerOpen, setIsThemerOpen] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kavio_active_invoice_theme')
+      if (saved) return JSON.parse(saved)
+    } catch (e) { }
+    return BUILTIN_THEMES[0]
+  })
+
+  const handleApplyTheme = (themeObj) => {
+    setCurrentTheme(themeObj)
+    try {
+      localStorage.setItem('kavio_active_invoice_theme', JSON.stringify(themeObj))
+    } catch (e) { }
+  }
 
   const prevSelectedIdRef = useRef(null)
 
@@ -326,20 +345,29 @@ Kavio Edu Management`
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Desktop Only Invoice Themer Toggle Button */}
+          <button
+            onClick={() => setIsThemerOpen(!isThemerOpen)}
+            className={`hidden lg:flex items-center space-x-2 px-3 py-2 border text-sm font-semibold rounded-fluent transition-colors ${isThemerOpen
+              ? 'bg-fluent-blue text-white border-fluent-blue shadow-xs'
+              : 'border-fluent-border bg-white text-fluent-text hover:bg-fluent-subtle'
+              }`}
+            title="Buka Themer Studio untuk mendesain kustom template invoice"
+          >
+            <Palette className="w-4 h-4" />
+          </button>
           <button
             onClick={handleCopyShareLink}
             className="px-3 py-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent text-sm font-medium flex items-center space-x-2"
             title="Salin link publik invoice untuk dibagikan ke siswa/wali"
           >
             {copiedShareLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-fluent-blue" />}
-            <span>{copiedShareLink ? 'Link Disalin' : 'Salin Link Invoice'}</span>
           </button>
           <button
             onClick={() => window.print()}
             className="px-3 py-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent text-sm font-medium flex items-center space-x-2"
           >
             <Printer className="w-4 h-4" />
-            <span>Cetak</span>
           </button>
           <button
             onClick={handleDownloadPNG}
@@ -347,7 +375,7 @@ Kavio Edu Management`
             className="px-3 py-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent text-sm font-medium flex items-center space-x-2"
           >
             <Download className="w-4 h-4 text-fluent-blue" />
-            <span>Download PNG</span>
+            <span>PNG</span>
           </button>
           <button
             onClick={handleDownloadPDF}
@@ -355,10 +383,21 @@ Kavio Edu Management`
             className="px-4 py-2 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent text-sm font-medium flex items-center space-x-2 shadow-sm"
           >
             <Download className="w-4 h-4" />
-            <span>{isExporting ? 'Memproses...' : 'Download PDF'}</span>
+            <span>{isExporting ? 'Memproses...' : 'PDF'}</span>
           </button>
         </div>
       </div>
+
+      {/* Invoice Themer Studio Panel (Desktop Only) */}
+      {isThemerOpen && (
+        <InvoiceThemerStudio
+          currentTheme={currentTheme}
+          onApplyTheme={handleApplyTheme}
+          onSaveThemeToLibrary={(newTheme) => {
+            handleApplyTheme(newTheme)
+          }}
+        />
+      )}
 
       {/* Main 2-Column Grid: Form & Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -642,11 +681,28 @@ Kavio Edu Management`
 
           <div
             ref={invoiceRef}
-            className="w-full bg-white border border-fluent-border rounded-fluent p-8 shadow-fluent space-y-6 text-fluent-text print:shadow-none print:border-none print:p-0"
-            style={{ minHeight: '600px' }}
+            className={`w-full bg-white border border-fluent-border rounded-fluent p-8 shadow-fluent space-y-6 text-fluent-text print:shadow-none print:border-none print:p-0 relative overflow-hidden ${currentTheme?.fontFamily || 'font-sans'}`}
+            style={{ minHeight: '600px', color: currentTheme?.textColor || '#1b1b1b' }}
           >
+            {/* Background Watermark */}
+            {currentTheme?.watermarkText && (
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0"
+                style={{ opacity: (currentTheme.watermarkOpacity || 5) / 100 }}
+              >
+                <span className="text-6xl sm:text-7xl font-extrabold uppercase tracking-widest text-slate-900 -rotate-12 text-center max-w-lg leading-tight">
+                  {currentTheme.watermarkText}
+                </span>
+              </div>
+            )}
+
             {/* Invoice Header with Kavio Edu Logo & Address */}
-            <div className="flex justify-between items-start border-b border-fluent-border pb-6">
+            <div className={`flex justify-between items-start border-b border-fluent-border pb-6 relative z-10 ${currentTheme?.logoPosition === 'center'
+              ? 'flex-col items-center text-center space-y-4 sm:space-y-0 sm:flex-row sm:text-left'
+              : currentTheme?.logoPosition === 'right'
+                ? 'flex-row-reverse text-left'
+                : ''
+              }`}>
               <div>
                 <img src="/logo.svg" alt="Kavio Edu Logo" className="h-10 w-auto object-contain mb-2" />
                 <p className="text-xs text-fluent-textSecondary font-semibold">
@@ -660,8 +716,11 @@ Kavio Edu Management`
                 </p>
               </div>
 
-              <div className="text-right">
-                <h2 className="text-xl font-bold tracking-tight text-fluent-blue uppercase">
+              <div className={currentTheme?.logoPosition === 'right' ? 'text-left' : 'text-right'}>
+                <h2
+                  className={`${currentTheme?.headerSize || 'text-xl'} font-bold tracking-tight uppercase`}
+                  style={{ color: currentTheme?.primaryColor || '#0078d4' }}
+                >
                   INVOICE
                 </h2>
                 <p className="text-xs font-mono font-semibold text-fluent-text mt-1">

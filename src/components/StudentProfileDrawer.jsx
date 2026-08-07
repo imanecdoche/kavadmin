@@ -52,7 +52,7 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-sm flex justify-end transition-opacity">
+    <div className="fixed inset-0 top-0 left-0 z-50 h-screen w-screen overflow-hidden bg-black/40 backdrop-blur-sm flex justify-end transition-opacity">
       <div className="w-full max-w-xl bg-white h-full shadow-fluent-modal border-l border-fluent-border flex flex-col justify-between overflow-y-auto animate-slideLeft">
 
         {/* Header */}

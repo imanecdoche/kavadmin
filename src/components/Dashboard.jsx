@@ -157,6 +157,110 @@ const getFourWeeksData = () => {
   return weeks
 }
 
+// Helper to calculate upcoming sessions for the next 3 days
+const getUpcomingSessions3Days = (studentsList) => {
+  const dayNamesIndonesian = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+  const monthNamesIndonesian = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+
+  const today = new Date()
+  const resultDays = []
+
+  for (let i = 0; i < 3; i++) {
+    const targetDate = new Date(today)
+    targetDate.setDate(today.getDate() + i)
+
+    const dayName = dayNamesIndonesian[targetDate.getDay()]
+    const dayNum = targetDate.getDate()
+    const monthName = monthNamesIndonesian[targetDate.getMonth()]
+    const dateFormatted = `${dayName}, ${dayNum} ${monthName}`
+
+    const dateLabel = i === 0 ? 'Hari Ini' : i === 1 ? 'Besok' : 'Lusa'
+
+    const sessions = []
+
+    if (Array.isArray(studentsList)) {
+      studentsList.forEach(st => {
+        if (!st) return
+
+        let slots = st.selectedSlots && Array.isArray(st.selectedSlots) ? [...st.selectedSlots] : []
+
+        if (slots.length === 0 && st.schedule) {
+          DAYS_LIST.forEach(day => {
+            TIME_SLOTS_LIST.forEach(slotObj => {
+              if (st.schedule.includes(day) && st.schedule.includes(slotObj.id)) {
+                slots.push(`${day} ${slotObj.label}`)
+              }
+            })
+          })
+        }
+
+        slots.forEach(slotStr => {
+          if (typeof slotStr === 'string' && slotStr.toLowerCase().includes(dayName.toLowerCase())) {
+            let timeLabel = ''
+            TIME_SLOTS_LIST.forEach(ts => {
+              if (slotStr.includes(ts.id) || slotStr.includes(ts.label)) {
+                timeLabel = ts.label
+              }
+            })
+            if (!timeLabel) {
+              timeLabel = slotStr.replace(dayName, '').trim() || 'Jadwal Sesi'
+            }
+
+            sessions.push({
+              student: st,
+              slotStr,
+              timeLabel
+            })
+          }
+        })
+      })
+    }
+
+    sessions.sort((a, b) => a.timeLabel.localeCompare(b.timeLabel))
+
+    resultDays.push({
+      dateObj: targetDate,
+      dayName,
+      dateFormatted,
+      dateLabel,
+      sessions
+    })
+  }
+
+  return resultDays
+}
+
+// Helper to extract clean WhatsApp phone number (studentPhone first, fallback to parentPhone)
+const getCleanWhatsAppPhone = (student) => {
+  if (!student) return null
+
+  const candidates = [student.studentPhone, student.parentPhone]
+
+  for (const phone of candidates) {
+    if (!phone) continue
+    let digits = String(phone).replace(/\D/g, '')
+
+    if (digits.startsWith('0')) {
+      digits = '62' + digits.slice(1)
+    }
+
+    if (digits.startsWith('62') && digits.length >= 10) {
+      return digits
+    }
+  }
+
+  return null
+}
+
+// Helper to construct WhatsApp session reminder message
+const createSessionReminderMessage = (student, dayItem, sess) => {
+  const recipientName = student.name || 'Siswa'
+  const dateStr = dayItem.dateFormatted || 'sesi mendatang'
+  const timeStr = sess.timeLabel || ''
+
+  return `Halo, ini pengingat sesi bimbingan belajar Kavio Edu untuk ${recipientName} pada ${dateStr} jam ${timeStr}. Mohon persiapkan diri. Terima kasih.`
+}
+
 export default function Dashboard({ students, setStudents, onGenerateInvoice }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [packageFilter, setPackageFilter] = useState('ALL')
@@ -241,6 +345,10 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
     const mins = curr.minutesPerSession || 60
     return acc + (sessions * mins)
   }, 0)
+
+  // Upcoming 3 Days Sessions calculation
+  const upcoming3DaysData = getUpcomingSessions3Days(students)
+  const totalUpcoming3DaysCount = upcoming3DaysData.reduce((acc, curr) => acc + curr.sessions.length, 0)
 
   // Filtered Students List
   const safeStudentsList = Array.isArray(students) ? students : []
@@ -544,6 +652,145 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
           <div className="p-3 bg-purple-50 text-purple-600 rounded-fluent">
             <Clock className="w-6 h-6" />
           </div>
+        </div>
+      </div>
+
+      {/* Widget: Sesi Mendatang 3 Hari Ke Depan */}
+      <div className="bg-white rounded-fluent border border-fluent-border shadow-fluent p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-fluent-border pb-3">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 bg-fluent-blue/10 text-fluent-blue rounded-fluent">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-fluent-text">
+                Sesi Mendatang (3 Hari Ke Depan)
+              </h2>
+              <p className="text-xs text-fluent-textSecondary">
+                Ringkasan jadwal bimbingan belajar siswa untuk Hari Ini, Besok, dan Lusa
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 self-start sm:self-center">
+            <span className="px-3 py-1 bg-fluent-blue/10 text-fluent-blue text-xs font-bold rounded-full border border-fluent-blue/20">
+              Total {totalUpcoming3DaysCount} Sesi
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {upcoming3DaysData.map((dayItem, dayIdx) => (
+            <div
+              key={dayIdx}
+              className={`rounded-fluent border p-3 space-y-3 ${
+                dayItem.dateLabel === 'Hari Ini'
+                  ? 'bg-blue-50/40 border-blue-200'
+                  : 'bg-fluent-subtle/30 border-fluent-border'
+              }`}
+            >
+              {/* Day Header */}
+              <div className="flex items-center justify-between pb-2 border-b border-fluent-border/60">
+                <div className="flex items-center space-x-2">
+                  <span
+                    className={`px-2 py-0.5 text-[11px] font-bold rounded ${
+                      dayItem.dateLabel === 'Hari Ini'
+                        ? 'bg-fluent-blue text-white'
+                        : 'bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {dayItem.dateLabel}
+                  </span>
+                  <span className="text-xs font-semibold text-fluent-text">
+                    {dayItem.dateFormatted}
+                  </span>
+                </div>
+                <span className="text-[11px] font-medium text-fluent-textSecondary">
+                  {dayItem.sessions.length} Sesi
+                </span>
+              </div>
+
+              {/* Sessions List */}
+              {dayItem.sessions.length === 0 ? (
+                <div className="py-6 px-3 text-center text-xs text-fluent-textSecondary bg-white rounded border border-dashed border-fluent-border">
+                  Tidak ada sesi bimbingan
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {dayItem.sessions.map((sess, sessIdx) => (
+                    <div
+                      key={sessIdx}
+                      onClick={() => setViewingStudent(sess.student)}
+                      className="p-3 bg-white hover:bg-slate-50/90 rounded-fluent border border-fluent-border hover:border-fluent-blue/50 transition-all cursor-pointer space-y-2 shadow-sm group"
+                      title="Klik untuk melihat profil lengkap siswa"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center text-xs font-bold text-fluent-blue bg-fluent-blue/10 px-2 py-0.5 rounded">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {sess.timeLabel}
+                        </span>
+                        
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-[10px] font-semibold text-fluent-textSecondary bg-slate-100 px-1.5 py-0.5 rounded">
+                            {sess.student.packageType || 'GROW'}
+                          </span>
+
+                          {/* Tombol Reminder WhatsApp */}
+                          {(() => {
+                            const waPhone = getCleanWhatsAppPhone(sess.student)
+                            const hasPhone = Boolean(waPhone)
+
+                            return (
+                              <button
+                                type="button"
+                                disabled={!hasPhone}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (!hasPhone) return
+                                  const text = createSessionReminderMessage(sess.student, dayItem, sess)
+                                  const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`
+                                  window.open(url, '_blank', 'noopener,noreferrer')
+                                }}
+                                className={`p-1 rounded transition-colors flex items-center justify-center ${
+                                  hasPhone
+                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 hover:border-emerald-300'
+                                    : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-50'
+                                }`}
+                                title={
+                                  hasPhone
+                                    ? `Kirim reminder WhatsApp ke +${waPhone}`
+                                    : 'Nomor WhatsApp siswa/orang tua tidak tersedia'
+                                }
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                              </button>
+                            )
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-fluent-text group-hover:text-fluent-blue transition-colors">
+                            {sess.student.name}
+                          </p>
+                          <Eye className="w-3.5 h-3.5 text-fluent-textSecondary opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <p className="text-[11px] text-fluent-textSecondary truncate">
+                          {sess.student.grade || 'Siswa'} • {sess.student.address || 'Alamat -'}
+                        </p>
+                      </div>
+
+                      {sess.student.learningTarget && (
+                        <p className="text-[10px] text-slate-500 bg-slate-50 p-1.5 rounded border border-slate-100 truncate">
+                          Target: {sess.student.learningTarget}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -887,7 +1134,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
 
       {/* Add / Edit Student Modal Form (3 Tabs) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 top-0 left-0 z-50 h-screen w-screen bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-fluent border border-fluent-border shadow-fluent-modal w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
             {/* Modal Header */}
@@ -1291,7 +1538,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
 
       {/* Custom Confirmation Modal for Delete (Sensitive & Crucial) */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 top-0 left-0 z-50 h-screen w-screen bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-fluent border border-rose-200 shadow-fluent-modal w-full max-w-md p-6 space-y-4">
             
             {/* Header with Red Warning Icon */}
