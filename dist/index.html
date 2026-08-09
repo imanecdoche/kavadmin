@@ -2,13 +2,34 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/png" href="./logobaru.png" />
+    <link rel="apple-touch-icon" href="./logobaru.png" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#0f172a" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kavio Edu - Dashboard & Invoice Generator</title>
-    <script type="module" crossorigin src="/assets/index-CpONNwwk.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-lsu8bMF2.css">
+    <script type="module" crossorigin src="./assets/index-umIGv_7l.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DwyDlilh.css">
   </head>
   <body class="bg-fluent-bg text-fluent-text font-sans antialiased selection:bg-fluent-blue selection:text-white min-h-screen">
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(reg => reg.unregister())
+          })
+          if ('caches' in window) {
+            caches.keys().then(names => names.forEach(name => caches.delete(name)))
+          }
+        } else {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(err => {
+              console.error('ServiceWorker registration failed:', err)
+            })
+          })
+        }
+      }
+    </script>
   </body>
 </html>

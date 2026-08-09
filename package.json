@@ -2,12 +2,35 @@
   "name": "kavio-inv-generator",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "main": "electron.cjs",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
     "lint": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "electron .",
+    "electron:build": "vite build && electron-builder",
+    "electron:package": "vite build && electron-packager . \"Kavio Edu\" --platform=win32 --arch=x64 --out=release --overwrite"
+  },
+  "build": {
+    "appId": "com.kavioedu.invoicegenerator",
+    "productName": "Kavio Edu",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.cjs",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/logobaru.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
   "dependencies": {
     "firebase": "^12.17.0",
@@ -23,6 +46,9 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.3",
+    "electron-packager": "^17.1.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "vite": "^5.4.11"

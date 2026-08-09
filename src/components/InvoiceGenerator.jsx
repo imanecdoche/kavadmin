@@ -6,13 +6,17 @@ import {
   FileText,
   Printer,
   Share2,
-  Palette
+  Palette,
+  Award
 } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import { PACKAGE_RATES } from './Dashboard'
 import { generateInvoiceShareLink } from '../utils/invoiceShare'
+import { formatDateIndonesian } from '../utils/dateFormatter'
 import InvoiceThemerStudio, { BUILTIN_THEMES } from './InvoiceThemerStudio'
+import ReceiptModal from './ReceiptModal'
+import { INVOICE_CONFIG } from '../config/stampConfig'
 
 export default function InvoiceGenerator({ students = [], selectedStudent, onSaveInvoiceToHistory, onSaveToDashboard }) {
   const invoiceRef = useRef(null)
@@ -37,13 +41,29 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
     return `${year}-${month}-${day}`
   }
 
+  // Helper to add default 7 days due date
+  const getDefaultDueDateStr = (fromDateStr) => {
+    try {
+      const d = fromDateStr ? new Date(fromDateStr) : new Date()
+      d.setDate(d.getDate() + 7)
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    } catch (e) {
+      return fromDateStr
+    }
+  }
+
   const [invoiceNo, setInvoiceNo] = useState(generateInvoiceNo())
   const [invoiceDate, setInvoiceDate] = useState(getTodayDateStr())
-  const [dueDate, setDueDate] = useState(getTodayDateStr())
+  const [dueDate, setDueDate] = useState(() => getDefaultDueDateStr(getTodayDateStr()))
 
   // Empty initial fields & Autocomplete States
   const [studentName, setStudentName] = useState('')
   const [parentName, setParentName] = useState('')
+  const [parentPhone, setParentPhone] = useState('')
+  const [studentPhone, setStudentPhone] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isStudentLocked, setIsStudentLocked] = useState(false)
 
@@ -60,6 +80,7 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   const [copied, setCopied] = useState(false)
   const [copiedShareLink, setCopiedShareLink] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
 
   // Invoice Themer State (Desktop Only)
   const [isThemerOpen, setIsThemerOpen] = useState(false)
@@ -83,8 +104,11 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   const getInvoiceDataPayload = () => ({
     invoiceNo,
     invoiceDate,
+    dueDate,
     studentName,
     parentName,
+    parentPhone,
+    studentPhone,
     packageType,
     durationMonths,
     valPerMonth,
@@ -123,6 +147,8 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
     setStudentName(st.name || '')
     const parentText = formatParentDisplayText(st)
     setParentName(parentText)
+    setParentPhone(st.parentPhone || '')
+    setStudentPhone(st.studentPhone || '')
     setIsStudentLocked(true)
     setShowSuggestions(false)
 
@@ -215,8 +241,9 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   const paidPct = totalInvestment > 0 ? Math.min(100, Math.round((paidAmount / totalInvestment) * 100)) : 0
 
   // Status Text Logic
+  const isLunas = paidAmount >= totalInvestment && totalInvestment > 0
   let statusBadge = { label: 'BELUM BAYAR', text: 'text-rose-600' }
-  if (paidAmount >= totalInvestment && totalInvestment > 0) {
+  if (isLunas) {
     statusBadge = { label: 'LUNAS (100%)', text: 'text-emerald-600' }
   } else if (paidAmount > 0) {
     statusBadge = { label: `DP TERBAYAR (${paidPct}%)`, text: 'text-amber-600' }
@@ -231,13 +258,15 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
     const sName = studentName || '-'
     const studentText = parentName ? `${sName} (Anak dari ${parentName})` : sName
     const shareUrl = generateInvoiceShareLink(getInvoiceDataPayload())
+    const dueDateLine = isLunas ? '' : `Jatuh Tempo: ${formatDateIndonesian(dueDate)}\n`
 
     return `Yth. Bpk/Ibu ${parentName || sName},
 
 Berikut kami sampaikan rincian INVOICE Kursus Private English Class Kavio Edu:
 
 Nomor Invoice: ${invoiceNo}
-Nama Siswa: ${studentText}
+Tanggal Terbit: ${formatDateIndonesian(invoiceDate)}
+${dueDateLine}Nama Siswa: ${studentText}
 Paket Belajar: ${packageType} (${durationMonths} Bulan / Total ${totalSessions} Sesi)
 Total Investasi: ${formatIDR(totalInvestment)}
 Jumlah Terbayar: ${formatIDR(paidAmount)}
@@ -264,6 +293,7 @@ Kavio Edu Management`
       onSaveInvoiceToHistory({
         invoiceNo,
         invoiceDate,
+        dueDate,
         studentName,
         totalInvestment,
         paidAmount,
@@ -385,6 +415,14 @@ Kavio Edu Management`
             <Download className="w-4 h-4" />
             <span>{isExporting ? 'Memproses...' : 'PDF'}</span>
           </button>
+          <button
+            onClick={() => setIsReceiptModalOpen(true)}
+            className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-fluent text-sm font-semibold flex items-center space-x-1.5 transition-colors shadow-2xs"
+            title="Cetak Kwitansi Pembayaran Resmi"
+          >
+            <Award className="w-4 h-4 text-emerald-600" />
+            <span>Kwitansi</span>
+          </button>
         </div>
       </div>
 
@@ -409,18 +447,19 @@ Kavio Edu Management`
             <span>Form Input Invoice</span>
           </h2>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
-                Nomor Invoice
-              </label>
-              <input
-                type="text"
-                value={invoiceNo}
-                onChange={(e) => setInvoiceNo(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs font-mono border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
+              Nomor Invoice
+            </label>
+            <input
+              type="text"
+              value={invoiceNo}
+              onChange={(e) => setInvoiceNo(e.target.value)}
+              className="w-full px-3 py-1.5 text-xs font-mono border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue"
+            />
+          </div>
+
+          <div className={isLunas ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-2 gap-3'}>
             <div>
               <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
                 Tanggal Terbit
@@ -428,10 +467,27 @@ Kavio Edu Management`
               <input
                 type="date"
                 value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}
+                onChange={(e) => {
+                  const newDate = e.target.value
+                  setInvoiceDate(newDate)
+                  setDueDate(getDefaultDueDateStr(newDate))
+                }}
                 className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue"
               />
             </div>
+            {!isLunas && (
+              <div>
+                <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
+                  Tanggal Jatuh Tempo
+                </label>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs border border-amber-300 rounded-fluent focus:outline-none focus:border-amber-500 font-medium text-amber-900 bg-amber-50/60"
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -712,7 +768,7 @@ Kavio Edu Management`
                   Founder: Fatih Farhat Asshidiq
                 </p>
                 <p className="text-[11px] text-fluent-textSecondary mt-1 max-w-xs leading-tight">
-                  Kp. Bojong Canar, Ds. Dahu, Kec. Cikeda, Kab. Pandeglang, Banten - 42266
+                  Kp. Bojong Canar, Ds. Dahu, Kec. Cikedal, Kab. Pandeglang, Banten - 42266
                 </p>
               </div>
 
@@ -726,9 +782,14 @@ Kavio Edu Management`
                 <p className="text-xs font-mono font-semibold text-fluent-text mt-1">
                   {invoiceNo}
                 </p>
-                <p className="text-xs text-fluent-textSecondary mt-1">
-                  Tanggal: {invoiceDate}
-                </p>
+                <div className="text-xs text-fluent-textSecondary mt-1 space-y-1">
+                  <div>Tanggal Terbit: <span className="font-semibold text-fluent-text">{formatDateIndonesian(invoiceDate)}</span></div>
+                  {!isLunas && (
+                    <div className="text-sm font-semibold text-amber-700 mt-1">
+                      Jatuh Tempo: <span className="font-mono text-fluent-text font-bold">{formatDateIndonesian(dueDate)}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -750,9 +811,9 @@ Kavio Edu Management`
                 <span className="font-semibold text-fluent-textSecondary uppercase block mb-1">
                   Status Pembayaran:
                 </span>
-                <span className={`font-bold text-sm ${statusBadge.text}`}>
+                <div className={`font-bold text-sm ${statusBadge.text}`}>
                   {statusBadge.label}
-                </span>
+                </div>
               </div>
             </div>
 
@@ -841,14 +902,46 @@ Kavio Edu Management`
               </div>
             </div>
 
-            {/* Notes & Footer */}
-            <div className="border-t border-fluent-border pt-3 text-[11px] text-fluent-textSecondary flex justify-between items-end">
-              <div>
+            {/* Signature & Official Stamp Section */}
+            <div className="border-t border-fluent-border pt-4 flex justify-between items-end text-xs">
+              <div className="text-fluent-textSecondary text-[11px]">
                 <span className="font-semibold text-fluent-text block">Catatan:</span>
                 <p>{notes || '-'}</p>
               </div>
-              <div className="text-right italic text-[10px]">
-                Kavio Edu Management System
+
+              <div className="text-right space-y-1 pr-2">
+                <p className="text-[10px] text-slate-500 pb-16">Pandeglang, {formatDateIndonesian(invoiceDate)}</p>
+
+                <div className="relative inline-block">
+                  {/* Founder Digital Signature (Tanda Tangan) */}
+                  <img
+                    src="/ttd_fatih_founderkavio.png"
+                    alt="Tanda Tangan Founder Kavio"
+                    style={{
+                      height: `${INVOICE_CONFIG.signature.sizeHeightPx}px`,
+                      opacity: INVOICE_CONFIG.signature.opacity,
+                      bottom: `${INVOICE_CONFIG.signature.offsetBottomPx}px`
+                    }}
+                    className="absolute right-0 w-auto object-contain pointer-events-none z-20"
+                  />
+
+                  {/* Official Kavio Edu Stamp Overlay (Stempel Ungu) */}
+                  <img
+                    src="/stempel_kavioedu.png"
+                    alt="Stempel Resmi Kavio Edu"
+                    style={{
+                      height: `${INVOICE_CONFIG.kavioStamp.sizeHeightPx}px`,
+                      opacity: INVOICE_CONFIG.kavioStamp.opacity,
+                      transform: `rotate(${INVOICE_CONFIG.kavioStamp.rotationDeg}deg)`
+                    }}
+                    className="absolute -right-3 bottom-0 w-auto object-contain pointer-events-none z-10"
+                  />
+
+                  <p className="text-xs font-bold text-slate-900 border-b border-slate-400 pb-0.5 relative z-30">
+                    FATIH FARHAT ASSHIDIQ
+                  </p>
+                </div>
+                <p className="text-[10px] text-slate-500 block relative z-30">Founder Kavio Edu</p>
               </div>
             </div>
 
@@ -857,6 +950,13 @@ Kavio Edu Management`
         </div>
 
       </div>
+
+      {/* Kwitansi Pembayaran Modal */}
+      <ReceiptModal
+        isOpen={isReceiptModalOpen}
+        onClose={() => setIsReceiptModalOpen(false)}
+        data={getInvoiceDataPayload()}
+      />
 
     </div>
   )

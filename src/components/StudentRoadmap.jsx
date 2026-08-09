@@ -18,7 +18,7 @@ export default function StudentRoadmap() {
     { id: '4', name: 'Sesi 4: Simple Past Tense (Regular & Irregular Verbs)', status: 'Belum' },
     { id: '5', name: 'Sesi 5: Future Tense (Will vs Be Going To)', status: 'Belum' },
     { id: '6', name: 'Sesi 6: Praktek Conversational Speaking & Roleplay Situasional', status: 'Belum' },
-    { id: '7', name: 'Sesi 7: Vocabulary & Sentence Structure Building', status: 'Belum' },
+    { id: '7', name: 'Sesi 418sd+abulary & Sentence Structure Building', status: 'Belum' },
     { id: '8', name: 'Sesi 8: Evaluasi Akhir Modul & Assessment Feedback', status: 'Belum' },
   ])
 
@@ -136,7 +136,7 @@ ${topics.map((t, idx) => `- [${t.status === 'Selesai' ? 'x' : ' '}] **${t.name}*
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+
         {/* Left Column: Config Controls */}
         <div className="lg:col-span-5 bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent space-y-4 no-print">
           <h2 className="text-sm font-bold text-fluent-text uppercase tracking-wider text-fluent-blue border-b border-fluent-border pb-2">
@@ -277,7 +277,7 @@ ${topics.map((t, idx) => `- [${t.status === 'Selesai' ? 'x' : ' '}] **${t.name}*
                   }
 
                   return (
-                    <div 
+                    <div
                       key={topic.id}
                       className="flex items-center justify-between p-3 bg-fluent-subtle/50 rounded border border-fluent-border text-xs group"
                     >

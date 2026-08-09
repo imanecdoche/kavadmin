@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   X,
   User,
@@ -14,9 +14,22 @@ import {
   Award,
   BookOpen
 } from 'lucide-react'
+import { formatDateIndonesian } from '../utils/dateFormatter'
+import ReceiptModal from './ReceiptModal'
 
 export default function StudentProfileDrawer({ student, onClose, onGenerateInvoice }) {
+  const [activeReceiptData, setActiveReceiptData] = useState(null)
+
   if (!student) return null
+
+  // Keyboard shortcut listener for ESC key to close modal window
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   // Calculation parameters
   const totalInvestment = (student.valPerMonth || 0) * (student.durationMonths || 1)
@@ -52,37 +65,45 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
   }
 
   return (
-    <div className="fixed inset-0 top-0 left-0 z-50 h-screen w-screen overflow-hidden bg-black/40 backdrop-blur-sm flex justify-end transition-opacity">
-      <div className="w-full max-w-xl bg-white h-full shadow-fluent-modal border-l border-fluent-border flex flex-col justify-between overflow-y-auto animate-slideLeft">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl bg-white rounded-fluent shadow-fluent-modal border border-fluent-border flex flex-col max-h-[90vh] overflow-hidden my-auto"
+      >
 
         {/* Header */}
-        <div>
-          <div className="p-6 border-b border-fluent-border bg-fluent-subtle flex items-start justify-between">
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="px-2.5 py-0.5 text-xs font-bold bg-fluent-blue text-white rounded-fluent">
-                  Paket {student.packageType}
-                </span>
-                <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${statusBadge.bg}`}>
-                  {statusBadge.label}
-                </span>
-              </div>
-              <h2 className="text-2xl font-bold text-fluent-text mt-2">
-                {student.name}
-              </h2>
-              {student.parentName && (
-                <p className="text-xs text-fluent-textSecondary mt-0.5">
-                  Wali / Orang Tua: {student.parentName}
-                </p>
-              )}
+        <div className="p-5 sm:p-6 border-b border-fluent-border bg-fluent-subtle flex items-start justify-between flex-shrink-0">
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="px-2.5 py-0.5 text-xs font-bold bg-fluent-blue text-white rounded-fluent">
+                Paket {student.packageType}
+              </span>
+              <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${statusBadge.bg}`}>
+                {statusBadge.label}
+              </span>
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 text-fluent-textSecondary hover:bg-fluent-border rounded-fluent transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <h2 className="text-xl sm:text-2xl font-bold text-fluent-text mt-2">
+              {student.name}
+            </h2>
+            {student.parentName && (
+              <p className="text-xs text-fluent-textSecondary mt-0.5">
+                Wali / Orang Tua: {student.parentName}
+              </p>
+            )}
           </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-fluent-textSecondary hover:bg-fluent-border rounded-fluent transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Modal Content Body */}
+        <div className="flex-1 overflow-y-auto">
 
           {/* Quick Metrics Summary Cards */}
           <div className="p-6 grid grid-cols-3 gap-3 border-b border-fluent-border bg-white">
@@ -237,11 +258,28 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
                     <div key={idx} className="p-3 bg-fluent-subtle rounded border border-fluent-border flex items-center justify-between text-xs">
                       <div>
                         <div className="font-mono font-bold text-fluent-text">{inv.invoiceNo}</div>
-                        <div className="text-[10px] text-fluent-textSecondary">Tanggal: {inv.invoiceDate}</div>
+                        <div className="text-[10px] text-fluent-textSecondary">Tanggal: {formatDateIndonesian(inv.invoiceDate)}</div>
+                        {inv.dueDate && (
+                          <div className="text-[10px] text-amber-700 font-semibold">Jatuh Tempo: {formatDateIndonesian(inv.dueDate)}</div>
+                        )}
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end">
                         <div className="font-bold text-fluent-text">{formatIDR(inv.totalInvestment)}</div>
                         <span className="text-[10px] font-bold text-emerald-600">{inv.status}</span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveReceiptData({
+                            ...inv,
+                            studentName: student.name,
+                            parentName: student.parentName,
+                            packageType: student.packageType,
+                            paidAmount: inv.totalInvestment
+                          })}
+                          className="mt-1 text-[10px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 font-semibold flex items-center space-x-1 transition-colors"
+                        >
+                          <Award className="w-3 h-3 text-emerald-600" />
+                          <span>Kwitansi</span>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -257,7 +295,7 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
         </div>
 
         {/* Action Footer */}
-        <div className="p-4 border-t border-fluent-border bg-fluent-subtle flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-fluent-border bg-fluent-subtle flex items-center justify-between gap-3 flex-shrink-0">
           <button
             onClick={() => {
               onGenerateInvoice(student)
@@ -277,6 +315,13 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
         </div>
 
       </div>
+
+      {/* Kwitansi Modal */}
+      <ReceiptModal
+        isOpen={!!activeReceiptData}
+        onClose={() => setActiveReceiptData(null)}
+        data={activeReceiptData}
+      />
     </div>
   )
 }

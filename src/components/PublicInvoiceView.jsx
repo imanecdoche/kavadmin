@@ -1,12 +1,16 @@
 import React, { useRef, useState } from 'react'
-import { Download, Printer, Check, Copy, FileText, ArrowLeft, MessageSquare } from 'lucide-react'
+import { Download, Printer, Check, Copy, FileText, ArrowLeft, MessageSquare, Award } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
+import { formatDateIndonesian } from '../utils/dateFormatter'
+import ReceiptModal from './ReceiptModal'
+import { INVOICE_CONFIG } from '../config/stampConfig'
 
 export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
   const invoiceRef = useRef(null)
   const [isExporting, setIsExporting] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false)
 
   if (!invoiceData) return null
 
@@ -81,6 +85,7 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
   const paidAmount = invoiceData.paidAmount || 0
   const outstandingBalance = invoiceData.outstandingBalance !== undefined ? invoiceData.outstandingBalance : Math.max(0, totalInvestment - paidAmount)
 
+  const isLunas = (invoiceData.status && invoiceData.status.includes('LUNAS')) || (outstandingBalance <= 0)
   let statusBadge = { label: invoiceData.status || 'OFFICIAL', text: 'text-emerald-600' }
   if (invoiceData.status && invoiceData.status.includes('DP')) {
     statusBadge = { label: invoiceData.status, text: 'text-amber-600' }
@@ -140,6 +145,14 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
             <Download className="w-3.5 h-3.5" />
             <span>{isExporting ? 'Memproses...' : 'Download PDF'}</span>
           </button>
+          <button
+            onClick={() => setIsReceiptOpen(true)}
+            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+            title="Lihat / Cetak Kwitansi Pembayaran"
+          >
+            <Award className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Kwitansi</span>
+          </button>
         </div>
       </header>
 
@@ -173,8 +186,13 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
               <div className="text-xs font-mono font-semibold text-fluent-text">
                 {invoiceData.invoiceNo || 'INV/KEEN/000'}
               </div>
-              <div className="text-[11px] text-fluent-textSecondary">
-                Tanggal Terbit: <span className="font-semibold text-fluent-text">{invoiceData.invoiceDate || '-'}</span>
+              <div className="text-[11px] text-fluent-textSecondary space-y-0.5 mt-1">
+                <div>Tanggal Terbit: <span className="font-semibold text-fluent-text">{formatDateIndonesian(invoiceData.invoiceDate)}</span></div>
+                {!isLunas && invoiceData.dueDate && (
+                  <div className="text-xs font-semibold text-amber-700">
+                    Jatuh Tempo: <span className="font-mono text-fluent-text font-bold">{formatDateIndonesian(invoiceData.dueDate)}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -195,9 +213,9 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
               <span className="font-semibold text-fluent-textSecondary uppercase block mb-1">
                 Status Pembayaran:
               </span>
-              <span className={`font-bold text-sm ${statusBadge.text}`}>
+              <div className={`font-bold text-sm ${statusBadge.text}`}>
                 {statusBadge.label}
-              </span>
+              </div>
             </div>
           </div>
 
@@ -283,14 +301,46 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
             </div>
           </div>
 
-          {/* Notes & Footer */}
-          <div className="border-t border-fluent-border pt-3 text-[11px] text-fluent-textSecondary flex justify-between items-end">
-            <div>
+          {/* Signature & Official Stamp Section */}
+          <div className="border-t border-fluent-border pt-4 flex justify-between items-end text-xs">
+            <div className="text-fluent-textSecondary text-[11px]">
               <span className="font-semibold text-fluent-text block">Catatan:</span>
               <p>{invoiceData.notes || 'Terima kasih atas kepercayaan Anda memilih Kavio Edu.'}</p>
             </div>
-            <div className="text-right italic text-[10px]">
-              Kavio Edu Management System
+
+            <div className="text-right space-y-1 pr-2">
+              <p className="text-[10px] text-slate-500 pb-16">Pandeglang, {formatDateIndonesian(invoiceData.invoiceDate || new Date().toISOString().split('T')[0])}</p>
+
+              <div className="relative inline-block">
+                {/* Founder Digital Signature (Tanda Tangan) */}
+                <img
+                  src="/ttd_fatih_founderkavio.png"
+                  alt="Tanda Tangan Founder Kavio"
+                  style={{
+                    height: `${INVOICE_CONFIG.signature.sizeHeightPx}px`,
+                    opacity: INVOICE_CONFIG.signature.opacity,
+                    bottom: `${INVOICE_CONFIG.signature.offsetBottomPx}px`
+                  }}
+                  className="absolute right-0 w-auto object-contain pointer-events-none z-20"
+                />
+
+                {/* Official Kavio Edu Stamp Overlay (Stempel Ungu) */}
+                <img
+                  src="/stempel_kavioedu.png"
+                  alt="Stempel Resmi Kavio Edu"
+                  style={{
+                    height: `${INVOICE_CONFIG.kavioStamp.sizeHeightPx}px`,
+                    opacity: INVOICE_CONFIG.kavioStamp.opacity,
+                    transform: `rotate(${INVOICE_CONFIG.kavioStamp.rotationDeg}deg)`
+                  }}
+                  className="absolute -right-3 bottom-0 w-auto object-contain pointer-events-none z-10"
+                />
+
+                <p className="text-xs font-bold text-slate-900 border-b border-slate-400 pb-0.5 relative z-30">
+                  FATIH FARHAT ASSHIDIQ
+                </p>
+              </div>
+              <p className="text-[10px] text-slate-500 block relative z-30">Founder Kavio Edu</p>
             </div>
           </div>
 
@@ -312,6 +362,13 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
         </div>
 
       </main>
+
+      {/* Kwitansi Modal */}
+      <ReceiptModal
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+        data={invoiceData}
+      />
     </div>
   )
 }

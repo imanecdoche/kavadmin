@@ -21,6 +21,7 @@ import {
   Grid,
   List
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import StudentProfileDrawer from './StudentProfileDrawer'
 
 export const PACKAGE_RATES = {
@@ -1133,59 +1134,91 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
       )}
 
       {/* Add / Edit Student Modal Form (3 Tabs) */}
-      {isModalOpen && (
-        <div className="fixed inset-0 top-0 left-0 z-50 h-screen w-screen bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-fluent border border-fluent-border shadow-fluent-modal w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeModal}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          >
+            <motion.div
+              layout
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{
+                layout: { type: 'spring', stiffness: 350, damping: 32 },
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-fluent border border-fluent-border shadow-fluent-modal w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto"
+            >
 
-            {/* Modal Header */}
-            <div className="p-4 border-b border-fluent-border bg-fluent-subtle flex justify-between items-center">
-              <h2 className="font-bold text-base text-fluent-text">
-                {editingStudent ? 'Edit Data Siswa & Reservasi Slot' : 'Tambah Siswa Baru & Reservasi Slot'}
-              </h2>
-              <button onClick={closeModal} className="p-1 text-fluent-textSecondary hover:text-fluent-text rounded">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+              {/* Modal Header */}
+              <div className="p-4 border-b border-fluent-border bg-fluent-subtle flex justify-between items-center flex-shrink-0">
+                <h2 className="font-bold text-base text-fluent-text">
+                  {editingStudent ? 'Edit Data Siswa & Reservasi Slot' : 'Tambah Siswa Baru & Reservasi Slot'}
+                </h2>
+                <button onClick={closeModal} className="p-1 text-fluent-textSecondary hover:text-fluent-text rounded">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-            {/* 3 Form Tabs Header */}
-            <div className="flex border-b border-fluent-border bg-white px-4 pt-2 space-x-2">
-              <button
-                type="button"
-                onClick={() => setActiveFormTab('profile')}
-                className={`py-2 px-4 text-xs font-semibold rounded-t border-b-2 transition-colors ${activeFormTab === 'profile'
-                  ? 'border-fluent-blue text-fluent-blue bg-fluent-subtle/50'
-                  : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
-                  }`}
+              {/* 3 Form Tabs Header */}
+              <div className="flex border-b border-fluent-border bg-white px-4 pt-2 space-x-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveFormTab('profile')}
+                  className={`py-2 px-4 text-xs font-semibold rounded-t border-b-2 transition-colors ${activeFormTab === 'profile'
+                    ? 'border-fluent-blue text-fluent-blue bg-fluent-subtle/50'
+                    : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
+                    }`}
+                >
+                  1. Profil & Demografi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveFormTab('contact')}
+                  className={`py-2 px-4 text-xs font-semibold rounded-t border-b-2 transition-colors ${activeFormTab === 'contact'
+                    ? 'border-fluent-blue text-fluent-blue bg-fluent-subtle/50'
+                    : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
+                    }`}
+                >
+                  2. Kontak & Wali
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveFormTab('course')}
+                  className={`py-2 px-4 text-xs font-semibold rounded-t border-b-2 transition-colors ${activeFormTab === 'course'
+                    ? 'border-fluent-blue text-fluent-blue bg-fluent-subtle/50'
+                    : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
+                    }`}
+                >
+                  3. Paket & Reservasi Slot
+                </button>
+              </div>
+
+              <motion.form
+                layout
+                transition={{ layout: { type: 'spring', stiffness: 350, damping: 32 } }}
+                onSubmit={handleSaveStudent}
+                className="p-6 space-y-4 overflow-y-auto text-xs"
               >
-                1. Profil & Demografi
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveFormTab('contact')}
-                className={`py-2 px-4 text-xs font-semibold rounded-t border-b-2 transition-colors ${activeFormTab === 'contact'
-                  ? 'border-fluent-blue text-fluent-blue bg-fluent-subtle/50'
-                  : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
-                  }`}
-              >
-                2. Kontak & Wali
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveFormTab('course')}
-                className={`py-2 px-4 text-xs font-semibold rounded-t border-b-2 transition-colors ${activeFormTab === 'course'
-                  ? 'border-fluent-blue text-fluent-blue bg-fluent-subtle/50'
-                  : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
-                  }`}
-              >
-                3. Paket & Reservasi Slot
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveStudent} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
-
-              {/* TAB 1: Profil & Demografi */}
-              {activeFormTab === 'profile' && (
-                <div className="space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {/* TAB 1: Profil & Demografi */}
+                  {activeFormTab === 'profile' && (
+                    <motion.div
+                      layout
+                      key="profile"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.18 }}
+                      className="space-y-4"
+                    >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
@@ -1270,12 +1303,20 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                       placeholder="Contoh: Speaking Confidence & Preparation PTN"
                     />
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {/* TAB 2: Kontak & Wali */}
               {activeFormTab === 'contact' && (
-                <div className="space-y-4">
+                <motion.div
+                  layout
+                  key="contact"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                  className="space-y-4"
+                >
                   <div>
                     <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
                       Nama Orang Tua / Wali
@@ -1316,12 +1357,20 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                       />
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {/* TAB 3: Paket & Reservasi Slot Sesi */}
               {activeFormTab === 'course' && (
-                <div className="space-y-4">
+                <motion.div
+                  layout
+                  key="course"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                  className="space-y-4"
+                >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
@@ -1486,8 +1535,9 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                       className="w-full px-3 py-1.5 text-sm border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue"
                     ></textarea>
                   </div>
-                </div>
+                </motion.div>
               )}
+            </AnimatePresence>
 
               {/* Real-time Calculation Live Summary Panel */}
               <div className="p-4 bg-fluent-subtle rounded border border-fluent-border space-y-2 mt-4">
@@ -1530,37 +1580,57 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                 </button>
               </div>
 
-            </form>
+            </motion.form>
 
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Custom Confirmation Modal for Delete (Sensitive & Crucial) */}
-      {deleteId && (
-        <div className="fixed inset-0 top-0 left-0 z-50 h-screen w-screen bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-fluent border border-rose-200 shadow-fluent-modal w-full max-w-md p-6 space-y-4">
-            
-            {/* Header with Red Warning Icon */}
-            <div className="flex items-center space-x-2 border-b border-fluent-border pb-3">
-              <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-              <h3 className="text-sm font-bold text-fluent-text">
-                Konfirmasi Hapus Siswa (Tindakan Sensitif)
-              </h3>
-            </div>
+      <AnimatePresence>
+        {deleteId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDeleteId(null)}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          >
+            <motion.div
+              layout
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{
+                layout: { type: 'spring', stiffness: 350, damping: 30 },
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-fluent border border-rose-200 shadow-fluent-modal w-full max-w-md p-6 space-y-4 my-auto"
+            >
+              
+              {/* Header with Red Warning Icon */}
+              <div className="flex items-center space-x-2 border-b border-fluent-border pb-3">
+                <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                <h3 className="text-sm font-bold text-fluent-text">
+                  Konfirmasi Hapus Siswa (Tindakan Sensitif)
+                </h3>
+              </div>
 
-            {/* Crucial Blinking Warning Box (No Glow) */}
-            <div className="bg-rose-50 border border-rose-300 rounded p-3 text-xs space-y-1.5">
-              <div className="flex items-start space-x-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
-                <p className="font-bold text-rose-700 leading-snug animate-pulse">
-                  PERINGATAN KRUSIAL: Tindakan ini tidak bisa diurungkan!
+              {/* Crucial Blinking Warning Box (No Glow) */}
+              <div className="bg-rose-50 border border-rose-300 rounded p-3 text-xs space-y-1.5">
+                <div className="flex items-start space-x-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <p className="font-bold text-rose-700 leading-snug animate-pulse">
+                    PERINGATAN KRUSIAL: Tindakan ini tidak bisa diurungkan!
+                  </p>
+                </div>
+                <p className="text-[11px] text-rose-700/90 pl-6 leading-relaxed">
+                  Apakah Anda yakin ingin menghapus data siswa ini? Seluruh data profil, reservasi slot, dan riwayat invoice terkait akan dihapus secara permanen dari sistem.
                 </p>
               </div>
-              <p className="text-[11px] text-rose-700/90 pl-6 leading-relaxed">
-                Apakah Anda yakin ingin menghapus data siswa ini? Seluruh data profil, reservasi slot, dan riwayat invoice terkait akan dihapus secara permanen dari sistem.
-              </p>
-            </div>
 
             {/* Action Buttons & Countdown Footer */}
             <div className="space-y-2 pt-2 border-t border-fluent-border">
@@ -1600,9 +1670,10 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
               </div>
             </div>
 
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   )

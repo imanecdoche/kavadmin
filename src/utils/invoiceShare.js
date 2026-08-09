@@ -7,6 +7,7 @@ export function generateInvoiceShareLink(invoiceData) {
     const payload = {
       invoiceNo: invoiceData.invoiceNo,
       invoiceDate: invoiceData.invoiceDate,
+      dueDate: invoiceData.dueDate,
       studentName: invoiceData.studentName,
       parentName: invoiceData.parentName,
       packageType: invoiceData.packageType,
