@@ -120,7 +120,14 @@ function AppContent() {
       const saved = localStorage.getItem('kavio_modules')
       if (saved) {
         const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map(m => m.id))
+          const missingDefaults = INITIAL_MODULES_BACKUP.filter(m => !existingIds.has(m.id))
+          if (missingDefaults.length > 0) {
+            return [...missingDefaults, ...parsed]
+          }
+          return parsed
+        }
       }
     } catch (e) {
       console.error('Failed to load modules from localStorage', e)
