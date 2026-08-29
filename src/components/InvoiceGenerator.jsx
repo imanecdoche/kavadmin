@@ -302,6 +302,13 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount || 0)
   }
 
+  const formatNumberWithDots = (val) => {
+    if (val === '' || val === null || val === undefined) return ''
+    const clean = String(val).replace(/\D/g, '')
+    if (!clean) return ''
+    return new Intl.NumberFormat('id-ID').format(Number(clean))
+  }
+
   // Format WhatsApp Message with Shareable Link
   const generateWhatsAppMessage = () => {
     const sName = studentName || '-'
@@ -770,15 +777,24 @@ Kavio Edu Management`
           {paymentType === 'CUSTOM' && (
             <div>
               <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
-                Nominal Yang Dibayar (Rp)
+                Terbayar
               </label>
-              <input
-                type="number"
-                value={customPaidAmount}
-                onChange={(e) => setCustomPaidAmount(e.target.value)}
-                placeholder="0"
-                className="w-full px-3 py-1.5 text-sm border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue"
-              />
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-xs font-semibold text-fluent-textSecondary pointer-events-none select-none">
+                  Rp
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={formatNumberWithDots(customPaidAmount)}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\D/g, '')
+                    setCustomPaidAmount(raw === '' ? '' : Number(raw))
+                  }}
+                  placeholder="0"
+                  className="w-full pl-9 pr-3 py-1.5 text-sm border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-medium"
+                />
+              </div>
             </div>
           )}
 
