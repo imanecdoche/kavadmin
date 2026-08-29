@@ -448,6 +448,101 @@ export const CURRICULUM_PRESETS = {
 }
 
 /**
+ * Resolves curriculum sessions array by CEFR level and total sessions count.
+ * If totalCount <= preset length, slices down to totalCount.
+ * If totalCount > preset length, appends continuation sessions.
+ * @param {string} cefrLevel e.g. "A1", "A2", "B1", "B2", "Level A1 - Beginner"
+ * @param {number} totalCount e.g. 12
+ * @param {string|Date} startDate
+ * @returns {Array} Array of session objects
+ */
+export const getPresetByCefr = (cefrLevel = 'A1', totalCount = 12, startDate = new Date()) => {
+  const normalized = String(cefrLevel || 'A1').trim().toUpperCase()
+  let presetArray = []
+
+  if (normalized.includes('A1')) {
+    presetArray = [...CEFR_A1_PRESET]
+  } else if (normalized.includes('A2')) {
+    presetArray = [...CURRICULUM_PRESETS.GROW.sessions]
+  } else if (normalized.includes('B1')) {
+    presetArray = [...CURRICULUM_PRESETS.BOOST.sessions]
+  } else if (normalized.includes('B2') || normalized.includes('C1') || normalized.includes('C2')) {
+    presetArray = [...CURRICULUM_PRESETS.MASTER.sessions]
+  } else {
+    presetArray = [...CEFR_A1_PRESET]
+  }
+
+  const baseDate = startDate instanceof Date ? startDate : new Date(startDate || Date.now())
+  const levelCode = normalized.slice(0, 2) || 'A1'
+
+  // Jika totalCount lebih sedikit atau sama dengan preset, potong sesuai totalCount
+  if (totalCount <= presetArray.length) {
+    return presetArray.slice(0, totalCount).map((item, idx) => {
+      const sessionDate = new Date(baseDate)
+      sessionDate.setDate(baseDate.getDate() + (idx * 7))
+      const yyyy = sessionDate.getFullYear()
+      const mm = String(sessionDate.getMonth() + 1).padStart(2, '0')
+      const dd = String(sessionDate.getDate()).padStart(2, '0')
+
+      return {
+        ...item,
+        id: item.id || `session-${String(idx + 1).padStart(2, '0')}`,
+        sessionNumber: idx + 1,
+        level: item.level || levelCode,
+        date: item.date || `${yyyy}-${mm}-${dd}`,
+        status: item.status || (idx === 0 ? 'SEDANG BERJALAN' : 'BELUM MULAI'),
+        isCompleted: item.isCompleted || item.status === 'COMPLETED' || item.status === 'SELESAI'
+      }
+    })
+  }
+
+  // Jika totalCount lebih banyak dari preset, salin dan tambahkan sesi lanjutan
+  const result = presetArray.map((item, idx) => {
+    const sessionDate = new Date(baseDate)
+    sessionDate.setDate(baseDate.getDate() + (idx * 7))
+    const yyyy = sessionDate.getFullYear()
+    const mm = String(sessionDate.getMonth() + 1).padStart(2, '0')
+    const dd = String(sessionDate.getDate()).padStart(2, '0')
+
+    return {
+      ...item,
+      id: item.id || `session-${String(idx + 1).padStart(2, '0')}`,
+      sessionNumber: idx + 1,
+      level: item.level || levelCode,
+      date: item.date || `${yyyy}-${mm}-${dd}`,
+      status: item.status || (idx === 0 ? 'SEDANG BERJALAN' : 'BELUM MULAI'),
+      isCompleted: item.isCompleted || item.status === 'COMPLETED' || item.status === 'SELESAI'
+    }
+  })
+
+  for (let i = presetArray.length + 1; i <= totalCount; i++) {
+    const sessionDate = new Date(baseDate)
+    sessionDate.setDate(baseDate.getDate() + ((i - 1) * 7))
+    const yyyy = sessionDate.getFullYear()
+    const mm = String(sessionDate.getMonth() + 1).padStart(2, '0')
+    const dd = String(sessionDate.getDate()).padStart(2, '0')
+
+    result.push({
+      id: `session-${String(i).padStart(2, '0')}`,
+      sessionNumber: i,
+      level: levelCode,
+      title: `Pendalaman Materi & Praktik Lanjutan (Sesi ${i})`,
+      description: `Sesi penguatan konsep, latihan interaktif tambahan, dan studi kasus terapan untuk jenjang ${cefrLevel}.`,
+      status: "BELUM MULAI",
+      isCompleted: false,
+      date: `${yyyy}-${mm}-${dd}`,
+      linkedModuleId: null
+    })
+  }
+
+  return result.map((item, idx) => ({
+    ...item,
+    id: item.id || `session-${String(idx + 1).padStart(2, '0')}`,
+    sessionNumber: idx + 1
+  }))
+}
+
+/**
  * Generate a complete list of sessions tailored to student's sessionsPerMonth and durationMonths.
  * @param {string} tier 'SEED' | 'GROW' | 'BOOST' | 'MASTER'
  * @param {number} sessionsPerMonth e.g. 4
@@ -462,37 +557,7 @@ export const generateBatchSessions = (
   startDate = new Date()
 ) => {
   const selectedTier = CURRICULUM_PRESETS[tier] || CURRICULUM_PRESETS.GROW
+  const level = selectedTier.level || tier
   const totalNeeded = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
-  const pool = selectedTier.sessions || []
-
-  const baseDate = startDate instanceof Date ? startDate : new Date(startDate || Date.now())
-  const results = []
-
-  for (let i = 0; i < totalNeeded; i++) {
-    const template = pool[i % pool.length]
-    const cycle = Math.floor(i / pool.length)
-    const sessionDate = new Date(baseDate)
-    sessionDate.setDate(baseDate.getDate() + (i * 7)) // 1 session every 7 days
-
-    const yyyy = sessionDate.getFullYear()
-    const mm = String(sessionDate.getMonth() + 1).padStart(2, '0')
-    const dd = String(sessionDate.getDate()).padStart(2, '0')
-    const dateStr = template.date || `${yyyy}-${mm}-${dd}`
-
-    const titleSuffix = cycle > 0 ? ` (Part ${cycle + 1})` : ''
-
-    results.push({
-      id: `session-${String(i + 1).padStart(2, '0')}`,
-      sessionNumber: i + 1,
-      level: template.level || selectedTier.level,
-      title: `${template.title}${titleSuffix}`,
-      description: template.description || 'Fokus materi pembelajaran dan praktik aktif.',
-      status: template.status || (i === 0 ? 'COMPLETED' : i === 1 ? 'IN_PROGRESS' : 'LOCKED'),
-      isCompleted: template.isCompleted || template.status === 'COMPLETED' || template.status === 'SELESAI',
-      date: dateStr,
-      linkedModuleId: null
-    })
-  }
-
-  return results
+  return getPresetByCefr(level, totalNeeded, startDate)
 }

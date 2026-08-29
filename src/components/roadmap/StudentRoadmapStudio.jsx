@@ -23,7 +23,7 @@ import RoadmapBatchDocument from './RoadmapBatchDocument'
 import SessionDetailDrawer from './SessionDetailDrawer'
 import RoadmapPresetSelector from './RoadmapPresetSelector'
 import CustomSessionModal from './CustomSessionModal'
-import { CURRICULUM_PRESETS, generateBatchSessions } from '../../utils/curriculumPresets'
+import { CURRICULUM_PRESETS, generateBatchSessions, getPresetByCefr } from '../../utils/curriculumPresets'
 import {
   calculateOverallRoadmapProgress,
   calculateBatchSessionCount,
@@ -151,10 +151,34 @@ export default function StudentRoadmapStudio({
     saveChanges(autoAdvanced)
   }
 
-  // Regenerate sessions based on current duration & sessionsPerMonth
+  // Handle start date change and auto-sync session dates with 7-day interval
+  const handleStartDateChange = (newDate) => {
+    setStartDate(newDate)
+    if (!newDate) return
+
+    const base = new Date(newDate)
+    if (isNaN(base.getTime())) return
+
+    const updated = sessions.map((s, idx) => {
+      const d = new Date(base)
+      d.setDate(base.getDate() + (idx * 7))
+      const yyyy = d.getFullYear()
+      const mm = String(d.getMonth() + 1).padStart(2, '0')
+      const dd = String(d.getDate()).padStart(2, '0')
+      return {
+        ...s,
+        date: `${yyyy}-${mm}-${dd}`
+      }
+    })
+
+    setSessions(updated)
+    saveChanges(updated)
+  }
+
+  // Regenerate sessions based on current duration, sessionsPerMonth, and selected CEFR level
   const handleRegenerateSessions = () => {
-    const tier = activeStudent?.packageType || 'GROW'
-    const generated = generateBatchSessions(tier, sessionsPerMonth, durationMonths, startDate)
+    const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
+    const generated = getPresetByCefr(level, totalCount, startDate)
     setSessions(generated)
     saveChanges(generated)
   }
@@ -162,9 +186,10 @@ export default function StudentRoadmapStudio({
   // Apply Preset
   const handleApplyPreset = (preset) => {
     if (!preset) return
-    const generated = generateBatchSessions(preset.tier, sessionsPerMonth, durationMonths, startDate)
+    const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
+    const generated = getPresetByCefr(preset.level || preset.tier, totalCount, startDate)
     setSessions(generated)
-    setLevel(preset.level)
+    setLevel(preset.level || 'A1')
     saveChanges(generated)
   }
 
@@ -358,7 +383,14 @@ export default function StudentRoadmapStudio({
                 </label>
                 <select
                   value={level}
-                  onChange={(e) => setLevel(e.target.value)}
+                  onChange={(e) => {
+                    const newLevel = e.target.value
+                    setLevel(newLevel)
+                    const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
+                    const generated = getPresetByCefr(newLevel, totalCount, startDate)
+                    setSessions(generated)
+                    saveChanges(generated)
+                  }}
                   className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent bg-white focus:outline-none focus:border-fluent-blue font-bold"
                 >
                   <option value="A1">Level A1 - Beginner</option>
@@ -368,6 +400,20 @@ export default function StudentRoadmapStudio({
                   <option value="C1">Level C1 - Advanced</option>
                 </select>
               </div>
+            </div>
+
+            {/* Tanggal Mulai Batch */}
+            <div>
+              <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-fluent-blue" />
+                Tanggal Mulai Batch
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => handleStartDateChange(e.target.value)}
+                className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-mono font-medium"
+              />
             </div>
 
             <div className="grid grid-cols-3 gap-3 pt-1">
