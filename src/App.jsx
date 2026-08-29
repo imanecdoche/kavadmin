@@ -10,6 +10,8 @@ import ModulesManager from './components/modules/ModulesManager'
 import ReportCardStudio from './components/reports/ReportCardStudio'
 import PublicReportViewer from './components/reports/PublicReportViewer'
 import PublicRoadmapViewer from './components/roadmap/PublicRoadmapViewer'
+import CertificateStudio from './components/certificate/CertificateStudio'
+import PublicCertificateViewer from './components/certificate/PublicCertificateViewer'
 import CursorTooltip from './components/CursorTooltip'
 import SplashScreen from './components/SplashScreen'
 import ExitConfirmModal from './components/ExitConfirmModal'
@@ -36,6 +38,7 @@ import { INITIAL_MODULES_BACKUP } from './utils/defaultModules'
 import { parseInvoiceShareLink } from './utils/invoiceShare'
 import { parseReportShareLink } from './utils/reportShare'
 import { parseRoadmapShareLink } from './utils/roadmapShare'
+import { parseCertificateShareLink } from './utils/certificateShare'
 import PublicInvoiceView from './components/PublicInvoiceView'
 
 export default function App() {
@@ -45,6 +48,7 @@ export default function App() {
   const [publicInvoiceData, setPublicInvoiceData] = useState(() => parseInvoiceShareLink())
   const [publicReportData, setPublicReportData] = useState(() => parseReportShareLink())
   const [publicRoadmapData, setPublicRoadmapData] = useState(() => parseRoadmapShareLink())
+  const [publicCertificateData, setPublicCertificateData] = useState(() => parseCertificateShareLink())
 
   // Browser navigation and popstate listener
   useEffect(() => {
@@ -52,6 +56,7 @@ export default function App() {
       setPublicInvoiceData(parseInvoiceShareLink())
       setPublicReportData(parseReportShareLink())
       setPublicRoadmapData(parseRoadmapShareLink())
+      setPublicCertificateData(parseCertificateShareLink())
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -137,6 +142,7 @@ export default function App() {
   const [selectedStudentForInvoice, setSelectedStudentForInvoice] = useState(null)
   const [selectedStudentForRoadmap, setSelectedStudentForRoadmap] = useState(null)
   const [selectedStudentForReport, setSelectedStudentForReport] = useState(null)
+  const [selectedStudentForCertificate, setSelectedStudentForCertificate] = useState(null)
   const [isFirebaseConnected, setIsFirebaseConnected] = useState(false)
   const [showConfigModal, setShowConfigModal] = useState(false)
 
@@ -357,6 +363,12 @@ export default function App() {
     setActiveTab('reports')
   }
 
+  // Handle navigating to student certificate generator from dashboard
+  const handleOpenCertificateFromDashboard = (student) => {
+    setSelectedStudentForCertificate(student)
+    setActiveTab('certificates')
+  }
+
   // Handle saving generated invoice into student's history
   const handleSaveInvoiceToHistory = (invoiceData) => {
     if (!invoiceData || !invoiceData.studentName) return
@@ -473,6 +485,18 @@ export default function App() {
     )
   }
 
+  if (publicCertificateData) {
+    return (
+      <PublicCertificateViewer
+        certificateData={publicCertificateData}
+        onBack={() => {
+          window.history.pushState({}, '', window.location.pathname)
+          setPublicCertificateData(null)
+        }}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-fluent-bg text-fluent-text font-sans flex flex-col antialiased selection:bg-fluent-blue selection:text-white">
 
@@ -496,6 +520,7 @@ export default function App() {
             onGenerateInvoice={handleGenerateInvoiceFromDashboard}
             onOpenRoadmap={handleOpenRoadmapFromDashboard}
             onOpenReportCard={handleOpenReportCardFromDashboard}
+            onOpenCertificate={handleOpenCertificateFromDashboard}
             reports={reports}
           />
         </div>
@@ -516,6 +541,17 @@ export default function App() {
             students={students}
             selectedStudent={selectedStudentForReport}
             onSaveReport={handleSaveReport}
+          />
+        </div>
+
+        <div className={activeTab === 'certificates' ? 'block' : 'hidden'}>
+          <CertificateStudio
+            students={students}
+            selectedStudentId={selectedStudentForCertificate?.id}
+            onSelectStudent={setSelectedStudentForCertificate}
+            onUpdateStudent={(updatedStudent) => {
+              updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
+            }}
           />
         </div>
 

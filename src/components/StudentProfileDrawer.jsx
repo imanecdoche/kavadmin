@@ -14,7 +14,8 @@ import {
   ExternalLink,
   MessageSquare,
   Award,
-  BookOpen
+  BookOpen,
+  GraduationCap
 } from 'lucide-react'
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
@@ -26,6 +27,7 @@ export default function StudentProfileDrawer({
   onGenerateInvoice,
   onOpenRoadmap,
   onOpenReportCard = null,
+  onOpenCertificate = null,
   reports = []
 }) {
   const [activeReceiptData, setActiveReceiptData] = useState(null)
@@ -519,6 +521,19 @@ export default function StudentProfileDrawer({
                 className="p-2.5 bg-white border border-fluent-border hover:bg-blue-50 hover:text-fluent-blue hover:border-blue-200 text-fluent-text rounded-fluent flex items-center justify-center transition-colors shadow-xs"
               >
                 <BookOpen className="w-4 h-4" />
+              </button>
+            )}
+            {onOpenCertificate && (
+              <button
+                onClick={() => {
+                  onOpenCertificate(student)
+                  onClose()
+                }}
+                title="Buka / Buat Sertifikat Kelulusan Siswa"
+                aria-label="Buka / Buat Sertifikat Kelulusan Siswa"
+                className="p-2.5 bg-white border border-fluent-border hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 text-fluent-text rounded-fluent flex items-center justify-center transition-colors shadow-xs"
+              >
+                <GraduationCap className="w-4 h-4 text-emerald-600" />
               </button>
             )}
           </div>

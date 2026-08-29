@@ -280,6 +280,7 @@ export default function Dashboard({
   onGenerateInvoice,
   onOpenRoadmap,
   onOpenReportCard = null,
+  onOpenCertificate = null,
   reports = []
 }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -1481,6 +1482,10 @@ export default function Dashboard({
           onOpenReportCard={(st, rep) => {
             setViewingStudent(null)
             if (onOpenReportCard) onOpenReportCard(st, rep)
+          }}
+          onOpenCertificate={(st) => {
+            setViewingStudent(null)
+            if (onOpenCertificate) onOpenCertificate(st)
           }}
           reports={reports}
         />

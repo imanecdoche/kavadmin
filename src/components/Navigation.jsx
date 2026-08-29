@@ -1,5 +1,5 @@
 import React from 'react'
-import { LayoutDashboard, FileText, MessageSquare, BookOpen, Library, Award } from 'lucide-react'
+import { LayoutDashboard, FileText, MessageSquare, BookOpen, Library, Award, GraduationCap } from 'lucide-react'
 import { logoSvg } from '../assets'
 
 export default function Navigation({ activeTab, setActiveTab }) {
@@ -7,6 +7,7 @@ export default function Navigation({ activeTab, setActiveTab }) {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'invoice', label: 'Invoice', icon: FileText },
     { id: 'reports', label: 'Rapor Siswa', icon: Award },
+    { id: 'certificates', label: 'Sertifikat Kelulusan', icon: GraduationCap },
     { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
     { id: 'roadmap', label: 'Roadmap', icon: BookOpen },
     { id: 'modules', label: 'Modules', icon: Library },
