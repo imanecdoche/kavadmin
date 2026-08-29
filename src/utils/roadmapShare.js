@@ -1,4 +1,4 @@
-import { calculateOverallRoadmapProgress, calculateMilestoneProgress } from './roadmapCalculator'
+import { calculateOverallRoadmapProgress, formatSessionNumber } from './roadmapCalculator'
 
 /**
  * Encodes roadmap data into a shareable URL query string
@@ -10,14 +10,18 @@ export function generateRoadmapShareLink(roadmapData) {
 
   try {
     const payload = {
+      id: roadmapData.id || 'ROA/KEEN/202608/0001',
       studentId: roadmapData.studentId,
       studentName: roadmapData.studentName,
-      parentName: roadmapData.parentName,
+      guardianName: roadmapData.guardianName || roadmapData.parentName || '-',
       packageTier: roadmapData.packageTier || roadmapData.programTier || 'GROW',
-      targetDuration: roadmapData.targetDuration,
-      level: roadmapData.level,
-      moduleTitle: roadmapData.moduleTitle,
-      milestones: roadmapData.milestones,
+      batchName: roadmapData.batchName || 'BATCH 1',
+      durationMonths: roadmapData.durationMonths || 3,
+      sessionsPerMonth: roadmapData.sessionsPerMonth || 4,
+      level: roadmapData.level || 'A2',
+      moduleTitle: roadmapData.moduleTitle || 'Kurikulum Bahasa Inggris',
+      issueDate: roadmapData.issueDate || new Date().toISOString().split('T')[0],
+      sessions: roadmapData.sessions || [],
       updatedAt: roadmapData.updatedAt || new Date().toISOString()
     }
 
@@ -54,7 +58,7 @@ export function parseRoadmapShareLink() {
 }
 
 /**
- * Formats official WhatsApp message draft for Student Roadmap & Milestone Progress
+ * Formats official WhatsApp message draft for Student Roadmap 1-Batch Progress
  * @param {Object} roadmapData
  * @param {string} customShareUrl
  * @returns {string} Formatted WhatsApp message
@@ -64,46 +68,55 @@ export function generateRoadmapWhatsAppMessage(roadmapData, customShareUrl = nul
 
   const {
     studentName = 'Siswa',
-    parentName = '',
+    guardianName = '',
     packageTier = 'GROW',
-    level = 'Level A1 - Elementary',
-    moduleTitle = 'Kurikulum Bahasa Inggris',
-    milestones = []
+    batchName = 'BATCH 1',
+    durationMonths = 3,
+    level = 'A2',
+    sessions = []
   } = roadmapData
 
-  const stats = calculateOverallRoadmapProgress(milestones)
+  const stats = calculateOverallRoadmapProgress(sessions)
   const shareUrl = customShareUrl || generateRoadmapShareLink(roadmapData)
-  const recipientName = parentName ? `Bpk/Ibu ${parentName}` : `Orang Tua/Wali dari ${studentName}`
+  const recipientName = guardianName && guardianName !== '-' ? `Bpk/Ibu ${guardianName}` : `Orang Tua/Wali dari ${studentName}`
 
-  let msg = `*ROADMAP KURIKULUM & PROGRES BELAJAR SISWA*\n`
+  let msg = `*ROADMAP PEMBELAJARAN SESI 1-BATCH*\n`
   msg += `*KAVIO EDU — Private English Class & Academic Mentoring*\n`
   msg += `━━━━━━━━━━━━━━━━━━━━━\n\n`
   msg += `Yth. ${recipientName},\n\n`
-  msg += `Berikut kami sampaikan pembaruan capaian roadmap pembelajaran ananda *${studentName}*:\n\n`
-  msg += `🎯 *RINGKASAN TARGET KURIKULUM:*\n`
+  msg += `Berikut kami sampaikan alur pembelajaran dan capaian sesi untuk ananda *${studentName}* (${batchName}):\n\n`
+  msg += `🎯 *RINGKASAN BATCH 1:*\n`
   msg += `• Paket Program: *Paket ${packageTier}*\n`
-  msg += `• Jenjang Akademik: *${level}*\n`
-  msg += `• Modul Utama: *${moduleTitle}*\n`
-  msg += `• Progres Capaian: *${stats.completedCount}/${stats.totalMilestones} Milestone Selesai (${stats.percentage}%)*\n\n`
+  msg += `• Jenjang Level: *Level ${level}*\n`
+  msg += `• Durasi & Alokasi: *${durationMonths} Bulan (${stats.totalSessions} Sesi)*\n`
+  msg += `• Progres Capaian: *${stats.completedCount}/${stats.totalSessions} Sesi Tuntas (${stats.percentage}%)*\n\n`
 
-  msg += `📍 *STATUS TAHAPAN MILESTONE:*\n`
-  milestones.forEach((m, idx) => {
+  msg += `📍 *RINCIAN ALUR SESI:*\n`
+  sessions.slice(0, 12).forEach((s, idx) => {
+    const rawStatus = String(s.status || '').toUpperCase()
     let icon = '🔒'
-    if (m.status === 'COMPLETED') icon = '✅'
-    else if (m.status === 'IN_PROGRESS') icon = '⏳'
+    let statusText = 'Belum Mulai'
 
-    const progress = calculateMilestoneProgress(m)
-    msg += `${icon} *Milestone ${idx + 1}: ${m.title}* [${m.status === 'COMPLETED' ? 'SELESAI' : m.status === 'IN_PROGRESS' ? 'BERJALAN' : 'TERKUNCI'}] (${progress}%)\n`
-    if (m.description) {
-      msg += `   └ _${m.description}_\n`
+    if (rawStatus === 'COMPLETED' || rawStatus === 'SELESAI') {
+      icon = '✅'
+      statusText = 'Selesai'
+    } else if (rawStatus === 'IN_PROGRESS' || rawStatus === 'SEDANG BERJALAN') {
+      icon = '⏳'
+      statusText = 'Berjalan'
     }
+
+    msg += `${icon} *${formatSessionNumber(s.sessionNumber || idx + 1)}*: ${s.title} [${statusText}]\n`
   })
 
-  msg += `\n🌐 *METRO-LINE ROADMAP INTERAKTIF:*
-Bagan visualisasi metro-line interaktif dan rincian modul dapat diakses langsung melalui tautan berikut:
+  if (sessions.length > 12) {
+    msg += `   _...dan ${sessions.length - 12} sesi berikutnya._\n`
+  }
+
+  msg += `\n📄 *DOKUMEN LENGKAP & DETAIL MATERI:*
+Dokumen resmi roadmap 1-Batch lengkap berstempel dan bertanda tangan Founder dapat dilihat melalui tautan berikut:
 👉 ${shareUrl}
 
-Terima kasih atas kerja sama dan dukungan Bapak/Ibu.
+Terima kasih atas kerja sama dan kepercayaan Bapak/Ibu.
 
 Salam hangat,
 *Fatih Farhat Asshidiq*

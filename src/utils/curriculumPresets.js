@@ -1,66 +1,112 @@
 /**
- * 📚 Curriculum Presets Library for Kavio Edu
- * Pre-configured academic roadmap templates for SEED, GROW, BOOST, and MASTER tiers.
+ * 📚 Granular Curriculum Presets Library for Kavio Edu
+ * Pre-configured 1-Batch session-by-session curriculum roadmaps (SEED, GROW, BOOST, MASTER).
  */
 
 export const CURRICULUM_PRESETS = {
   SEED: {
     tier: 'SEED',
     label: 'SEED — Foundation & Basic Communication',
-    level: 'A1 - Beginner',
-    targetDuration: '3 Bulan (9 Sesi)',
-    description: 'Fokus pada fondasi tata bahasa dasar, kosakata harian esensial, dan keberanian berbicara kalimat sederhana.',
-    milestones: [
+    level: 'A1',
+    defaultSessionsPerMonth: 4,
+    defaultDurationMonths: 3,
+    description: 'Fokus pada fondasi tata bahasa dasar, fonetik pengucapan alfabet, dan keberanian komunikasi kalimat sederhana.',
+    sessions: [
       {
-        id: 'seed-m1',
-        milestoneNumber: 1,
-        title: 'Alphabet, Pronunciation & Basic Greetings',
+        sessionNumber: 1,
         level: 'A1',
-        targetSessions: 3,
-        description: 'Mengenal fonetik dasar alfabet bahasa Inggris, cara memperkenalkan diri, dan sapaan formal/informal.',
-        materials: 'Phonetic sounds chart, self-introduction formulas, formal & informal greetings vocabulary.',
+        title: 'Alphabet, Phonics & Clear Pronunciation Drill',
+        description: 'Mengenal fonetik vokal dan konsonan bahasa Inggris, artikulasi bunyi, serta latihan pelafalan kata dasar.',
+        status: 'COMPLETED',
+        date: '2026-08-01'
+      },
+      {
+        sessionNumber: 2,
+        level: 'A1',
+        title: 'Personal Pronouns & Self-Introduction Mastery',
+        description: 'Menyusun kalimat perkenalan diri (nama, usia, asal, hobi) dengan subject pronouns (I, You, They, We, He, She, It).',
+        status: 'COMPLETED',
+        date: '2026-08-08'
+      },
+      {
+        sessionNumber: 3,
+        level: 'A1',
+        title: 'Auxiliary Verb BE (Am, Is, Are) in Present Sentences',
+        description: 'Pemahaman tuntas kalimat nominal positif, negatif, dan tanya menggunakan to be (am/is/are).',
         status: 'IN_PROGRESS',
-        checklists: [
-          { id: 'c1-1', text: 'Melafalkan alfabet dan fonetik vokal dengan artikulasi yang tepat', completed: true },
-          { id: 'c1-2', text: 'Mempraktikkan percakapan perkenalan diri 2 menit tanpa ragu', completed: false },
-          { id: 'c1-3', text: 'Menguasai 20+ kosakata sapaan dan respons situasional', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-15'
       },
       {
-        id: 'seed-m2',
-        milestoneNumber: 2,
-        title: 'Auxiliary Verb BE & Subject-Verb Agreement',
+        sessionNumber: 4,
         level: 'A1',
-        targetSessions: 3,
-        description: 'Pemahaman tuntas penggunaan to be (am/is/are) dalam kalimat positif, negatif, dan interogatif.',
-        materials: 'To be nominal sentence structures, subject pronouns, demonstrative pronouns (this/that/these/those).',
+        title: 'Singular vs Plural Nouns & Article Usage (A / An / The)',
+        description: 'Aturan penambahan -s/-es pada kata benda jamak, kata benda tak beraturan, dan penggunaan artikel yang tepat.',
         status: 'LOCKED',
-        checklists: [
-          { id: 'c2-1', text: 'Menyusun kalimat nominal menggunakan am/is/are dengan benar', completed: false },
-          { id: 'c2-2', text: 'Membentuk kalimat tanya dan jawaban pendek (Yes/No questions)', completed: false },
-          { id: 'c2-3', text: 'Menyelesaikan 15 soal latihan Subject-Verb Agreement', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-22'
       },
       {
-        id: 'seed-m3',
-        milestoneNumber: 3,
-        title: 'Simple Present Tense & Daily Routine Speaking',
+        sessionNumber: 5,
         level: 'A1',
-        targetSessions: 3,
-        description: 'Menyusun kalimat verbal rutinitas harian dengan imbuhan kata kerja -s/-es dan adverbs of frequency.',
-        materials: 'Simple present tense formulas, action verbs, frequency adverbs (always, usually, sometimes, never).',
+        title: 'Demonstrative Pronouns (This, That, These, Those) in Objects',
+        description: 'Menunjukkan benda di sekitar dengan kata tunjuk jarak dekat/jauh serta kepemilikan sederhana (Possessive Adjectives).',
         status: 'LOCKED',
-        checklists: [
-          { id: 'c3-1', text: 'Menceritakan jadwal rutinitas dari pagi hingga malam secara lisan', completed: false },
-          { id: 'c3-2', text: 'Menerapkan aturan -s/-es pada subjek orang ketiga tunggal (He/She/It)', completed: false },
-          { id: 'c3-3', text: 'Evaluasi lisan sesi perpisahan modul SEED', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-29'
+      },
+      {
+        sessionNumber: 6,
+        level: 'A1',
+        title: 'Numbers, Telling Time & Calendar Dates',
+        description: 'Menyebutkan angka cardinal/ordinal, membaca jam analog/digital (quarter past/to, half past), dan penanggalan.',
+        status: 'LOCKED',
+        date: '2026-09-05'
+      },
+      {
+        sessionNumber: 7,
+        level: 'A1',
+        title: 'Simple Present Tense: Action Verbs & Subject Rules',
+        description: 'Membentuk kalimat verbal kegiatan harian dengan aturan kata kerja -s/-es pada subjek He/She/It.',
+        status: 'LOCKED',
+        date: '2026-09-12'
+      },
+      {
+        sessionNumber: 8,
+        level: 'A1',
+        title: 'Daily Routine Speaking & Adverbs of Frequency',
+        description: 'Menceritakan jadwal kegiatan dari pagi hingga malam menggunakan always, usually, often, sometimes, never.',
+        status: 'LOCKED',
+        date: '2026-09-19'
+      },
+      {
+        sessionNumber: 9,
+        level: 'A1',
+        title: 'Expressing Likes, Dislikes & Favorite Activities',
+        description: 'Mengungkapkan kesukaan dan preferensi (like, love, enjoy, prefer) diikuti kata benda atau gerund (V-ing).',
+        status: 'LOCKED',
+        date: '2026-09-26'
+      },
+      {
+        sessionNumber: 10,
+        level: 'A1',
+        title: 'Basic WH-Questions & Interactive Information Gathering',
+        description: 'Membentuk kalimat tanya mendalam menggunakan What, Where, When, Who, Why, dan How beserta intonasi tanya.',
+        status: 'LOCKED',
+        date: '2026-10-03'
+      },
+      {
+        sessionNumber: 11,
+        level: 'A1',
+        title: 'There is / There are & Prepositions of Place in Room Setup',
+        description: 'Mendeskripsikan ruangan dan posisi letak benda menggunakan in, on, under, next to, between, in front of.',
+        status: 'LOCKED',
+        date: '2026-10-10'
+      },
+      {
+        sessionNumber: 12,
+        level: 'A1',
+        title: 'Integrated Speaking Simulation & Batch 1 Review',
+        description: 'Simulasi percakapan dua arah komprehensif merangkum seluruh materi dasar tingkat Beginner A1.',
+        status: 'LOCKED',
+        date: '2026-10-17'
       }
     ]
   },
@@ -68,77 +114,106 @@ export const CURRICULUM_PRESETS = {
   GROW: {
     tier: 'GROW',
     label: 'GROW — Elementary Grammar & Active Fluency',
-    level: 'A2 - Elementary',
-    targetDuration: '3 Bulan (12 Sesi)',
+    level: 'A2',
+    defaultSessionsPerMonth: 4,
+    defaultDurationMonths: 3,
     description: 'Pengembangan tata bahasa waktu (Past, Present Continuous, Future) dan percakapan kontekstual dua arah.',
-    milestones: [
+    sessions: [
       {
-        id: 'grow-m1',
-        milestoneNumber: 1,
+        sessionNumber: 1,
+        level: 'A2',
         title: 'Present Continuous & Dynamic vs Stative Verbs',
+        description: 'Membedakan aktivitas yang sedang terjadi dengan kebiasaan serta mengenali kata kerja statif (love, know, understand).',
+        status: 'COMPLETED',
+        date: '2026-08-01'
+      },
+      {
+        sessionNumber: 2,
         level: 'A2',
-        targetSessions: 3,
-        description: 'Membedakan aktivitas yang sedang terjadi dengan kebiasaan serta mengidentifikasi kata kerja statif.',
-        materials: 'Present continuous formulas (be + V-ing), stative verbs list (love, understand, know, want).',
+        title: 'Present Simple vs Present Continuous in Spoken Context',
+        description: 'Latihan kontras situasi fakta permanen vs kejadian sementara dalam dialog interaktif sehari-hari.',
+        status: 'COMPLETED',
+        date: '2026-08-08'
+      },
+      {
+        sessionNumber: 3,
+        level: 'A2',
+        title: 'Simple Past Tense: Regular Verbs & -ed Pronunciation Rules',
+        description: 'Menguasai tiga pelafalan akhiran -ed (/t/, /d/, /id/) dan menyusun kalimat pengalaman waktu lampau.',
         status: 'IN_PROGRESS',
-        checklists: [
-          { id: 'grow-c1-1', text: 'Menjelaskan situasi yang sedang berlangsung di sekitar secara spontan', completed: true },
-          { id: 'grow-c1-2', text: 'Menghindari penggunaan -ing pada kata kerja statif', completed: false },
-          { id: 'grow-c1-3', text: 'Latihan roleplay mendeskripsikan gambar situasi dinamis', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-15'
       },
       {
-        id: 'grow-m2',
-        milestoneNumber: 2,
-        title: 'Simple Past Tense: Regular & Irregular Mastery',
+        sessionNumber: 4,
         level: 'A2',
-        targetSessions: 3,
-        description: 'Menceritakan pengalaman masa lalu menggunakan kata kerja bentuk lampau (V2) dengan intonasi yang alami.',
-        materials: 'Regular past tense pronunciation (-ed /t/, /d/, /id/), 50 common irregular verbs list, time markers.',
+        title: 'Irregular Past Verbs Mastery & Story Recount Drills',
+        description: 'Menghafal dan mengaplikasikan 30+ kata kerja tak beraturan populer dalam menceritakan kronologi cerita.',
         status: 'LOCKED',
-        checklists: [
-          { id: 'grow-c2-1', text: 'Menghafal dan mengaplikasikan 30 irregular verbs populer dalam kalimat', completed: false },
-          { id: 'grow-c2-2', text: 'Menceritakan pengalaman liburan atau kejadian kemarin secara runut', completed: false },
-          { id: 'grow-c2-3', text: 'Menyusun mini paragraf recount teks 5-7 kalimat', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-22'
       },
       {
-        id: 'grow-m3',
-        milestoneNumber: 3,
-        title: 'Future Plans: Will vs Be Going To & Modals',
+        sessionNumber: 5,
         level: 'A2',
-        targetSessions: 3,
-        description: 'Menyatakan rencana masa depan, janji spontan, prediksi, serta penggunaan modal verbs (can, must, should).',
-        materials: 'Will vs Be Going To contrast charts, modal auxiliary verbs for ability & advice.',
+        title: 'Past Continuous & Interrupted Actions with When / While',
+        description: 'Menjelaskan peristiwa masa lalu yang sedang berlangsung saat kejadian lain terjadi (was/were + V-ing).',
         status: 'LOCKED',
-        checklists: [
-          { id: 'grow-c3-1', text: 'Membedakan rencana yang sudah terjadwal vs keputusan spontan', completed: false },
-          { id: 'grow-c3-2', text: 'Memberikan saran kepada teman menggunakan should/ought to', completed: false },
-          { id: 'grow-c3-3', text: 'Simulasi percakapan rencana akhir pekan bersama tutor', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-29'
       },
       {
-        id: 'grow-m4',
-        milestoneNumber: 4,
-        title: 'Situational Roleplay & Mid-Program Evaluation',
+        sessionNumber: 6,
         level: 'A2',
-        targetSessions: 3,
-        description: 'Integrasi seluruh tenses A2 dalam simulasi percakapan nyata (restoran, belanja, bertanya arah jalan).',
-        materials: 'Real-world dialogues, ordering food scripts, giving directions maps & vocab.',
+        title: 'Future Plans: Will vs Be Going To Contrast',
+        description: 'Membedakan keputusan spontan (will) dengan rencana masa depan yang sudah diniatkan (be going to).',
         status: 'LOCKED',
-        checklists: [
-          { id: 'grow-c4-1', text: 'Roleplay pemesanan makanan dan transaksi perbelanjaan', completed: false },
-          { id: 'grow-c4-2', text: 'Percakapan navigasi dan penunjuk arah secara akurat', completed: false },
-          { id: 'grow-c4-3', text: 'Evaluasi performa lisan dan penyusunan catatan kemajuan', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-09-05'
+      },
+      {
+        sessionNumber: 7,
+        level: 'A2',
+        title: 'Modal Verbs: Can, Could, May & Polite Requests',
+        description: 'Mengungkapkan kemampuan, izin formal, dan permintaan bantuan yang sopan dalam percakapan nyata.',
+        status: 'LOCKED',
+        date: '2026-09-12'
+      },
+      {
+        sessionNumber: 8,
+        level: 'A2',
+        title: 'Giving Directions, Spatial Maps & City Navigation',
+        description: 'Memberi dan menanyakan petunjuk arah jalan (turn left, go straight, cross the street) dengan denah peta.',
+        status: 'LOCKED',
+        date: '2026-09-19'
+      },
+      {
+        sessionNumber: 9,
+        level: 'A2',
+        title: 'Dining Out, Ordering Food & Restaurant Etiquette Dialogues',
+        description: 'Simulasi memesan menu di restoran, menanyakan rekomendasi chef, hingga proses pembayaran tagihan.',
+        status: 'LOCKED',
+        date: '2026-09-26'
+      },
+      {
+        sessionNumber: 10,
+        level: 'A2',
+        title: 'Shopping, Bargaining & Retail Transaction Expressions',
+        description: 'Percakapan membeli pakaian, menanyakan ukuran/warna, perbandingan harga, dan prosedur transaksi toko.',
+        status: 'LOCKED',
+        date: '2026-10-03'
+      },
+      {
+        sessionNumber: 11,
+        level: 'A2',
+        title: 'Travel, Weather & Vacation Storytelling Roleplay',
+        description: 'Mendiskusikan prakiraan cuaca, rencana liburan ke luar kota, dan reservasi hotel secara mandiri.',
+        status: 'LOCKED',
+        date: '2026-10-10'
+      },
+      {
+        sessionNumber: 12,
+        level: 'A2',
+        title: 'Comprehensive A2 Speaking Evaluation & Batch 1 Progress Review',
+        description: 'Evaluasi performa lisan terpadu, pengukuran kelancaran speaking, serta penetapan target batch berikutnya.',
+        status: 'LOCKED',
+        date: '2026-10-17'
       }
     ]
   },
@@ -146,77 +221,106 @@ export const CURRICULUM_PRESETS = {
   BOOST: {
     tier: 'BOOST',
     label: 'BOOST — Intermediate Competency & Fluency Accelerator',
-    level: 'B1 - Intermediate',
-    targetDuration: '3 Bulan (24 Sesi)',
+    level: 'B1',
+    defaultSessionsPerMonth: 8,
+    defaultDurationMonths: 3,
     description: 'Peningkatan kemampuan analisis teks, Present Perfect, Conditional Sentences, dan diskusi bertema opini.',
-    milestones: [
+    sessions: [
       {
-        id: 'boost-m1',
-        milestoneNumber: 1,
-        title: 'Present Perfect Tense & Life Experiences',
+        sessionNumber: 1,
         level: 'B1',
-        targetSessions: 6,
-        description: 'Penguasaan Have/Has + V3, time signals (since, for, ever, never, already, yet) untuk pengalaman hidup.',
-        materials: 'Present Perfect vs Simple Past matrix, V3 past participles, conversation triggers.',
+        title: 'Present Perfect Tense & Life Experiences (Have/Has + V3)',
+        description: 'Membahas pengalaman hidup dengan time signals: ever, never, already, yet, just, since, dan for.',
+        status: 'COMPLETED',
+        date: '2026-08-01'
+      },
+      {
+        sessionNumber: 2,
+        level: 'B1',
+        title: 'Present Perfect vs Simple Past Critical Distinctions',
+        description: 'Latihan mendalam membedakan kejadian yang masih berdampak di masa kini vs peristiwa lampau definitif.',
+        status: 'COMPLETED',
+        date: '2026-08-05'
+      },
+      {
+        sessionNumber: 3,
+        level: 'B1',
+        title: 'Present Perfect Continuous: Duration & Ongoing Efforts',
+        description: 'Menjelaskan aktivitas yang telah dan masih terus berlangsung hingga saat ini (have been + V-ing).',
         status: 'IN_PROGRESS',
-        checklists: [
-          { id: 'boost-c1-1', text: 'Membedakan Simple Past vs Present Perfect dalam konteks percakapan', completed: true },
-          { id: 'boost-c1-2', text: 'Menyusun dialog wawancara pengalaman kerja atau prestasi', completed: false },
-          { id: 'boost-c1-3', text: 'Kuis tata bahasa Present Perfect skor minimal 85%', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-08'
       },
       {
-        id: 'boost-m2',
-        milestoneNumber: 2,
-        title: 'Conditional Sentences (Types 0, 1 & 2)',
+        sessionNumber: 4,
         level: 'B1',
-        targetSessions: 6,
-        description: 'Mengungkapkan fakta umum, kemungkinan masa depan, dan pengandaian imajinatif (if clauses).',
-        materials: 'Zero, First & Second Conditional syntax formulas, hypothetical speaking prompts.',
+        title: 'Comparatives & Superlatives with Irregular Adjectives',
+        description: 'Membandingkan objek, tempat, dan kualitas menggunakan as...as, -er/more, dan the most.',
         status: 'LOCKED',
-        checklists: [
-          { id: 'boost-c2-1', text: 'Menjelaskan sebab-akibat ilmiah dengan Zero Conditional', completed: false },
-          { id: 'boost-c2-2', text: 'Membuat janji bersyarat dengan First Conditional', completed: false },
-          { id: 'boost-c2-3', text: 'Diskusi pengandaian "If I ruled the world..." dengan Second Conditional', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-12'
       },
       {
-        id: 'boost-m3',
-        milestoneNumber: 3,
-        title: 'Passive Voice & Technical Sentence Structure',
+        sessionNumber: 5,
         level: 'B1',
-        targetSessions: 6,
-        description: 'Mengubah kalimat aktif menjadi pasif di berbagai tenses untuk keperluan penulisan formal dan berita.',
-        materials: 'Passive voice conversion table (be + V3), agent "by", formal journalistic texts.',
+        title: 'Zero & First Conditional: Real Possibilities & Scientific Facts',
+        description: 'Menyusun kalimat sebab-akibat nyata dan janji masa depan dengan klausa if + present simple.',
         status: 'LOCKED',
-        checklists: [
-          { id: 'boost-c3-1', text: 'Mengubah 15 kalimat aktif menjadi bentuk pasif dengan tepat', completed: false },
-          { id: 'boost-c3-2', text: 'Membaca dan menganalisis struktur artikel berita pendek', completed: false },
-          { id: 'boost-c3-3', text: 'Menulis deskripsi proses manufaktur/alam dalam bentuk pasif', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-15'
       },
       {
-        id: 'boost-m4',
-        milestoneNumber: 4,
-        title: 'Thematic Debate & Academic Essay Drafting',
+        sessionNumber: 6,
         level: 'B1',
-        targetSessions: 6,
-        description: 'Membangun argumen logis dalam debat terarah dan menyusun esai terstruktur 3 paragraf.',
-        materials: 'Connectors & transitional words, opinion debate topics, paragraph development guides.',
+        title: 'Second Conditional: Hypothetical Situations & Dreams',
+        description: 'Mengungkapkan pengandaian imajinatif masa kini dan saran bijak (If I were you, I would...).',
         status: 'LOCKED',
-        checklists: [
-          { id: 'boost-c4-1', text: 'Menyampaikan argumen pro/kontra dengan konjungsi transisi yang tepat', completed: false },
-          { id: 'boost-c4-2', text: 'Menyusun draf esai opini dengan Topic Sentence yang kuat', completed: false },
-          { id: 'boost-c4-3', text: 'Ujian komprehensif lisan & tulisan tingkat Intermediate', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-19'
+      },
+      {
+        sessionNumber: 7,
+        level: 'B1',
+        title: 'Passive Voice in Present & Past Tenses',
+        description: 'Mengubah fokus kalimat dari pelaku ke objek tindakan (be + V3) untuk kebutuhan teks laporan.',
+        status: 'LOCKED',
+        date: '2026-08-22'
+      },
+      {
+        sessionNumber: 8,
+        level: 'B1',
+        title: 'Modal Verbs of Obligation, Deduction & Prohibition (Must, Should, Have to)',
+        description: 'Menyatakan kewajiban mutlak, larangan keras, deduksi logis, dan anjuran sopan.',
+        status: 'LOCKED',
+        date: '2026-08-26'
+      },
+      {
+        sessionNumber: 9,
+        level: 'B1',
+        title: 'Relative Clauses: Defining (Who, Which, That, Whose)',
+        description: 'Menggabungkan dua kalimat menjadi satu kalimat informatif dan efisien tanpa pengulangan kata.',
+        status: 'LOCKED',
+        date: '2026-08-29'
+      },
+      {
+        sessionNumber: 10,
+        level: 'B1',
+        title: 'Used to vs Be Used to vs Get Used to Adaptations',
+        description: 'Membedakan kebiasaan masa lalu yang sudah berhenti vs adaptasi kebiasaan baru di masa sekarang.',
+        status: 'LOCKED',
+        date: '2026-09-02'
+      },
+      {
+        sessionNumber: 11,
+        level: 'B1',
+        title: 'Thematic Debate: Expressing & Defending Opinions',
+        description: 'Teknik menyatakan persetujuan, sanggahan santun, dan mempertahankan argumen dalam diskusi kelompok.',
+        status: 'LOCKED',
+        date: '2026-09-05'
+      },
+      {
+        sessionNumber: 12,
+        level: 'B1',
+        title: 'Mid-Batch Intermediate Assessment & Fluency Checkpoint',
+        description: 'Ujian komprehensif evaluasi tata bahasa B1 dan uji kelancaran berbicara dua arah.',
+        status: 'LOCKED',
+        date: '2026-09-09'
       }
     ]
   },
@@ -224,78 +328,156 @@ export const CURRICULUM_PRESETS = {
   MASTER: {
     tier: 'MASTER',
     label: 'MASTER — Advanced Academic Mentoring & Professional Communication',
-    level: 'B2 - Upper Intermediate / Advanced',
-    targetDuration: '3 Bulan (24 Sesi / 90 Menit)',
+    level: 'B2',
+    defaultSessionsPerMonth: 8,
+    defaultDurationMonths: 3,
     description: 'Program persiapan TOEFL/IELTS, presentasi profesional, analisis wacana kritis, dan retorika bahasa tingkat tinggi.',
-    milestones: [
+    sessions: [
       {
-        id: 'master-m1',
-        milestoneNumber: 1,
-        title: 'Complex Sentences, Relative Clauses & Inversion',
+        sessionNumber: 1,
         level: 'B2',
-        targetSessions: 6,
-        description: 'Membangun kalimat bertingkat dengan Relative Pronouns (who, which, whose, whom) dan variasi kalimat inversi.',
-        materials: 'Defining vs Non-defining relative clauses, negative inversion patterns, academic syntax.',
+        title: 'Advanced Sentence Inversion & Emphatic Structures',
+        description: 'Membangun gaya bahasa formal berbobot sastra/akademik menggunakan Rarely, Seldom, Not only did he...',
+        status: 'COMPLETED',
+        date: '2026-08-01'
+      },
+      {
+        sessionNumber: 2,
+        level: 'B2',
+        title: 'Third Conditional & Mixed Conditionals in Regrets',
+        description: 'Menganalisis pengandaian masa lalu dan dampaknya pada kondisi saat ini secara mendalam.',
+        status: 'COMPLETED',
+        date: '2026-08-05'
+      },
+      {
+        sessionNumber: 3,
+        level: 'B2',
+        title: 'Subjunctive Mood & Formal Decision-Making Clauses',
+        description: 'Struktur bahasa diplomasi dan rekomendasi institusional (It is crucial that he be present).',
         status: 'IN_PROGRESS',
-        checklists: [
-          { id: 'master-c1-1', text: 'Menggabungkan 2 klausa kompleks dengan Relative Clauses secara presisi', completed: true },
-          { id: 'master-c1-2', text: 'Menggunakan pola inversi untuk penekanan makna dalam tulisan formal', completed: false },
-          { id: 'master-c1-3', text: 'Analisis struktur kalimat pada jurnal akademik berbahasa Inggris', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-08'
       },
       {
-        id: 'master-m2',
-        milestoneNumber: 2,
-        title: 'Professional Presentation & Public Speaking Rhetoric',
+        sessionNumber: 4,
         level: 'B2',
-        targetSessions: 6,
-        description: 'Teknik presentasi bisnis/ilmiah, bahasa visualisasi data, transisi slide yang mulus, dan penanganan sesi Q&A.',
-        materials: 'Presentation signposting language, data commentary vocabs, pitch delivery frameworks.',
+        title: 'Signposting Language for Executive Public Speaking',
+        description: 'Teknik pemandu alur presentasi profesional, pengantar data, transisi ide, dan persuasi audiens.',
         status: 'LOCKED',
-        checklists: [
-          { id: 'master-c2-1', text: 'Menyampaikan presentasi 10 menit dengan slide visual berbahasa Inggris', completed: false },
-          { id: 'master-c2-2', text: 'Menjelaskan grafik dan diagram data menggunakan diksi analitis yang tepat', completed: false },
-          { id: 'master-c2-3', text: 'Menjawab pertanyaan sanggahan audiens secara tanggap dan sopan', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-12'
       },
       {
-        id: 'master-m3',
-        milestoneNumber: 3,
-        title: 'Standardized Test Mastery (TOEFL/IELTS Prep)',
+        sessionNumber: 5,
         level: 'B2',
-        targetSessions: 6,
-        description: 'Strategi pengerjaan soal Reading, Listening, Speaking, and Writing terstandarisasi internasional.',
-        materials: 'Skimming/Scanning speed drills, listening paraphrase recognition, IELTS Task 2 templates.',
+        title: 'Academic Graph & Trend Analysis (IELTS Writing Task 1 Focus)',
+        description: 'Diksi presisi untuk menggambarkan fluktuasi data, peningkatan drastis, perbandingan persentase.',
         status: 'LOCKED',
-        checklists: [
-          { id: 'master-c3-1', text: 'Simulasi tes TOEFL/IELTS Reading & Listening', completed: false },
-          { id: 'master-c3-2', text: 'Menulis esai argumentatif akademik 250 kata dalam 40 menit', completed: false },
-          { id: 'master-c3-3', text: 'Simulasi speaking interview one-on-one bersama instruktur', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-15'
       },
       {
-        id: 'master-m4',
-        milestoneNumber: 4,
-        title: 'Capstone Defense & Final Academic Portfolio',
+        sessionNumber: 6,
         level: 'B2',
-        targetSessions: 6,
-        description: 'Penyusunan portofolio akademik menyeluruh, presentasi akhir (Capstone project), dan sertifikasi kelulusan.',
-        materials: 'Academic portfolio guidelines, capstone project rubrics, graduation evaluation criteria.',
+        title: 'Critical Essay Structuring & Thesis Statement Defense',
+        description: 'Menyusun argumen akademis berbasis fakta dengan paragraph transition yang kohesif dan koheren.',
         status: 'LOCKED',
-        checklists: [
-          { id: 'master-c4-1', text: 'Menyelesaikan portofolio tulisan esai dan materi modul lengkap', completed: false },
-          { id: 'master-c4-2', text: 'Sidang presentasi capstone di hadapan Academic Director', completed: false },
-          { id: 'master-c4-3', text: 'Penerbitan sertifikat kelulusan dan laporan evaluasi akhir resmi', completed: false }
-        ],
-        linkedModuleId: null,
-        evaluationNotes: ''
+        date: '2026-08-19'
+      },
+      {
+        sessionNumber: 7,
+        level: 'B2',
+        title: 'Discourse Markers & Nuanced Conversational Flow',
+        description: 'Menggunakan ungkapan penghubung alami (frankly speaking, nevertheless, as far as I am concerned).',
+        status: 'LOCKED',
+        date: '2026-08-22'
+      },
+      {
+        sessionNumber: 8,
+        level: 'B2',
+        title: 'Standardized Speed Reading: Skimming & Scanning Drills',
+        description: 'Strategi menjawab soal wacana panjang TOEFL/IELTS dalam batas waktu ketat tanpa kehilangan akurasi.',
+        status: 'LOCKED',
+        date: '2026-08-26'
+      },
+      {
+        sessionNumber: 9,
+        level: 'B2',
+        title: 'Paraphrasing & Academic Synthesis without Plagiarism',
+        description: 'Menulis ulang ide gagasan orang lain dengan struktur kalimat berbeda tanpa mengubah esensi makna.',
+        status: 'LOCKED',
+        date: '2026-08-29'
+      },
+      {
+        sessionNumber: 10,
+        level: 'B2',
+        title: 'Advanced Idioms, Collocations & Phrasal Verbs in Context',
+        description: 'Memperkaya ekspresi bahasa alami dengan 40+ kolokasi profesional dan ungkapan idiomatik tingkat tinggi.',
+        status: 'LOCKED',
+        date: '2026-09-02'
+      },
+      {
+        sessionNumber: 11,
+        level: 'B2',
+        title: 'Mock Interview & Impromptu Speech Simulation',
+        description: 'Latihan menjawab pertanyaan mendadak di hadapan panel penilai dengan struktur berpikir STAR.',
+        status: 'LOCKED',
+        date: '2026-09-05'
+      },
+      {
+        sessionNumber: 12,
+        level: 'B2',
+        title: 'Capstone Defense & Final Academic Certification',
+        description: 'Presentasi akhir proyek capstone bahasa Inggris dan penerbitan transkrip capaian Batch 1.',
+        status: 'LOCKED',
+        date: '2026-09-09'
       }
     ]
   }
+}
+
+/**
+ * Generate a complete list of sessions tailored to student's sessionsPerMonth and durationMonths.
+ * @param {string} tier 'SEED' | 'GROW' | 'BOOST' | 'MASTER'
+ * @param {number} sessionsPerMonth e.g. 4
+ * @param {number} durationMonths e.g. 3
+ * @param {string|Date} startDate e.g. '2026-08-01'
+ * @returns {Array} List of session objects
+ */
+export const generateBatchSessions = (
+  tier = 'GROW',
+  sessionsPerMonth = 4,
+  durationMonths = 3,
+  startDate = new Date()
+) => {
+  const selectedTier = CURRICULUM_PRESETS[tier] || CURRICULUM_PRESETS.GROW
+  const totalNeeded = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
+  const pool = selectedTier.sessions || []
+
+  const baseDate = startDate instanceof Date ? startDate : new Date(startDate || Date.now())
+  const results = []
+
+  for (let i = 0; i < totalNeeded; i++) {
+    const template = pool[i % pool.length]
+    const cycle = Math.floor(i / pool.length)
+    const sessionDate = new Date(baseDate)
+    sessionDate.setDate(baseDate.getDate() + (i * 7)) // 1 session every 7 days
+
+    const yyyy = sessionDate.getFullYear()
+    const mm = String(sessionDate.getMonth() + 1).padStart(2, '0')
+    const dd = String(sessionDate.getDate()).padStart(2, '0')
+    const dateStr = `${yyyy}-${mm}-${dd}`
+
+    const titleSuffix = cycle > 0 ? ` (Part ${cycle + 1})` : ''
+
+    results.push({
+      id: `session-${String(i + 1).padStart(2, '0')}`,
+      sessionNumber: i + 1,
+      level: template.level || selectedTier.level,
+      title: `${template.title}${titleSuffix}`,
+      description: template.description || 'Fokus materi pembelajaran dan praktik aktif.',
+      status: i === 0 ? 'COMPLETED' : i === 1 ? 'IN_PROGRESS' : 'LOCKED',
+      date: dateStr,
+      linkedModuleId: null
+    })
+  }
+
+  return results
 }

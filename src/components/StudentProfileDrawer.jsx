@@ -18,7 +18,6 @@ import {
 } from 'lucide-react'
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
-import RoadmapMetroGraph from './roadmap/RoadmapMetroGraph'
 import { calculateOverallRoadmapProgress } from '../utils/roadmapCalculator'
 
 export default function StudentProfileDrawer({
@@ -359,36 +358,55 @@ export default function StudentProfileDrawer({
                 )}
               </div>
 
-              {student.roadmap && Array.isArray(student.roadmap.milestones) && student.roadmap.milestones.length > 0 ? (
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-800">{student.roadmap.moduleTitle || 'Kurikulum Bahasa Inggris'}</span>
-                    <span className="font-mono text-xs font-bold text-fluent-blue">
-                      {calculateOverallRoadmapProgress(student.roadmap.milestones).percentage}% Selesai
-                    </span>
+              {(() => {
+                const sessions = student.roadmap && Array.isArray(student.roadmap.sessions) ? student.roadmap.sessions : []
+                const stats = calculateOverallRoadmapProgress(sessions)
+
+                if (sessions.length > 0) {
+                  return (
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-800">
+                          {student.roadmap.batchName || 'BATCH 1'} — Level {student.roadmap.level || 'A2'}
+                        </span>
+                        <span className="font-mono text-xs font-bold text-emerald-700">
+                          {stats.completedCount}/{stats.totalSessions} Sesi ({stats.percentage}%)
+                        </span>
+                      </div>
+
+                      <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                          style={{ width: `${stats.percentage}%` }}
+                        />
+                      </div>
+
+                      <div className="text-[11px] text-slate-500 flex justify-between">
+                        <span>Sedang Berjalan: {stats.inProgressCount} Sesi</span>
+                        <span>Belum Mulai: {stats.lockedCount} Sesi</span>
+                      </div>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className="p-3 bg-fluent-subtle rounded border border-fluent-border text-xs flex items-center justify-between">
+                    <span className="text-fluent-textSecondary italic">Kurikulum 1-Batch aktif untuk paket {student.packageType}.</span>
+                    {onOpenRoadmap && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onOpenRoadmap(student)
+                          onClose()
+                        }}
+                        className="px-2.5 py-1 bg-white border border-slate-200 text-fluent-blue hover:bg-blue-50 rounded font-semibold text-[10px]"
+                      >
+                        Buka Studio
+                      </button>
+                    )}
                   </div>
-                  <RoadmapMetroGraph
-                    milestones={student.roadmap.milestones}
-                    readOnly={true}
-                  />
-                </div>
-              ) : (
-                <div className="p-3 bg-fluent-subtle rounded border border-fluent-border text-xs flex items-center justify-between">
-                  <span className="text-fluent-textSecondary italic">Kurikulum default aktif untuk paket {student.packageType}.</span>
-                  {onOpenRoadmap && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onOpenRoadmap(student)
-                        onClose()
-                      }}
-                      className="px-2.5 py-1 bg-white border border-slate-200 text-fluent-blue hover:bg-blue-50 rounded font-semibold text-[10px]"
-                    >
-                      Kustomisasi
-                    </button>
-                  )}
-                </div>
-              )}
+                )
+              })()}
             </div>
 
             {/* Riwayat Rapor & Evaluasi Berkala */}

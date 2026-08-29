@@ -2,29 +2,31 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 
 /**
- * High-definition PNG export for Roadmap Metro Graph
- * @param {HTMLElement|string} targetElement
+ * High-definition PNG export for Roadmap Document
+ * @param {HTMLElement|string} target
  * @param {Object} roadmapMeta
  * @returns {Promise<string>} Filename
  */
-export const exportRoadmapToPng = async (targetElement, roadmapMeta = {}) => {
-  const element = typeof targetElement === 'string'
-    ? document.getElementById(targetElement)
-    : targetElement
+export const exportRoadmapToPng = async (target, roadmapMeta = {}) => {
+  const element = typeof target === 'string'
+    ? document.getElementById(target)
+    : target
 
-  if (!element) {
-    throw new Error('Element target untuk ekspor Roadmap PNG tidak ditemukan')
-  }
+  if (!element) return
 
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
     logging: false,
-    backgroundColor: '#FFFFFF'
+    backgroundColor: '#ffffff',
+    scrollX: 0,
+    scrollY: 0,
+    windowWidth: 1200
   })
 
   const studentName = (roadmapMeta.studentName || 'Siswa').replace(/[^a-zA-Z0-9]/g, '_')
-  const filename = `Roadmap_KavioEdu_${studentName}.png`
+  const batchName = (roadmapMeta.batchName || 'Batch1').replace(/[^a-zA-Z0-9]/g, '_')
+  const filename = `Roadmap_KavioEdu_${studentName}_${batchName}.png`
 
   const link = document.createElement('a')
   link.download = filename
@@ -35,25 +37,25 @@ export const exportRoadmapToPng = async (targetElement, roadmapMeta = {}) => {
 }
 
 /**
- * High-definition PDF export for Roadmap Metro Graph
- * @param {HTMLElement|string} targetElement
+ * High-definition PDF export for Roadmap Document
+ * @param {HTMLElement|string} target
  * @param {Object} roadmapMeta
  * @returns {Promise<string>} Filename
  */
-export const exportRoadmapToPdf = async (targetElement, roadmapMeta = {}) => {
-  const element = typeof targetElement === 'string'
-    ? document.getElementById(targetElement)
-    : targetElement
+export const exportRoadmapToPdf = async (target, roadmapMeta = {}) => {
+  const element = typeof target === 'string'
+    ? document.getElementById(target)
+    : target
 
-  if (!element) {
-    throw new Error('Element target untuk ekspor Roadmap PDF tidak ditemukan')
-  }
+  if (!element) return
 
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
     logging: false,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
+    scrollX: 0,
+    scrollY: 0,
     windowWidth: 1200
   })
 
@@ -65,16 +67,17 @@ export const exportRoadmapToPdf = async (targetElement, roadmapMeta = {}) => {
     compress: true
   })
 
-  const pdfWidth = pdf.internal.pageSize.getWidth()
-  const pdfHeight = pdf.internal.pageSize.getHeight()
+  const pdfWidth = pdf.internal.pageSize.getWidth() // 210mm
+  const pdfHeight = pdf.internal.pageSize.getHeight() // 297mm
 
   const imgHeight = (canvas.height * pdfWidth) / canvas.width
-  const finalHeight = Math.min(imgHeight, pdfHeight)
+  const renderHeight = Math.min(imgHeight, pdfHeight)
 
-  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalHeight, undefined, 'FAST')
+  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, renderHeight, undefined, 'FAST')
 
   const studentName = (roadmapMeta.studentName || 'Siswa').replace(/[^a-zA-Z0-9]/g, '_')
-  const filename = `Roadmap_KavioEdu_${studentName}.pdf`
+  const batchName = (roadmapMeta.batchName || 'Batch1').replace(/[^a-zA-Z0-9]/g, '_')
+  const filename = `Roadmap_KavioEdu_${studentName}_${batchName}.pdf`
 
   pdf.save(filename)
   return filename

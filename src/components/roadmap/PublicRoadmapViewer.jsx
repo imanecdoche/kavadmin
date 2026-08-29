@@ -1,8 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { Download, Printer, Share2, Check, ArrowLeft, BookOpen, Layers, Clock, ShieldCheck } from 'lucide-react'
-import RoadmapMetroGraph from './RoadmapMetroGraph'
+import { Download, Printer, Share2, Check, ArrowLeft, BookOpen, ShieldCheck } from 'lucide-react'
+import RoadmapBatchDocument from './RoadmapBatchDocument'
 import { parseRoadmapShareLink } from '../../utils/roadmapShare'
-import { calculateOverallRoadmapProgress, getAcademicLevelBadge } from '../../utils/roadmapCalculator'
 import { exportRoadmapToPng, exportRoadmapToPdf } from '../../utils/roadmapExport'
 
 export default function PublicRoadmapViewer({ roadmapData: propData, onBack = null }) {
@@ -75,14 +74,10 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
     )
   }
 
-  const milestones = Array.isArray(data.milestones) ? data.milestones : []
-  const stats = calculateOverallRoadmapProgress(milestones)
-  const levelBadge = getAcademicLevelBadge(data.level)
-
   return (
     <div className="min-h-screen bg-slate-100 py-6 px-3 sm:px-6 flex flex-col items-center">
       {/* Top Navbar Toolbar */}
-      <div className="w-full max-w-3xl bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 no-print">
+      <div className="w-full max-w-[820px] bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 no-print">
         <div className="flex items-center space-x-2">
           {onBack && (
             <button
@@ -96,10 +91,10 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
           <ShieldCheck className="w-5 h-5 text-fluent-blue" />
           <div>
             <div className="text-xs font-bold text-slate-900">
-              Peta Kurikulum & Capaian Belajar Siswa
+              Peta Kurikulum & Capaian Belajar Siswa (1-Batch)
             </div>
-            <div className="text-[10px] text-slate-500 font-medium">
-              Kavio Edu Academic Mentoring
+            <div className="text-[10px] text-slate-500 font-medium font-mono">
+              ID: {data.id || 'ROA/KEEN'}
             </div>
           </div>
         </div>
@@ -150,67 +145,13 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
         </div>
       </div>
 
-      {/* Main Roadmap Document */}
-      <div
-        ref={containerRef}
-        className="w-full max-w-3xl bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200 space-y-6 pb-12"
-      >
-        {/* Header Profile */}
-        <div className="border-b border-slate-200 pb-5 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs font-black uppercase px-2.5 py-1 rounded bg-slate-900 text-white font-mono">
-              Paket {data.packageTier || 'GROW'}
-            </span>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded border uppercase font-mono ${levelBadge.badgeClass}`}>
-              {data.level || 'Level A1'}
-            </span>
-          </div>
-
-          <div>
-            <h1 className="text-lg sm:text-xl font-extrabold text-slate-900">
-              {data.studentName}
-            </h1>
-            <p className="text-xs text-fluent-blue font-semibold mt-0.5">
-              {data.moduleTitle || 'Kurikulum Bahasa Inggris'}
-            </p>
-          </div>
-
-          {/* Stats Bar */}
-          <div className="grid grid-cols-3 gap-3 pt-2 text-xs">
-            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Total Milestone</span>
-              <span className="font-extrabold text-slate-800 text-sm">{stats.totalMilestones} Tahapan</span>
-            </div>
-            <div className="p-2.5 bg-emerald-50 rounded-lg border border-emerald-200 text-center">
-              <span className="text-[10px] text-emerald-700 font-bold uppercase block">Selesai</span>
-              <span className="font-extrabold text-emerald-800 text-sm">{stats.completedCount} Milestone</span>
-            </div>
-            <div className="p-2.5 bg-blue-50 rounded-lg border border-blue-200 text-center">
-              <span className="text-[10px] text-fluent-blue font-bold uppercase block">Progres</span>
-              <span className="font-extrabold text-blue-900 text-sm">{stats.percentage}%</span>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-fluent-blue to-emerald-500"
-              style={{ width: `${stats.percentage}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Metro-Line Graph */}
-        <RoadmapMetroGraph
-          milestones={milestones}
+      {/* Main A4 Printable Roadmap Document */}
+      <div className="w-full overflow-x-auto flex justify-center pb-12">
+        <RoadmapBatchDocument
+          roadmapData={data}
+          previewRef={containerRef}
           readOnly={true}
         />
-
-        {/* Footer */}
-        <div className="pt-6 border-t border-slate-200 text-center text-xs text-slate-400">
-          <p>© 2026 Kavio Edu — Private English Class & Academic Mentoring</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Founder & Academic Director: Fatih Farhat Asshidiq</p>
-        </div>
       </div>
     </div>
   )

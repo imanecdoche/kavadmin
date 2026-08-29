@@ -8,25 +8,27 @@ import {
   Printer,
   Copy,
   Check,
-  CheckCircle2,
-  Clock,
+  Calendar,
   Layers,
-  Award,
-  ChevronDown,
+  Clock,
   User,
   MessageCircle,
   Save,
-  Trash2
+  RotateCcw,
+  Sliders,
+  Trash2,
+  Edit3
 } from 'lucide-react'
-import RoadmapMetroGraph from './RoadmapMetroGraph'
-import MilestoneDetailDrawer from './MilestoneDetailDrawer'
+import RoadmapBatchDocument from './RoadmapBatchDocument'
+import SessionDetailDrawer from './SessionDetailDrawer'
 import RoadmapPresetSelector from './RoadmapPresetSelector'
-import CustomMilestoneModal from './CustomMilestoneModal'
-import { CURRICULUM_PRESETS } from '../../utils/curriculumPresets'
+import CustomSessionModal from './CustomSessionModal'
+import { CURRICULUM_PRESETS, generateBatchSessions } from '../../utils/curriculumPresets'
 import {
   calculateOverallRoadmapProgress,
+  calculateBatchSessionCount,
   autoAdvanceRoadmap,
-  getAcademicLevelBadge
+  formatSessionNumber
 } from '../../utils/roadmapCalculator'
 import { generateRoadmapShareLink, generateRoadmapWhatsAppMessage } from '../../utils/roadmapShare'
 import { exportRoadmapToPng, exportRoadmapToPdf } from '../../utils/roadmapExport'
@@ -40,7 +42,7 @@ export default function StudentRoadmapStudio({
   onOpenModule = null,
   onSaveRoadmap = null
 }) {
-  const roadmapContainerRef = useRef(null)
+  const previewRef = useRef(null)
 
   // Find active student
   const activeStudent = useMemo(() => {
@@ -52,125 +54,126 @@ export default function StudentRoadmapStudio({
     return students[0]
   }, [students, selectedStudentId])
 
-  // Roadmap State for active student
-  const [milestones, setMilestones] = useState([])
-  const [activeLevel, setActiveLevel] = useState('Level A1 - Beginner')
-  const [moduleTitle, setModuleTitle] = useState('Kurikulum Bahasa Inggris')
-  const [targetDuration, setTargetDuration] = useState('3 Bulan')
+  // Roadmap Document Meta State
+  const [docId, setDocId] = useState('ROA/KEEN/202608/0001')
+  const [batchName, setBatchName] = useState('BATCH 1')
+  const [sessionsPerMonth, setSessionsPerMonth] = useState(4)
+  const [durationMonths, setDurationMonths] = useState(3)
+  const [level, setLevel] = useState('A2')
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [sessions, setSessions] = useState([])
 
-  // Modals & Drawers state
-  const [activeMilestone, setActiveMilestone] = useState(null)
+  // Modals & Drawers
+  const [activeSession, setActiveSession] = useState(null)
   const [showPresetModal, setShowPresetModal] = useState(false)
   const [showCustomModal, setShowCustomModal] = useState(false)
-  const [editingMilestone, setEditingMilestone] = useState(null)
+  const [editingSession, setEditingSession] = useState(null)
 
-  // Feedback states
+  // Feedback State
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedWA, setCopiedWA] = useState(false)
   const [isExportingPng, setIsExportingPng] = useState(false)
   const [isExportingPdf, setIsExportingPdf] = useState(false)
 
-  // Load student's roadmap on student change
+  // Load student's roadmap on active student change
   useEffect(() => {
     if (activeStudent) {
       const tier = activeStudent.packageType || 'GROW'
-      const defaultPreset = CURRICULUM_PRESETS[tier] || CURRICULUM_PRESETS.GROW
+      const sPerM = Number(activeStudent.sessionsPerMonth) || 4
+      const durM = Number(activeStudent.durationMonths) || 3
 
-      if (activeStudent.roadmap && Array.isArray(activeStudent.roadmap.milestones) && activeStudent.roadmap.milestones.length > 0) {
-        setMilestones(activeStudent.roadmap.milestones)
-        setActiveLevel(activeStudent.roadmap.level || defaultPreset.level)
-        setModuleTitle(activeStudent.roadmap.moduleTitle || defaultPreset.label)
-        setTargetDuration(activeStudent.roadmap.targetDuration || defaultPreset.targetDuration)
+      setSessionsPerMonth(sPerM)
+      setDurationMonths(durM)
+
+      if (activeStudent.roadmap && Array.isArray(activeStudent.roadmap.sessions) && activeStudent.roadmap.sessions.length > 0) {
+        setDocId(activeStudent.roadmap.id || `ROA/KEEN/${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2, '0')}/${Math.floor(Math.random()*9000)+1000}`)
+        setBatchName(activeStudent.roadmap.batchName || 'BATCH 1')
+        setLevel(activeStudent.roadmap.level || (CURRICULUM_PRESETS[tier]?.level || 'A2'))
+        setSessions(activeStudent.roadmap.sessions)
       } else {
-        // Initialize from preset
-        setMilestones(JSON.parse(JSON.stringify(defaultPreset.milestones)))
-        setActiveLevel(defaultPreset.level)
-        setModuleTitle(defaultPreset.label)
-        setTargetDuration(defaultPreset.targetDuration)
+        // Generate initial sessions from preset based on (sessionsPerMonth * durationMonths)
+        const initialList = generateBatchSessions(tier, sPerM, durM, startDate)
+        setSessions(initialList)
+        setBatchName('BATCH 1')
+        setLevel(CURRICULUM_PRESETS[tier]?.level || 'A2')
       }
     }
   }, [activeStudent?.id])
 
-  // Calculated Progress
-  const stats = useMemo(() => calculateOverallRoadmapProgress(milestones), [milestones])
-  const levelBadge = useMemo(() => getAcademicLevelBadge(activeLevel), [activeLevel])
+  // Calculated Progress & Total Sessions
+  const totalCalculatedSessions = calculateBatchSessionCount(sessionsPerMonth, durationMonths)
+  const stats = useMemo(() => calculateOverallRoadmapProgress(sessions), [sessions])
 
-  // Assembled Roadmap Object
-  const currentRoadmapData = {
+  // Assembled Roadmap Payload
+  const roadmapPayload = {
+    id: docId,
     studentId: activeStudent?.id || '',
-    studentName: activeStudent?.name || 'Siswa',
-    parentName: activeStudent?.parentName || '',
+    studentName: activeStudent?.name || 'Nama Siswa',
+    guardianName: activeStudent?.parentName || '-',
     packageTier: activeStudent?.packageType || 'GROW',
-    targetDuration,
-    level: activeLevel,
-    moduleTitle,
-    milestones,
+    batchName,
+    durationMonths,
+    sessionsPerMonth,
+    level,
+    startDate,
+    sessions,
     updatedAt: new Date().toISOString()
   }
 
-  // Update Milestone Handler
-  const handleUpdateMilestone = (updatedM) => {
-    const updatedList = milestones.map(m => m.id === updatedM.id ? updatedM : m)
+  // Update session handler
+  const handleUpdateSession = (updatedS) => {
+    const updatedList = sessions.map(s => s.id === updatedS.id ? updatedS : s)
     const autoAdvanced = autoAdvanceRoadmap(updatedList)
-    setMilestones(autoAdvanced)
+    setSessions(autoAdvanced)
     saveChanges(autoAdvanced)
   }
 
-  // Delete Milestone Handler
-  const handleDeleteMilestone = (mId) => {
-    const filtered = milestones.filter(m => m.id !== mId)
-    setMilestones(filtered)
-    saveChanges(filtered)
+  // Delete session handler
+  const handleDeleteSession = (sessionId) => {
+    const filtered = sessions.filter(s => s.id !== sessionId)
+    // Re-index session numbers
+    const reindexed = filtered.map((s, idx) => ({ ...s, sessionNumber: idx + 1 }))
+    setSessions(reindexed)
+    saveChanges(reindexed)
   }
 
-  // Save Custom Milestone from Modal
-  const handleSaveCustomMilestone = (newOrUpdatedM) => {
-    let nextMilestones = []
-    const exists = milestones.some(m => m.id === newOrUpdatedM.id)
+  // Save custom session
+  const handleSaveCustomSession = (newOrUpdatedS) => {
+    let nextList = []
+    const exists = sessions.some(s => s.id === newOrUpdatedS.id)
     if (exists) {
-      nextMilestones = milestones.map(m => m.id === newOrUpdatedM.id ? newOrUpdatedM : m)
+      nextList = sessions.map(s => s.id === newOrUpdatedS.id ? newOrUpdatedS : s)
     } else {
-      nextMilestones = [...milestones, { ...newOrUpdatedM, milestoneNumber: milestones.length + 1 }]
+      nextList = [...sessions, { ...newOrUpdatedS, sessionNumber: sessions.length + 1 }]
     }
-    const autoAdvanced = autoAdvanceRoadmap(nextMilestones)
-    setMilestones(autoAdvanced)
+    const autoAdvanced = autoAdvanceRoadmap(nextList)
+    setSessions(autoAdvanced)
     saveChanges(autoAdvanced)
   }
 
-  // Apply Preset Handler
+  // Regenerate sessions based on current duration & sessionsPerMonth
+  const handleRegenerateSessions = () => {
+    const tier = activeStudent?.packageType || 'GROW'
+    const generated = generateBatchSessions(tier, sessionsPerMonth, durationMonths, startDate)
+    setSessions(generated)
+    saveChanges(generated)
+  }
+
+  // Apply Preset
   const handleApplyPreset = (preset) => {
     if (!preset) return
-    const clonedMilestones = JSON.parse(JSON.stringify(preset.milestones))
-    setMilestones(clonedMilestones)
-    setActiveLevel(preset.level)
-    setModuleTitle(preset.label)
-    setTargetDuration(preset.targetDuration)
-
-    const updatedRoadmap = {
-      studentId: activeStudent?.id || '',
-      studentName: activeStudent?.name || '',
-      level: preset.level,
-      moduleTitle: preset.label,
-      targetDuration: preset.targetDuration,
-      milestones: clonedMilestones,
-      updatedAt: new Date().toISOString()
-    }
-
-    if (activeStudent && onUpdateStudent) {
-      onUpdateStudent({
-        ...activeStudent,
-        roadmap: updatedRoadmap
-      })
-    }
-    if (onSaveRoadmap) onSaveRoadmap(updatedRoadmap)
+    const generated = generateBatchSessions(preset.tier, sessionsPerMonth, durationMonths, startDate)
+    setSessions(generated)
+    setLevel(preset.level)
+    saveChanges(generated)
   }
 
-  // Save to student record helper
-  const saveChanges = (latestMilestones = milestones) => {
+  // Save changes helper
+  const saveChanges = (latestSessions = sessions) => {
     if (!activeStudent) return
     const updatedRoadmap = {
-      ...currentRoadmapData,
-      milestones: latestMilestones,
+      ...roadmapPayload,
+      sessions: latestSessions,
       updatedAt: new Date().toISOString()
     }
     if (onUpdateStudent) {
@@ -182,28 +185,26 @@ export default function StudentRoadmapStudio({
     if (onSaveRoadmap) onSaveRoadmap(updatedRoadmap)
   }
 
-  // Copy Link Action
+  // Actions
   const handleCopyLink = () => {
-    const link = generateRoadmapShareLink(currentRoadmapData)
+    const link = generateRoadmapShareLink(roadmapPayload)
     navigator.clipboard.writeText(link)
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 2000)
   }
 
-  // Copy WhatsApp Action
   const handleCopyWA = () => {
-    const text = generateRoadmapWhatsAppMessage(currentRoadmapData)
+    const text = generateRoadmapWhatsAppMessage(roadmapPayload)
     navigator.clipboard.writeText(text)
     setCopiedWA(true)
     setTimeout(() => setCopiedWA(false), 2000)
   }
 
-  // Download PNG
   const handleDownloadPng = async () => {
-    if (roadmapContainerRef.current) {
+    if (previewRef.current) {
       setIsExportingPng(true)
       try {
-        await exportRoadmapToPng(roadmapContainerRef.current, currentRoadmapData)
+        await exportRoadmapToPng(previewRef.current, roadmapPayload)
       } catch (err) {
         console.error('Export PNG error:', err)
       } finally {
@@ -212,12 +213,11 @@ export default function StudentRoadmapStudio({
     }
   }
 
-  // Download PDF
   const handleDownloadPdf = async () => {
-    if (roadmapContainerRef.current) {
+    if (previewRef.current) {
       setIsExportingPdf(true)
       try {
-        await exportRoadmapToPdf(roadmapContainerRef.current, currentRoadmapData)
+        await exportReportToPdf(previewRef.current, roadmapPayload)
       } catch (err) {
         console.error('Export PDF error:', err)
       } finally {
@@ -233,16 +233,15 @@ export default function StudentRoadmapStudio({
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-fluent-text tracking-tight flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-fluent-blue" />
-            <span>Interactive Roadmap Studio</span>
+            <span>1-Batch Modular Learning Roadmap</span>
           </h1>
           <p className="text-xs text-fluent-textSecondary mt-0.5">
-            Peta jalur kurikulum modular & pelacak capaian kompetensi siswa Kavio Edu.
+            Peta alur kurikulum per sesi granular dalam 1 Batch pembelajaran siswa Kavio Edu.
           </p>
         </div>
 
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-1.5">
-          {/* Preset Kurikulum */}
           <button
             type="button"
             onClick={() => setShowPresetModal(true)}
@@ -252,191 +251,277 @@ export default function StudentRoadmapStudio({
             <span>Preset Kurikulum</span>
           </button>
 
-          {/* Tambah Milestone Kustom */}
           <button
             type="button"
             onClick={() => {
-              setEditingMilestone(null)
+              setEditingSession(null)
               setShowCustomModal(true)
             }}
             className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-fluent transition-colors flex items-center gap-1.5 shadow-2xs"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Tambah Milestone</span>
+            <span>Tambah Sesi</span>
           </button>
 
-          {/* Copy Share Link */}
           <button
             type="button"
             onClick={handleCopyLink}
             className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent transition-colors flex items-center justify-center"
-            title="Salin Tautan Berbagi Publik Roadmap"
+            title="Salin Tautan Berbagi Publik"
           >
             {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-fluent-blue" />}
           </button>
 
-          {/* Download PNG */}
           <button
             type="button"
             onClick={handleDownloadPng}
             disabled={isExportingPng}
             className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent transition-colors flex items-center justify-center disabled:opacity-50"
-            title="Download Bagan Roadmap PNG HD"
+            title="Download PNG HD"
           >
             <Download className="w-4 h-4 text-fluent-blue" />
           </button>
 
-          {/* Download PDF */}
           <button
             type="button"
             onClick={handleDownloadPdf}
             disabled={isExportingPdf}
             className="p-2 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent transition-colors flex items-center justify-center shadow-xs disabled:opacity-50"
-            title="Download Roadmap PDF Resmi"
+            title="Download PDF A4 Resmi"
           >
             <Download className="w-4 h-4" />
           </button>
 
-          {/* Copy WhatsApp Draft */}
           <button
             type="button"
             onClick={handleCopyWA}
             className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-fluent flex items-center justify-center transition-colors shadow-xs"
-            title={copiedWA ? "Pesan WhatsApp Tersalin!" : "Salin Pesan WhatsApp Update Roadmap"}
+            title={copiedWA ? "Pesan WhatsApp Tersalin!" : "Salin Pesan WhatsApp"}
           >
             {copiedWA ? <Check className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Student Selector & Progress Highlights Bar */}
-      <div className="bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-fluent-border pb-4">
+      {/* Main Studio Grid: Split Screen Controls (Left 45%) & Live A4 Canvas (Right 55%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* ========================================================================= */}
+        {/* LEFT COLUMN: CONTROL & BATCH SESSION MANAGER (45%) */}
+        {/* ========================================================================= */}
+        <div className="lg:col-span-5 bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent space-y-5 text-fluent-text">
           
-          {/* Student Selector Combobox */}
-          <div className="flex items-center space-x-3 w-full sm:w-auto">
-            <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
-              <User className="w-5 h-5 text-fluent-blue" />
+          {/* Section: Student Selector */}
+          <div className="space-y-2 pb-3 border-b border-fluent-border">
+            <label className="block text-xs font-bold text-fluent-textSecondary uppercase tracking-wider">
+              Pilih Siswa Terdaftar
+            </label>
+            <select
+              value={activeStudent?.id || ''}
+              onChange={(e) => {
+                const matched = students.find(s => s.id === e.target.value)
+                if (matched && onSelectStudent) onSelectStudent(matched)
+              }}
+              className="w-full px-3 py-2 text-xs font-bold text-fluent-text border border-fluent-border rounded-fluent bg-white focus:outline-none focus:border-fluent-blue"
+            >
+              {students.map((st) => (
+                <option key={st.id} value={st.id}>
+                  {st.name} — Paket {st.packageType || 'GROW'} ({st.parentName ? `Wali: ${st.parentName}` : '-'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Section: Batch Parameters Form */}
+          <div className="space-y-3 pb-3 border-b border-fluent-border">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-fluent-text flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5 text-fluent-blue" />
+              Parameter 1-Batch Pembelajaran
+            </h2>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                  Nama Batch / Periode
+                </label>
+                <input
+                  type="text"
+                  value={batchName}
+                  onChange={(e) => setBatchName(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-bold font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                  Jenjang CEFR
+                </label>
+                <select
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent bg-white focus:outline-none focus:border-fluent-blue font-bold"
+                >
+                  <option value="A1">Level A1 - Beginner</option>
+                  <option value="A2">Level A2 - Elementary</option>
+                  <option value="B1">Level B1 - Intermediate</option>
+                  <option value="B2">Level B2 - Upper Intermediate</option>
+                  <option value="C1">Level C1 - Advanced</option>
+                </select>
+              </div>
             </div>
-            <div className="flex-1 sm:flex-none">
-              <label className="block text-[10px] font-bold text-fluent-textSecondary uppercase tracking-wider">
-                Pilih Siswa Terdaftar
-              </label>
-              <select
-                value={activeStudent?.id || ''}
-                onChange={(e) => {
-                  const matched = students.find(s => s.id === e.target.value)
-                  if (matched && onSelectStudent) onSelectStudent(matched)
-                }}
-                className="mt-0.5 px-2.5 py-1 text-xs font-bold text-fluent-text border border-fluent-border rounded-fluent bg-white focus:outline-none focus:border-fluent-blue min-w-[200px]"
-              >
-                {students.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.name} — Paket {st.packageType || 'GROW'}
-                  </option>
-                ))}
-              </select>
+
+            <div className="grid grid-cols-3 gap-3 pt-1">
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                  Sesi / Bulan
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={sessionsPerMonth}
+                  onChange={(e) => setSessionsPerMonth(Number(e.target.value) || 4)}
+                  className="w-full px-2.5 py-1 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-bold text-center"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                  Durasi (Bln)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={durationMonths}
+                  onChange={(e) => setDurationMonths(Number(e.target.value) || 3)}
+                  className="w-full px-2.5 py-1 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-bold text-center"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                  Total Sesi
+                </label>
+                <div className="w-full py-1 text-xs bg-blue-50 border border-blue-200 text-fluent-blue font-extrabold rounded-fluent text-center font-mono">
+                  {totalCalculatedSessions} Sesi
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleRegenerateSessions}
+              className="w-full mt-2 py-1.5 px-3 bg-fluent-subtle hover:bg-slate-200 text-slate-700 rounded-fluent text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-200"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Sesuaikan Ulang Daftar {totalCalculatedSessions} Sesi
+            </button>
+          </div>
+
+          {/* Section: List of Sessions in Studio Manager */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-fluent-text flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-fluent-blue" />
+                Daftar Sesi Granular ({sessions.length})
+              </h2>
+              <span className="text-xs font-mono font-bold text-emerald-700">
+                {stats.completedCount} Tuntas ({stats.percentage}%)
+              </span>
+            </div>
+
+            <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+              {sessions.map((s, idx) => {
+                const rawStatus = String(s.status || '').toUpperCase()
+                const isDone = rawStatus === 'COMPLETED' || rawStatus === 'SELESAI'
+                const isRun = rawStatus === 'IN_PROGRESS' || rawStatus === 'SEDANG BERJALAN'
+
+                return (
+                  <div
+                    key={s.id || idx}
+                    onClick={() => setActiveSession(s)}
+                    className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between ${
+                      isDone
+                        ? 'bg-emerald-50/40 border-emerald-200 hover:border-emerald-300'
+                        : isRun
+                        ? 'bg-blue-50/40 border-blue-200 hover:border-blue-300'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="space-y-0.5 max-w-[280px]">
+                      <div className="flex items-center space-x-2 text-[10px]">
+                        <span className="font-bold text-slate-900 font-mono">
+                          {formatSessionNumber(s.sessionNumber || idx + 1)}
+                        </span>
+                        <span className="text-slate-400">•</span>
+                        <span className="font-semibold text-slate-600">
+                          {s.level || 'A2'}
+                        </span>
+                        <span className="text-slate-400">•</span>
+                        <span className={isDone ? 'text-emerald-700 font-bold' : isRun ? 'text-blue-700 font-bold' : 'text-slate-400'}>
+                          {isDone ? 'SELESAI' : isRun ? 'BERJALAN' : 'BELUM'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-900 truncate">
+                        {s.title}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setActiveSession(s)
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-fluent-blue transition-colors"
+                        title="Edit Sesi"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteSession(s.id)
+                        }}
+                        className="p-1.5 text-slate-300 hover:text-rose-600 transition-colors"
+                        title="Hapus Sesi"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
-          {/* Academic Level & Tier Badges */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold px-2.5 py-1 rounded bg-slate-900 text-white font-mono uppercase">
-              Paket {activeStudent?.packageType || 'GROW'}
-            </span>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded border uppercase font-mono ${levelBadge.badgeClass}`}>
-              {activeLevel}
-            </span>
-          </div>
         </div>
 
-        {/* Progress Metrics Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3 bg-fluent-subtle rounded-lg border border-fluent-border space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Total Milestone
-            </span>
-            <div className="text-base sm:text-lg font-extrabold font-mono text-slate-800">
-              {stats.totalMilestones} Tahapan
-            </div>
-          </div>
-
-          <div className="p-3 bg-emerald-50/50 rounded-lg border border-emerald-200 space-y-1">
-            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
-              Selesai (Completed)
-            </span>
-            <div className="text-base sm:text-lg font-extrabold font-mono text-emerald-700">
-              {stats.completedCount} Milestone
-            </div>
-          </div>
-
-          <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-200 space-y-1">
-            <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider">
-              Sedang Berjalan
-            </span>
-            <div className="text-base sm:text-lg font-extrabold font-mono text-fluent-blue">
-              {stats.inProgressCount} Milestone
-            </div>
-          </div>
-
-          <div className="p-3 bg-amber-50/50 rounded-lg border border-amber-200 space-y-1">
-            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
-              Persentase Kurikulum
-            </span>
-            <div className="text-base sm:text-lg font-extrabold font-mono text-amber-700">
-              {stats.percentage}% Tuntas
-            </div>
-          </div>
-        </div>
-
-        {/* Visual Progress Bar */}
-        <div className="space-y-1 pt-1">
-          <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-fluent-blue to-emerald-500 transition-all duration-500"
-              style={{ width: `${stats.percentage}%` }}
+        {/* ========================================================================= */}
+        {/* RIGHT COLUMN: LIVE A4 PRINTABLE DOCUMENT PREVIEW (55%) */}
+        {/* ========================================================================= */}
+        <div className="lg:col-span-7 flex flex-col items-center">
+          <div className="w-full overflow-x-auto pb-6 flex justify-center">
+            <RoadmapBatchDocument
+              roadmapData={roadmapPayload}
+              previewRef={previewRef}
+              onSelectSession={setActiveSession}
             />
           </div>
         </div>
+
       </div>
 
-      {/* Main Roadmap Canvas / Metro Graph */}
-      <div
-        ref={roadmapContainerRef}
-        id="roadmap-graph-canvas"
-        className="bg-white p-6 sm:p-8 rounded-fluent border border-fluent-border shadow-fluent"
-      >
-        <div className="border-b border-slate-200 pb-4 mb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">
-              {moduleTitle}
-            </h2>
-            <p className="text-xs text-slate-500">
-              Target Durasi: <span className="font-semibold text-slate-700">{targetDuration}</span> | Siswa: <span className="font-bold text-fluent-blue">{activeStudent?.name}</span>
-            </p>
-          </div>
-
-          <div className="text-[11px] text-slate-400 italic">
-            *Klik salah satu milestone untuk memeriksa checklist & modul belajar.
-          </div>
-        </div>
-
-        {/* Metro-Line Component */}
-        <RoadmapMetroGraph
-          milestones={milestones}
-          activeMilestoneId={activeMilestone?.id}
-          onSelectMilestone={setActiveMilestone}
-        />
-      </div>
-
-      {/* Modals & Drawers */}
-      <MilestoneDetailDrawer
-        isOpen={!!activeMilestone}
-        milestone={activeMilestone}
+      {/* Drawers & Modals */}
+      <SessionDetailDrawer
+        isOpen={!!activeSession}
+        session={activeSession}
         modules={modules}
-        onClose={() => setActiveMilestone(null)}
-        onUpdateMilestone={handleUpdateMilestone}
-        onDeleteMilestone={handleDeleteMilestone}
+        onClose={() => setActiveSession(null)}
+        onUpdateSession={handleUpdateSession}
         onOpenModule={onOpenModule}
       />
 
@@ -447,15 +532,16 @@ export default function StudentRoadmapStudio({
         currentTier={activeStudent?.packageType || 'GROW'}
       />
 
-      <CustomMilestoneModal
+      <CustomSessionModal
         isOpen={showCustomModal}
-        milestone={editingMilestone}
+        session={editingSession}
+        nextSessionNumber={sessions.length + 1}
         modules={modules}
         onClose={() => {
           setShowCustomModal(false)
-          setEditingMilestone(null)
+          setEditingSession(null)
         }}
-        onSave={handleSaveCustomMilestone}
+        onSave={handleSaveCustomSession}
       />
     </div>
   )

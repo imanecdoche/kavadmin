@@ -1,61 +1,84 @@
 /**
  * 🧮 Roadmap Calculator & Progress Metrics for Kavio Edu
+ * Granular batch session calculator, progress aggregator, and formatting helpers.
  */
 
 /**
- * Calculates individual milestone completion percentage based on checklist items or status
- * @param {Object} milestone
- * @returns {number} 0 - 100
+ * Calculates total sessions in a batch
+ * @param {number} sessionsPerMonth
+ * @param {number} durationMonths
+ * @returns {number}
  */
-export const calculateMilestoneProgress = (milestone) => {
-  if (!milestone) return 0
-  if (milestone.status === 'COMPLETED') return 100
-  if (milestone.status === 'LOCKED') return 0
-
-  const checklists = Array.isArray(milestone.checklists) ? milestone.checklists : []
-  if (checklists.length === 0) {
-    return milestone.status === 'IN_PROGRESS' ? 50 : 0
-  }
-
-  const completedCount = checklists.filter(c => c.completed).length
-  return Math.round((completedCount / checklists.length) * 100)
+export const calculateBatchSessionCount = (sessionsPerMonth = 4, durationMonths = 3) => {
+  const s = Math.max(1, Number(sessionsPerMonth) || 4)
+  const d = Math.max(1, Number(durationMonths) || 1)
+  return s * d
 }
 
 /**
- * Calculates overall roadmap progress across all milestones
- * @param {Array} milestones
- * @returns {Object} { percentage, totalMilestones, completedCount, inProgressCount, lockedCount }
+ * Formats a session number with leading zero, e.g. 1 -> "Sesi 01"
+ * @param {number|string} num
+ * @returns {string}
  */
-export const calculateOverallRoadmapProgress = (milestones = []) => {
-  if (!Array.isArray(milestones) || milestones.length === 0) {
+export const formatSessionNumber = (num) => {
+  const n = Number(num) || 1
+  return `Sesi ${String(n).padStart(2, '0')}`
+}
+
+/**
+ * Formats date into short Indonesian format: e.g. "12 Agu 2026"
+ * @param {string|Date} date
+ * @returns {string}
+ */
+export const formatDateShortIndonesian = (date) => {
+  if (!date) return '-'
+  try {
+    const d = date instanceof Date ? date : new Date(date)
+    if (isNaN(d.getTime())) return String(date)
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+  } catch (e) {
+    return String(date)
+  }
+}
+
+/**
+ * Calculates overall roadmap progress across all session items
+ * @param {Array} sessions List of session objects
+ * @returns {Object} { percentage, totalSessions, completedCount, inProgressCount, lockedCount }
+ */
+export const calculateOverallRoadmapProgress = (sessions = []) => {
+  if (!Array.isArray(sessions) || sessions.length === 0) {
     return {
       percentage: 0,
-      totalMilestones: 0,
+      totalSessions: 0,
       completedCount: 0,
       inProgressCount: 0,
       lockedCount: 0
     }
   }
 
-  const total = milestones.length
+  const total = sessions.length
   let completedCount = 0
   let inProgressCount = 0
   let lockedCount = 0
-  let totalProgressSum = 0
 
-  milestones.forEach((m) => {
-    const p = calculateMilestoneProgress(m)
-    totalProgressSum += p
-    if (m.status === 'COMPLETED') completedCount++
-    else if (m.status === 'IN_PROGRESS') inProgressCount++
-    else lockedCount++
+  sessions.forEach((s) => {
+    const status = String(s.status || '').toUpperCase()
+    if (status === 'COMPLETED' || status === 'SELESAI') {
+      completedCount++
+    } else if (status === 'IN_PROGRESS' || status === 'SEDANG BERJALAN') {
+      inProgressCount++
+    } else {
+      lockedCount++
+    }
   })
 
-  const percentage = Math.round(totalProgressSum / total)
+  const percentage = total > 0 ? Math.round((completedCount / total) * 100) : 0
 
   return {
     percentage,
-    totalMilestones: total,
+    totalSessions: total,
     completedCount,
     inProgressCount,
     lockedCount
@@ -66,13 +89,13 @@ export const calculateOverallRoadmapProgress = (milestones = []) => {
  * Returns badge styling and color codes for CEFR Academic Levels
  * @param {string} level e.g. "A1", "A2", "B1", "B2", "C1"
  */
-export const getAcademicLevelBadge = (level = 'A1') => {
-  const cleanLevel = String(level || 'A1').trim().toUpperCase()
+export const getAcademicLevelBadge = (level = 'A2') => {
+  const cleanLevel = String(level || 'A2').trim().toUpperCase()
 
   if (cleanLevel.includes('A1')) {
     return {
       code: 'A1',
-      label: 'Level A1 - Beginner',
+      label: 'A1 - Beginner',
       color: 'text-emerald-700',
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
@@ -82,7 +105,7 @@ export const getAcademicLevelBadge = (level = 'A1') => {
   if (cleanLevel.includes('A2')) {
     return {
       code: 'A2',
-      label: 'Level A2 - Elementary',
+      label: 'A2 - Elementary',
       color: 'text-blue-700',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
@@ -92,7 +115,7 @@ export const getAcademicLevelBadge = (level = 'A1') => {
   if (cleanLevel.includes('B1')) {
     return {
       code: 'B1',
-      label: 'Level B1 - Intermediate',
+      label: 'B1 - Intermediate',
       color: 'text-indigo-700',
       bgColor: 'bg-indigo-50',
       borderColor: 'border-indigo-200',
@@ -102,7 +125,7 @@ export const getAcademicLevelBadge = (level = 'A1') => {
   if (cleanLevel.includes('B2')) {
     return {
       code: 'B2',
-      label: 'Level B2 - Upper Intermediate',
+      label: 'B2 - Upper Intermediate',
       color: 'text-purple-700',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
@@ -112,7 +135,7 @@ export const getAcademicLevelBadge = (level = 'A1') => {
   if (cleanLevel.includes('C1') || cleanLevel.includes('C2')) {
     return {
       code: 'C1/C2',
-      label: 'Level C1/C2 - Advanced / Mastery',
+      label: 'C1/C2 - Advanced',
       color: 'text-amber-700',
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-200',
@@ -121,7 +144,7 @@ export const getAcademicLevelBadge = (level = 'A1') => {
   }
 
   return {
-    code: 'CUSTOM',
+    code: 'GENERAL',
     label: level || 'General English',
     color: 'text-slate-700',
     bgColor: 'bg-slate-50',
@@ -131,28 +154,23 @@ export const getAcademicLevelBadge = (level = 'A1') => {
 }
 
 /**
- * Auto-advances roadmap milestone status:
- * When milestone i is set to COMPLETED, milestone i+1 (if currently LOCKED) becomes IN_PROGRESS.
- * @param {Array} milestones
- * @returns {Array} Updated milestones array
+ * Auto-advances roadmap session status:
+ * When session i is set to COMPLETED, session i+1 (if currently LOCKED) becomes IN_PROGRESS.
+ * @param {Array} sessions
+ * @returns {Array} Updated sessions array
  */
-export const autoAdvanceRoadmap = (milestones = []) => {
-  if (!Array.isArray(milestones) || milestones.length === 0) return []
+export const autoAdvanceRoadmap = (sessions = []) => {
+  if (!Array.isArray(sessions) || sessions.length === 0) return []
 
-  const updated = JSON.parse(JSON.stringify(milestones))
+  const updated = JSON.parse(JSON.stringify(sessions))
 
   for (let i = 0; i < updated.length; i++) {
     const current = updated[i]
-    const allChecklistsDone = Array.isArray(current.checklists) && current.checklists.length > 0
-      ? current.checklists.every(c => c.completed)
-      : false
+    const status = String(current.status || '').toUpperCase()
 
-    if (allChecklistsDone && current.status !== 'COMPLETED') {
-      current.status = 'COMPLETED'
-    }
-
-    if (current.status === 'COMPLETED' && i + 1 < updated.length) {
-      if (updated[i + 1].status === 'LOCKED') {
+    if ((status === 'COMPLETED' || status === 'SELESAI') && i + 1 < updated.length) {
+      const nextStatus = String(updated[i + 1].status || '').toUpperCase()
+      if (nextStatus === 'LOCKED' || nextStatus === 'TERKUNCI' || nextStatus === 'BELUM MULAI') {
         updated[i + 1].status = 'IN_PROGRESS'
       }
     }
