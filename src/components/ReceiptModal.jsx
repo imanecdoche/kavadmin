@@ -2,8 +2,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Download, Printer, Check, Copy, Award } from 'lucide-react'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
+import { exportElementToPdf, exportElementToPng } from '../utils/documentExportEngine'
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import { terbilangRupiah } from '../utils/terbilang'
 import { RECEIPT_CONFIG } from '../config/stampConfig'
@@ -86,23 +85,8 @@ export default function ReceiptModal({ isOpen, onClose, data }) {
     if (!receiptRef.current) return
     setIsExporting(true)
     try {
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a5'
-      })
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
-      pdf.save(`Kuitansi_${(data.studentName || 'Siswa').replace(/\s+/g, '_')}_${receiptNo.replace(/\//g, '-')}.pdf`)
+      const filename = `Kuitansi_${(data.studentName || 'Siswa').replace(/\s+/g, '_')}_${receiptNo.replace(/\//g, '-')}`
+      await exportElementToPdf(receiptRef.current, filename, { mode: 'a4', orientation: 'landscape' })
     } catch (err) {
       console.error('Error generating PDF:', err)
     } finally {
@@ -115,16 +99,8 @@ export default function ReceiptModal({ isOpen, onClose, data }) {
     if (!receiptRef.current) return
     setIsExporting(true)
     try {
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      })
-      const link = document.createElement('a')
-      link.download = `Kuitansi_${(data.studentName || 'Siswa').replace(/\s+/g, '_')}_${receiptNo.replace(/\//g, '-')}.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
+      const filename = `Kuitansi_${(data.studentName || 'Siswa').replace(/\s+/g, '_')}_${receiptNo.replace(/\//g, '-')}`
+      await exportElementToPng(receiptRef.current, filename)
     } catch (err) {
       console.error('Error generating PNG:', err)
     } finally {

@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { Download, Printer, Check, Copy, FileText, ArrowLeft, MessageSquare, Award } from 'lucide-react'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
+import { exportElementToPdf, exportElementToPng } from '../utils/documentExportEngine'
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
 import { INVOICE_CONFIG } from '../config/stampConfig'
@@ -26,19 +25,8 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
     setIsExporting(true)
 
     try {
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#FFFFFF'
-      })
-
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const imgWidth = 210
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
-      pdf.save(`${(invoiceData.invoiceNo || 'INV').replace(/\//g, '_')}_KavioEdu.pdf`)
+      const filename = `${(invoiceData.invoiceNo || 'INV').replace(/\//g, '_')}_KavioEdu`
+      await exportElementToPdf(invoiceRef.current, filename, { mode: 'a4', orientation: 'portrait' })
     } catch (err) {
       console.error('Export PDF error:', err)
     } finally {
@@ -52,16 +40,8 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
     setIsExporting(true)
 
     try {
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#FFFFFF'
-      })
-
-      const link = document.createElement('a')
-      link.download = `${(invoiceData.invoiceNo || 'INV').replace(/\//g, '_')}_KavioEdu.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
+      const filename = `${(invoiceData.invoiceNo || 'INV').replace(/\//g, '_')}_KavioEdu`
+      await exportElementToPng(invoiceRef.current, filename)
     } catch (err) {
       console.error('Export PNG error:', err)
     } finally {

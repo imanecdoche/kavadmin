@@ -2,7 +2,7 @@ import React from 'react'
 
 /**
  * 🕸️ Pure SVG Radar / Spider Chart for Academic Competency Visualization
- * Zero external library dependencies - 100% vector based and optimized for jsPDF & html2canvas rendering.
+ * Zero external library dependencies - 100% vector based and optimized for jsPDF & html-to-image rendering.
  *
  * @param {Array} competencies Array of competency items with { label, shortLabel, score }
  * @param {number} size Width & Height in pixels (default: 320)

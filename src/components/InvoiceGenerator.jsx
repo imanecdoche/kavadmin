@@ -10,8 +10,7 @@ import {
   Award,
   ArrowLeftRight
 } from 'lucide-react'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
+import { exportElementToPdf, exportElementToPng } from '../utils/documentExportEngine'
 import { PACKAGE_RATES } from './Dashboard'
 import { generateInvoiceShareLink } from '../utils/invoiceShare'
 import { formatDateIndonesian } from '../utils/dateFormatter'
@@ -373,19 +372,8 @@ Kavio Edu Management`
     setIsExporting(true)
 
     try {
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#FFFFFF'
-      })
-
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const imgWidth = 210
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
-      pdf.save(`${invoiceNo.replace(/\//g, '_')}_KavioEdu.pdf`)
+      const filename = `${invoiceNo.replace(/\//g, '_')}_KavioEdu`
+      await exportElementToPdf(invoiceRef.current, filename, { mode: 'a4', orientation: 'portrait' })
     } catch (err) {
       console.error('Export PDF error:', err)
     } finally {
@@ -400,16 +388,8 @@ Kavio Edu Management`
     setIsExporting(true)
 
     try {
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#FFFFFF'
-      })
-
-      const link = document.createElement('a')
-      link.download = `${invoiceNo.replace(/\//g, '_')}_KavioEdu.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
+      const filename = `${invoiceNo.replace(/\//g, '_')}_KavioEdu`
+      await exportElementToPng(invoiceRef.current, filename)
     } catch (err) {
       console.error('Export PNG error:', err)
     } finally {

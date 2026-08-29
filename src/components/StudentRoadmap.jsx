@@ -28,8 +28,7 @@ import {
   ExternalLink
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
+import { exportElementToPdf, exportElementToPng } from '../utils/documentExportEngine'
 import {
   SESSION_STATUS,
   STATUS_CONFIG,
@@ -358,81 +357,16 @@ export default function StudentRoadmap({
     window.open(url, '_blank')
   }
 
-  // 7. Standardized Precision High-Res Export (PDF & PNG) - 100% WYSIWYG
-  const prepareAndCaptureCanvas = async () => {
-    if (!roadmapRef.current) return null
 
-    // Ensure all web fonts are loaded
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready
-    }
 
-    // Small delay to allow any pending DOM rendering/layout calculation to complete
-    await new Promise(resolve => setTimeout(resolve, 150))
-
-    const element = roadmapRef.current
-
-    const canvas = await html2canvas(element, {
-      scale: 2, // Crisp retina 2x scale
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#FFFFFF',
-      logging: false,
-      windowWidth: 1200, // Standard desktop canvas viewport to prevent responsive media query collapse
-      onclone: (clonedDoc) => {
-        const clonedElement = clonedDoc.getElementById('roadmap-printable-container')
-        if (clonedElement) {
-          clonedElement.style.width = '794px' // Standard A4 width in px @ 96 DPI
-          clonedElement.style.margin = '0'
-          clonedElement.style.padding = '36px'
-          clonedElement.style.boxShadow = 'none'
-          clonedElement.style.borderRadius = '0'
-          clonedElement.style.border = 'none'
-          clonedElement.style.backgroundColor = '#FFFFFF'
-        }
-      }
-    })
-
-    return canvas
-  }
-
-  // Export PDF with exact A4 proportions and multi-page handling if needed
+  // Export PDF with exact A4 proportions
   const handleDownloadPDF = async () => {
     if (!roadmapRef.current || !selectedStudent) return
     setIsExportingPDF(true)
 
     try {
-      const canvas = await prepareAndCaptureCanvas()
-      if (!canvas) throw new Error('Canvas render failed')
-
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('p', 'mm', 'a4')
-
-      const pdfWidth = 210
-      const pageHeight = 297
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width
-
-      // If content fits comfortably on one page (or slightly more with margin), render single page
-      if (imgHeight <= pageHeight) {
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight, undefined, 'FAST')
-      } else {
-        // Multi-page handling: split canvas cleanly across A4 pages
-        let heightLeft = imgHeight
-        let position = 0
-
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight, undefined, 'FAST')
-        heightLeft -= pageHeight
-
-        while (heightLeft > 0) {
-          position = position - pageHeight
-          pdf.addPage()
-          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight, undefined, 'FAST')
-          heightLeft -= pageHeight
-        }
-      }
-
       const cleanName = (selectedStudent.name || 'Siswa').replace(/[^a-zA-Z0-9_-]/g, '_')
-      pdf.save(`Roadmap_${cleanName}_KavioEdu.pdf`)
+      await exportElementToPdf(roadmapRef.current, `Roadmap_${cleanName}_KavioEdu`, { mode: 'continuous', orientation: 'portrait' })
       showToast('File PDF Roadmap berhasil diunduh!', 'success')
     } catch (err) {
       console.error('Export PDF error:', err)
@@ -448,16 +382,8 @@ export default function StudentRoadmap({
     setIsExportingPNG(true)
 
     try {
-      const canvas = await prepareAndCaptureCanvas()
-      if (!canvas) throw new Error('Canvas render failed')
-
       const cleanName = (selectedStudent.name || 'Siswa').replace(/[^a-zA-Z0-9_-]/g, '_')
-      const link = document.createElement('a')
-      link.download = `Roadmap_${cleanName}_KavioEdu.png`
-      link.href = canvas.toDataURL('image/png', 1.0)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      await exportElementToPng(roadmapRef.current, `Roadmap_${cleanName}_KavioEdu`)
       showToast('Gambar PNG Roadmap berhasil diunduh!', 'success')
     } catch (err) {
       console.error('Export PNG error:', err)
