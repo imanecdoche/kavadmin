@@ -689,106 +689,108 @@ export default function Dashboard({
         </div>
       </motion.div>
 
-      {/* 4 Dynamic Reconstructed KPI Cards Row */}
-      <motion.div layout transition={smoothTransition} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 Dynamic Reconstructed KPI Cards Row - Responsive 2-Columns on Mobile */}
+      <motion.div layout transition={smoothTransition} className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
 
         {/* CARD 1: SISWA AKTIF */}
-        <div className="group relative bg-white p-5 rounded-fluent border border-fluent-border hover:border-fluent-blue/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-fluent-blue rounded-t" />
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="relative flex h-2 w-2">
+        <div className="group relative bg-white p-2.5 sm:p-5 rounded-lg sm:rounded-fluent border border-fluent-border hover:border-fluent-blue/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-fluent-blue rounded-t" />
+          <div className="flex items-start justify-between gap-1.5 sm:gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center space-x-1 sm:space-x-1.5">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fluent-blue opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-fluent-blue"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-fluent-blue"></span>
                 </span>
-                <p className="text-[11px] font-bold text-fluent-textSecondary uppercase tracking-wider">
+                <p className="text-[9px] sm:text-[11px] font-bold text-fluent-textSecondary uppercase tracking-wider truncate">
                   Siswa Aktif
                 </p>
               </div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-fluent-text mt-2 tracking-tight">
-                {totalActiveStudents} <span className="text-sm font-semibold text-fluent-textSecondary font-normal">Siswa</span>
+              <p className="text-base sm:text-2xl lg:text-3xl font-extrabold text-fluent-text mt-1 sm:mt-2 tracking-tight">
+                {totalActiveStudents} <span className="text-[11px] sm:text-sm font-semibold text-fluent-textSecondary font-normal">Siswa</span>
               </p>
             </div>
-            <div className="p-3 bg-blue-50 text-fluent-blue rounded-fluent group-hover:bg-fluent-blue group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs">
-              <Users className="w-5 h-5" />
+            <div className="p-1.5 sm:p-3 bg-blue-50 text-fluent-blue rounded-md sm:rounded-fluent group-hover:bg-fluent-blue group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs shrink-0">
+              <Users className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-fluent-textSecondary font-medium">Status Reservasi</span>
-            <span className="font-bold text-fluent-blue bg-blue-50 px-2 py-0.5 rounded text-[11px] border border-blue-100">
-              100% Aktif Bimbingan
+          <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] sm:text-xs gap-1">
+            <span className="text-fluent-textSecondary font-medium truncate">
+              <span className="hidden sm:inline">Status </span>Reservasi
+            </span>
+            <span className="font-bold text-fluent-blue bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[11px] border border-blue-100 whitespace-nowrap">
+              100% Aktif
             </span>
           </div>
         </div>
 
         {/* CARD 2: PENDAPATAN TERBAYAR */}
-        <div className="group relative bg-white p-5 rounded-fluent border border-fluent-border hover:border-emerald-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500 rounded-t" />
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="relative flex h-2 w-2">
+        <div className="group relative bg-white p-2.5 sm:p-5 rounded-lg sm:rounded-fluent border border-fluent-border hover:border-emerald-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-emerald-500 rounded-t" />
+          <div className="flex items-start justify-between gap-1.5 sm:gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center space-x-1 sm:space-x-1.5">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500"></span>
                 </span>
-                <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
-                  Pendapatan Terbayar
+                <p className="text-[9px] sm:text-[11px] font-bold text-emerald-800 uppercase tracking-wider truncate">
+                  <span className="hidden sm:inline">Pendapatan </span>Terbayar
                 </p>
               </div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-2 tracking-tight">
+              <p className="text-xs xs:text-sm sm:text-2xl lg:text-3xl font-extrabold text-emerald-600 mt-1 sm:mt-2 tracking-tight truncate" title={formatIDR(totalMonthlyRevenue)}>
                 {formatIDR(totalMonthlyRevenue)}
               </p>
             </div>
-            <div className="w-11 h-11 bg-emerald-50 text-emerald-600 rounded-fluent group-hover:bg-emerald-600 group-hover:text-white transition-all duration-200 group-hover:scale-105 flex items-center justify-center font-extrabold text-sm shadow-2xs">
+            <div className="w-6 h-6 sm:w-11 sm:h-11 bg-emerald-50 text-emerald-600 rounded-md sm:rounded-fluent group-hover:bg-emerald-600 group-hover:text-white transition-all duration-200 group-hover:scale-105 flex items-center justify-center font-extrabold text-[10px] sm:text-sm shadow-2xs shrink-0">
               Rp
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] sm:text-xs gap-1">
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <div className="w-8 sm:w-16 h-1 sm:h-1.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
                 <div
                   className="h-full bg-emerald-500 rounded-full"
                   style={{ width: `${revenueRealizationPct}%` }}
                 />
               </div>
-              <span className="text-[11px] font-semibold text-slate-500">{revenueRealizationPct}% Realisasi</span>
+              <span className="text-[8px] sm:text-[11px] font-semibold text-slate-500 whitespace-nowrap">{revenueRealizationPct}%</span>
             </div>
-            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] border border-emerald-100">
+            <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[11px] border border-emerald-100 whitespace-nowrap">
               Kas Masuk
             </span>
           </div>
         </div>
 
         {/* CARD 3: OUTSTANDING */}
-        <div className="group relative bg-white p-5 rounded-fluent border border-fluent-border hover:border-amber-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500 rounded-t" />
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="relative flex h-2 w-2">
+        <div className="group relative bg-white p-2.5 sm:p-5 rounded-lg sm:rounded-fluent border border-fluent-border hover:border-amber-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-amber-500 rounded-t" />
+          <div className="flex items-start justify-between gap-1.5 sm:gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center space-x-1 sm:space-x-1.5">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2 shrink-0">
                   {outstandingStudentsCount > 0 && (
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                   )}
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-amber-500"></span>
                 </span>
-                <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
+                <p className="text-[9px] sm:text-[11px] font-bold text-amber-800 uppercase tracking-wider truncate">
                   Outstanding
                 </p>
               </div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-2 tracking-tight">
+              <p className="text-xs xs:text-sm sm:text-2xl lg:text-3xl font-extrabold text-amber-600 mt-1 sm:mt-2 tracking-tight truncate" title={formatIDR(totalOutstanding)}>
                 {formatIDR(totalOutstanding)}
               </p>
             </div>
-            <div className="p-3 bg-amber-50 text-amber-600 rounded-fluent group-hover:bg-amber-500 group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs">
-              <AlertCircle className="w-5 h-5" />
+            <div className="p-1.5 sm:p-3 bg-amber-50 text-amber-600 rounded-md sm:rounded-fluent group-hover:bg-amber-500 group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs shrink-0">
+              <AlertCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-fluent-textSecondary font-medium">
-              {outstandingStudentsCount > 0 ? `${outstandingStudentsCount} Siswa Menunggu` : 'Semua Lunas'}
+          <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] sm:text-xs gap-1">
+            <span className="text-fluent-textSecondary font-medium truncate">
+              {outstandingStudentsCount > 0 ? `${outstandingStudentsCount} Menunggu` : 'Semua Lunas'}
             </span>
-            <span className={`font-bold px-2 py-0.5 rounded text-[11px] border ${
+            <span className={`font-bold px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[11px] border whitespace-nowrap ${
               outstandingStudentsCount > 0
                 ? 'text-amber-700 bg-amber-50 border-amber-200'
                 : 'text-emerald-700 bg-emerald-50 border-emerald-200'
@@ -799,55 +801,57 @@ export default function Dashboard({
         </div>
 
         {/* CARD 4: TOTAL JAM BELAJAR */}
-        <div className="group relative bg-white p-5 rounded-fluent border border-fluent-border hover:border-purple-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-purple-600 rounded-t" />
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="relative flex h-2 w-2">
+        <div className="group relative bg-white p-2.5 sm:p-5 rounded-lg sm:rounded-fluent border border-fluent-border hover:border-purple-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-purple-600 rounded-t" />
+          <div className="flex items-start justify-between gap-1.5 sm:gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center space-x-1 sm:space-x-1.5">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-purple-600"></span>
                 </span>
-                <p className="text-[11px] font-bold text-purple-900 uppercase tracking-wider">
-                  Total Jam Belajar
+                <p className="text-[9px] sm:text-[11px] font-bold text-purple-900 uppercase tracking-wider truncate">
+                  <span className="hidden sm:inline">Total </span>Jam Belajar
                 </p>
               </div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-purple-700 mt-2 tracking-tight">
-                {(totalStudyMinutesOverall / 60).toFixed(1)} <span className="text-sm font-semibold text-fluent-textSecondary font-normal">Jam</span>
+              <p className="text-base sm:text-2xl lg:text-3xl font-extrabold text-purple-700 mt-1 sm:mt-2 tracking-tight">
+                {(totalStudyMinutesOverall / 60).toFixed(1)} <span className="text-[11px] sm:text-sm font-semibold text-fluent-textSecondary font-normal">Jam</span>
               </p>
             </div>
-            <div className="p-3 bg-purple-50 text-purple-600 rounded-fluent group-hover:bg-purple-600 group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs">
-              <Clock className="w-5 h-5" />
+            <div className="p-1.5 sm:p-3 bg-purple-50 text-purple-600 rounded-md sm:rounded-fluent group-hover:bg-purple-600 group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs shrink-0">
+              <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-fluent-textSecondary font-medium">Akumulasi Kuota</span>
-            <span className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded text-[11px] border border-purple-100">
-              {totalSessionsOverall} Sesi Terjadwal
+          <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] sm:text-xs gap-1">
+            <span className="text-fluent-textSecondary font-medium truncate">
+              <span className="hidden sm:inline">Akumulasi </span>Kuota
+            </span>
+            <span className="font-bold text-purple-700 bg-purple-50 px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[11px] border border-purple-100 whitespace-nowrap">
+              {totalSessionsOverall} Sesi
             </span>
           </div>
         </div>
 
       </motion.div>
 
-      {/* Widget: Sesi Mendatang 3 Hari Ke Depan (Summary Ringkas) - Collapsible */}
+      {/* Section: Sesi Mendatang 3 Hari Ke Depan (Divider Style - Downscaled) - Collapsible */}
       <motion.div
         layout
         transition={smoothTransition}
-        className="bg-white rounded-fluent border border-fluent-border shadow-fluent p-5 transition-shadow"
+        className="border-y border-slate-200/80 py-2.5 sm:py-3 my-0.5"
       >
-        {/* Card Header with Expand / Collapse Toggle */}
+        {/* Header with Expand / Collapse Toggle */}
         <div
           onClick={toggleUpcomingCollapse}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none group"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer select-none group"
         >
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 bg-fluent-blue/10 text-fluent-blue rounded-fluent group-hover:bg-fluent-blue/20 transition-colors">
-              <Calendar className="w-5 h-5" />
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-fluent-blue/10 text-fluent-blue rounded-md group-hover:bg-fluent-blue/20 transition-colors">
+              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-fluent-text group-hover:text-fluent-blue transition-colors flex items-center gap-2">
+                <h2 className="text-xs sm:text-sm font-bold text-fluent-text group-hover:text-fluent-blue transition-colors flex items-center gap-1.5">
                   Sesi Mendatang (3 Hari)
                 </h2>
                 <AnimatePresence>
@@ -857,21 +861,21 @@ export default function Dashboard({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.85 }}
                       transition={{ duration: 0.2 }}
-                      className="text-[11px] font-semibold text-fluent-textSecondary bg-fluent-subtle px-2 py-0.5 rounded border border-fluent-border"
+                      className="text-[9px] sm:text-[10px] font-semibold text-fluent-textSecondary bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200"
                     >
                       Disembunyikan
                     </motion.span>
                   )}
                 </AnimatePresence>
               </div>
-              <p className="text-xs text-fluent-textSecondary">
+              <p className="text-[10px] sm:text-[11px] text-fluent-textSecondary">
                 Ringkasan sesi bimbingan belajar 3 hari ke depan
               </p>
             </div>
           </div>
 
           <div
-            className="flex items-center space-x-2 self-start sm:self-auto"
+            className="flex items-center space-x-1.5 self-start sm:self-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <AnimatePresence>
@@ -881,7 +885,7 @@ export default function Dashboard({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.25 }}
-                  className="hidden lg:flex items-center space-x-1.5 text-xs text-fluent-textSecondary bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200 mr-1"
+                  className="hidden lg:flex items-center space-x-1.5 text-[11px] text-fluent-textSecondary bg-slate-100/80 px-2 py-0.5 rounded-full border border-slate-200 mr-1"
                 >
                   {upcoming3DaysData.map((d, i) => (
                     <span key={i} className="flex items-center space-x-1">
@@ -894,38 +898,38 @@ export default function Dashboard({
               )}
             </AnimatePresence>
 
-            <span className="px-3 py-1 bg-fluent-blue/10 text-fluent-blue text-xs font-bold rounded-full border border-fluent-blue/20">
+            <span className="px-2 py-0.5 bg-fluent-blue/10 text-fluent-blue text-[10px] sm:text-[11px] font-bold rounded-full border border-fluent-blue/20">
               Total {totalUpcoming3DaysCount} Sesi
             </span>
 
             <button
               type="button"
               onClick={() => setIsUpcomingModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-fluent-blue hover:bg-fluent-blueDark text-white text-xs font-semibold rounded-fluent shadow-xs transition-all group/btn"
+              className="inline-flex items-center gap-1 px-2.5 py-1 bg-fluent-blue hover:bg-fluent-blueDark text-white text-[10px] sm:text-[11px] font-semibold rounded shadow-2xs transition-all group/btn"
               title="Buka detail lengkap sesi mendatang dalam jendela popup"
             >
-              <Maximize2 className="w-3.5 h-3.5 transition-transform group-hover/btn:scale-110" />
-              <span>Buka Detail</span>
+              <Maximize2 className="w-3 h-3 transition-transform group-hover/btn:scale-110" />
+              <span>Detail</span>
             </button>
 
             <button
               type="button"
               onClick={toggleUpcomingCollapse}
               aria-expanded={!isUpcomingCollapsed}
-              className="p-1.5 text-fluent-textSecondary hover:text-fluent-text hover:bg-fluent-subtle rounded-fluent border border-fluent-border transition-all flex items-center justify-center"
+              className="p-1 text-fluent-textSecondary hover:text-fluent-text hover:bg-slate-100 rounded border border-slate-200 transition-all flex items-center justify-center"
               title={isUpcomingCollapsed ? "Tampilkan Sesi Mendatang" : "Sembunyikan Sesi Mendatang"}
             >
               <motion.div
                 animate={{ rotate: isUpcomingCollapsed ? -90 : 0 }}
                 transition={smoothTransition}
               >
-                <ChevronDown className="w-4 h-4 text-slate-600 group-hover:text-fluent-blue transition-colors" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-600 group-hover:text-fluent-blue transition-colors" />
               </motion.div>
             </button>
           </div>
         </div>
 
-        {/* Collapsible Content Area - Pure zero-margin container preventing snap */}
+        {/* Collapsible Content Area */}
         <AnimatePresence initial={false}>
           {!isUpcomingCollapsed && (
             <motion.div
@@ -949,25 +953,25 @@ export default function Dashboard({
               }}
               className="overflow-hidden"
             >
-              <div className="pt-4 border-t border-fluent-border mt-3.5">
-                {/* 3-Days Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              <div className="pt-2.5 border-t border-slate-200/60 mt-2.5">
+                {/* 3-Days Summary Cards - Downscaled */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {upcoming3DaysData.map((dayItem, dayIdx) => (
                     <div
                       key={dayIdx}
                       onClick={() => setIsUpcomingModalOpen(true)}
-                      className={`group rounded-fluent border p-3.5 space-y-2.5 transition-all cursor-pointer hover:shadow-md ${
+                      className={`group rounded-lg border p-2.5 space-y-2 transition-all cursor-pointer hover:shadow-xs ${
                         dayItem.dateLabel === 'Hari Ini'
                           ? 'bg-blue-50/40 hover:bg-blue-50/70 border-blue-200 hover:border-fluent-blue/60'
-                          : 'bg-fluent-subtle/30 hover:bg-white border-fluent-border hover:border-fluent-blue/40'
+                          : 'bg-white/80 hover:bg-white border-slate-200 hover:border-fluent-blue/40'
                       }`}
                       title="Klik untuk membuka rincian lengkap dalam popup"
                     >
                       {/* Day Header */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1.5">
                           <span
-                            className={`px-2 py-0.5 text-[11px] font-bold rounded ${
+                            className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${
                               dayItem.dateLabel === 'Hari Ini'
                                 ? 'bg-fluent-blue text-white'
                                 : 'bg-slate-200 text-slate-700'
@@ -975,45 +979,45 @@ export default function Dashboard({
                           >
                             {dayItem.dateLabel}
                           </span>
-                          <span className="text-xs font-semibold text-fluent-text">
+                          <span className="text-[11px] font-semibold text-fluent-text">
                             {dayItem.dateFormatted}
                           </span>
                         </div>
-                        <span className="px-2 py-0.5 bg-white text-fluent-blue border border-fluent-border text-[11px] font-bold rounded-full shadow-2xs">
+                        <span className="px-1.5 py-0.5 bg-white text-fluent-blue border border-slate-200 text-[10px] font-bold rounded-full shadow-2xs">
                           {dayItem.sessions.length} Sesi
                         </span>
                       </div>
 
                       {/* Compact Sessions Preview / Summary */}
                       {dayItem.sessions.length === 0 ? (
-                        <div className="py-2.5 px-2 text-center text-xs text-fluent-textSecondary bg-white/70 rounded border border-dashed border-fluent-border/80">
+                        <div className="py-1.5 px-2 text-center text-[10px] sm:text-[11px] text-fluent-textSecondary bg-slate-50/50 rounded border border-dashed border-slate-200">
                           Tidak ada sesi bimbingan
                         </div>
                       ) : (
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                           {dayItem.sessions.slice(0, 2).map((sess, sIdx) => (
                             <div
                               key={sIdx}
-                              className="flex items-center justify-between text-xs p-1.5 bg-white rounded border border-fluent-border/70 group-hover:border-fluent-blue/30 transition-colors"
+                              className="flex items-center justify-between text-[11px] p-1.5 bg-white rounded border border-slate-200/80 group-hover:border-fluent-blue/30 transition-colors"
                             >
-                              <div className="flex items-center space-x-1.5 truncate max-w-[170px]">
-                                <span className="text-[10px] font-bold text-fluent-blue bg-fluent-blue/10 px-1.5 py-0.5 rounded flex-shrink-0">
+                              <div className="flex items-center space-x-1.5 truncate max-w-[150px] sm:max-w-[170px]">
+                                <span className="text-[9px] font-bold text-fluent-blue bg-fluent-blue/10 px-1 py-0.5 rounded flex-shrink-0">
                                   {sess.timeLabel.split(' ')[0]}
                                 </span>
                                 <span className="font-semibold text-fluent-text truncate">
                                   {sess.student.name}
                                 </span>
                               </div>
-                              <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1 py-0.5 rounded flex-shrink-0">
+                              <span className="text-[9px] font-medium text-slate-500 bg-slate-100 px-1 py-0.5 rounded flex-shrink-0">
                                 {sess.student.packageType || 'GROW'}
                               </span>
                             </div>
                           ))}
 
                           {dayItem.sessions.length > 2 && (
-                            <div className="text-[11px] text-center font-medium text-fluent-blue pt-0.5 group-hover:underline flex items-center justify-center gap-1">
+                            <div className="text-[10px] text-center font-medium text-fluent-blue pt-0.5 group-hover:underline flex items-center justify-center gap-1">
                               <span>+{dayItem.sessions.length - 2} sesi lainnya</span>
-                              <ChevronRight className="w-3 h-3" />
+                              <ChevronRight className="w-2.5 h-2.5" />
                             </div>
                           )}
                         </div>
@@ -1034,11 +1038,11 @@ export default function Dashboard({
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1"
       >
         <div className="flex items-center space-x-2">
-          <div className="bg-slate-200/70 p-1 border border-fluent-border rounded-fluent flex items-center space-x-1 relative shadow-2xs">
+          <div className="bg-slate-200/70 p-0.5 sm:p-1 border border-fluent-border rounded-fluent flex items-center space-x-1 relative shadow-2xs">
             <button
               type="button"
               onClick={() => handleSetViewMode('table')}
-              className={`relative w-36 sm:w-40 py-1.5 rounded-fluent text-xs font-bold transition-colors flex items-center justify-center space-x-2 z-10 select-none ${
+              className={`relative w-28 sm:w-40 py-1 sm:py-1.5 rounded-fluent text-[11px] sm:text-xs font-bold transition-colors flex items-center justify-center space-x-1.5 sm:space-x-2 z-10 select-none ${
                 viewMode === 'table'
                   ? 'text-fluent-blue'
                   : 'text-fluent-textSecondary hover:text-fluent-text'
@@ -1051,14 +1055,14 @@ export default function Dashboard({
                   transition={smoothTransition}
                 />
               )}
-              <List className="w-4 h-4 relative z-10 flex-shrink-0" />
+              <List className="w-3.5 h-3.5 sm:w-4 sm:h-4 relative z-10 flex-shrink-0" />
               <span className="relative z-10 truncate">Daftar Siswa</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSetViewMode('matrix')}
-              className={`relative w-36 sm:w-40 py-1.5 rounded-fluent text-xs font-bold transition-colors flex items-center justify-center space-x-2 z-10 select-none ${
+              className={`relative w-28 sm:w-40 py-1 sm:py-1.5 rounded-fluent text-[11px] sm:text-xs font-bold transition-colors flex items-center justify-center space-x-1.5 sm:space-x-2 z-10 select-none ${
                 viewMode === 'matrix'
                   ? 'text-fluent-blue'
                   : 'text-fluent-textSecondary hover:text-fluent-text'
@@ -1071,7 +1075,7 @@ export default function Dashboard({
                   transition={smoothTransition}
                 />
               )}
-              <Grid className="w-4 h-4 relative z-10 flex-shrink-0" />
+              <Grid className="w-3.5 h-3.5 sm:w-4 sm:h-4 relative z-10 flex-shrink-0" />
               <span className="relative z-10 truncate">Matriks Jadwal</span>
             </button>
           </div>
@@ -1101,27 +1105,27 @@ export default function Dashboard({
             className="bg-white rounded-fluent border border-fluent-border shadow-fluent overflow-hidden"
           >
 
-          {/* Advanced Filters Bar */}
-          <div className="p-4 border-b border-fluent-border bg-fluent-subtle/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Advanced Filters Bar - Compact on Mobile */}
+          <div className="p-2.5 sm:p-4 border-b border-fluent-border bg-fluent-subtle/50 flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4">
 
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-fluent-textSecondary" />
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-fluent-textSecondary" />
               <input
                 type="text"
                 placeholder="Cari siswa, wali, alamat, atau no. HP..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 text-sm bg-white border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue"
+                className="w-full pl-8 sm:pl-9 pr-3 sm:pr-4 py-1 sm:py-1.5 text-xs sm:text-sm bg-white border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue"
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <div>
-                <span className="text-xs text-fluent-textSecondary mr-1.5 font-medium">Paket:</span>
+                <span className="text-[10px] sm:text-xs text-fluent-textSecondary mr-1 sm:mr-1.5 font-medium">Paket:</span>
                 <select
                   value={packageFilter}
                   onChange={(e) => setPackageFilter(e.target.value)}
-                  className="text-xs bg-white border border-fluent-border rounded-fluent px-2.5 py-1.5 focus:outline-none focus:border-fluent-blue"
+                  className="text-[10px] sm:text-xs bg-white border border-fluent-border rounded-fluent px-2 sm:px-2.5 py-1 sm:py-1.5 focus:outline-none focus:border-fluent-blue"
                 >
                   <option value="ALL">Semua Paket</option>
                   <option value="SEED">SEED (3 Sesi/60m)</option>
@@ -1133,11 +1137,11 @@ export default function Dashboard({
               </div>
 
               <div>
-                <span className="text-xs text-fluent-textSecondary mr-1.5 font-medium">Status:</span>
+                <span className="text-[10px] sm:text-xs text-fluent-textSecondary mr-1 sm:mr-1.5 font-medium">Status:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="text-xs bg-white border border-fluent-border rounded-fluent px-2.5 py-1.5 focus:outline-none focus:border-fluent-blue"
+                  className="text-[10px] sm:text-xs bg-white border border-fluent-border rounded-fluent px-2 sm:px-2.5 py-1 sm:py-1.5 focus:outline-none focus:border-fluent-blue"
                 >
                   <option value="ALL">Semua Status</option>
                   <option value="LUNAS">LUNAS</option>
@@ -1147,11 +1151,11 @@ export default function Dashboard({
               </div>
 
               <div>
-                <span className="text-xs text-fluent-textSecondary mr-1.5 font-medium">Hari:</span>
+                <span className="text-[10px] sm:text-xs text-fluent-textSecondary mr-1 sm:mr-1.5 font-medium">Hari:</span>
                 <select
                   value={dayFilter}
                   onChange={(e) => setDayFilter(e.target.value)}
-                  className="text-xs bg-white border border-fluent-border rounded-fluent px-2.5 py-1.5 focus:outline-none focus:border-fluent-blue"
+                  className="text-[10px] sm:text-xs bg-white border border-fluent-border rounded-fluent px-2 sm:px-2.5 py-1 sm:py-1.5 focus:outline-none focus:border-fluent-blue"
                 >
                   <option value="ALL">Semua Hari</option>
                   {DAYS_LIST.map(d => (
@@ -1163,19 +1167,19 @@ export default function Dashboard({
 
           </div>
 
-          {/* Table Content */}
+          {/* Table Content - Downscaled on Mobile */}
           <div className="overflow-x-auto border border-fluent-border rounded-fluent">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-fluent-subtle text-fluent-textSecondary font-semibold border-b border-fluent-border text-xs uppercase tracking-wider">
+            <table className="min-w-full text-left text-xs sm:text-sm">
+              <thead className="bg-fluent-subtle text-fluent-textSecondary font-semibold border-b border-fluent-border text-[9px] sm:text-xs uppercase tracking-wider">
                 <tr>
-                  <th className="py-3 px-4 whitespace-nowrap">No</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Nama Siswa & Wali</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Paket</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">Durasi</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">Jam Belajar</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Jadwal Sesi</th>
-                  <th className="py-3 px-4 text-right whitespace-nowrap">Status Bayar</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">Aksi</th>
+                  <th className="py-2 px-2.5 sm:py-3 sm:px-4 whitespace-nowrap">No</th>
+                  <th className="py-2 px-2.5 sm:py-3 sm:px-4 whitespace-nowrap">Nama Siswa & Wali</th>
+                  <th className="py-2 px-2.5 sm:py-3 sm:px-4 whitespace-nowrap">Paket</th>
+                  <th className="py-2 px-2.5 sm:py-3 sm:px-4 text-center whitespace-nowrap">Durasi</th>
+                  <th className="py-2 px-2.5 sm:py-3 sm:px-4 text-center whitespace-nowrap">Jam Belajar</th>
+                  <th className="py-2 px-2.5 sm:py-3 sm:px-4 whitespace-nowrap">Jadwal Sesi</th>
+                  <th className="py-2 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap">Status Bayar</th>
+                  <th className="py-2 px-2.5 sm:py-3 sm:px-4 text-center whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-fluent-border">
@@ -1198,97 +1202,97 @@ export default function Dashboard({
 
                     return (
                       <tr key={student.id} className="hover:bg-fluent-subtle/60 transition-colors">
-                        <td className="py-3 px-4 font-semibold text-fluent-textSecondary text-xs whitespace-nowrap">
+                        <td className="py-1.5 px-2.5 sm:py-3 sm:px-4 font-semibold text-fluent-textSecondary text-[10px] sm:text-xs whitespace-nowrap">
                           {idx + 1}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-1.5 px-2.5 sm:py-3 sm:px-4 whitespace-nowrap">
                           <button
                             onClick={() => setViewingStudent(student)}
-                            className="font-bold text-fluent-blue hover:underline text-left block"
+                            className="font-bold text-[11px] sm:text-sm text-fluent-blue hover:underline text-left block"
                           >
                             {student.name}
                           </button>
                           {student.parentName && (
-                            <span className="text-xs text-fluent-textSecondary block">
+                            <span className="text-[9px] sm:text-xs text-fluent-textSecondary block">
                               Wali: {student.parentName}
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <span className="font-semibold text-fluent-text block">
+                        <td className="py-1.5 px-2.5 sm:py-3 sm:px-4 whitespace-nowrap">
+                          <span className="font-semibold text-[10px] sm:text-sm text-fluent-text block">
                             {student.packageType}
                           </span>
-                          <span className="text-xs text-fluent-textSecondary block">
+                          <span className="text-[9px] sm:text-xs text-fluent-textSecondary block">
                             {formatIDR(student.valPerMonth)}/bln
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
-                          <span className="font-semibold text-fluent-text">
-                            {student.durationMonths || 1} Bulan
+                        <td className="py-1.5 px-2.5 sm:py-3 sm:px-4 text-center whitespace-nowrap">
+                          <span className="font-semibold text-[10px] sm:text-sm text-fluent-text">
+                            {student.durationMonths || 1} Bln
                           </span>
-                          <span className="text-xs text-fluent-textSecondary block">
+                          <span className="text-[9px] sm:text-xs text-fluent-textSecondary block">
                             ({totalSess} Sesi)
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
-                          <span className="font-semibold text-purple-700">
+                        <td className="py-1.5 px-2.5 sm:py-3 sm:px-4 text-center whitespace-nowrap">
+                          <span className="font-semibold text-[10px] sm:text-sm text-purple-700">
                             {(totalMins / 60).toFixed(1)} Jam
                           </span>
-                          <span className="text-xs text-fluent-textSecondary block">
+                          <span className="text-[9px] sm:text-xs text-fluent-textSecondary block">
                             ({student.minutesPerSession || 60}m/sesi)
                           </span>
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <span className="text-xs font-semibold text-fluent-text bg-blue-50 px-2 py-1 rounded border border-blue-200 inline-block">
+                        <td className="py-1.5 px-2.5 sm:py-3 sm:px-4 whitespace-nowrap">
+                          <span className="text-[9px] sm:text-xs font-semibold text-fluent-text bg-blue-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded border border-blue-200 inline-block">
                             {student.schedule || 'Belum diatur'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right whitespace-nowrap">
-                          <span className={`text-xs ${statusClass} block`}>
+                        <td className="py-1.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap">
+                          <span className={`text-[10px] sm:text-xs ${statusClass} block`}>
                             {statusLabel}
                           </span>
-                          <span className="text-[11px] text-fluent-textSecondary block">
+                          <span className="text-[9px] sm:text-[11px] text-fluent-textSecondary block">
                             {formatIDR(student.paid)} / {formatIDR(totalInv)}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
-                          <div className="flex items-center justify-center space-x-1">
+                        <td className="py-1.5 px-2.5 sm:py-3 sm:px-4 text-center whitespace-nowrap">
+                          <div className="flex items-center justify-center space-x-0.5 sm:space-x-1">
                             <button
                               onClick={() => setViewingStudent(student)}
-                              className="p-1.5 text-fluent-textSecondary hover:text-fluent-blue rounded hover:bg-fluent-subtle"
+                              className="p-1 sm:p-1.5 text-fluent-textSecondary hover:text-fluent-blue rounded hover:bg-fluent-subtle"
                               title="Lihat Profil Detail"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                             <button
                               onClick={() => onGenerateInvoice(student)}
-                              className="p-1.5 text-fluent-textSecondary hover:text-emerald-600 rounded hover:bg-fluent-subtle"
+                              className="p-1 sm:p-1.5 text-fluent-textSecondary hover:text-emerald-600 rounded hover:bg-fluent-subtle"
                               title="Generate Invoice"
                             >
-                              <FileText className="w-4 h-4" />
+                              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                             {onOpenRoadmap && (
                               <button
                                 onClick={() => onOpenRoadmap(student)}
-                                className="p-1.5 text-fluent-textSecondary hover:text-fluent-blue rounded hover:bg-fluent-subtle"
+                                className="p-1 sm:p-1.5 text-fluent-textSecondary hover:text-fluent-blue rounded hover:bg-fluent-subtle"
                                 title="Buka Roadmap Pembelajaran"
                               >
-                                <BookOpen className="w-4 h-4" />
+                                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
                               </button>
                             )}
                             <button
                               onClick={() => openModal(student)}
-                              className="p-1.5 text-fluent-textSecondary hover:text-fluent-blue rounded hover:bg-fluent-subtle"
+                              className="p-1 sm:p-1.5 text-fluent-textSecondary hover:text-fluent-blue rounded hover:bg-fluent-subtle"
                               title="Edit Data Siswa"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                             <button
                               onClick={() => setDeleteId(student.id)}
-                              className="p-1.5 text-fluent-textSecondary hover:text-rose-600 rounded hover:bg-fluent-subtle"
+                              className="p-1 sm:p-1.5 text-fluent-textSecondary hover:text-rose-600 rounded hover:bg-fluent-subtle"
                               title="Hapus Siswa"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </td>
@@ -1297,7 +1301,7 @@ export default function Dashboard({
                   })
                 ) : (
                   <tr>
-                    <td colSpan="8" className="py-8 text-center text-fluent-textSecondary text-xs">
+                    <td colSpan="8" className="py-6 sm:py-8 text-center text-fluent-textSecondary text-[10px] sm:text-xs">
                       Tidak ada data siswa yang cocok dengan kriteria pencarian.
                     </td>
                   </tr>

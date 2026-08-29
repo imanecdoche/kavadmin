@@ -15,6 +15,7 @@ import {
   FileCheck2
 } from 'lucide-react'
 import CertificatePreview from './CertificatePreview'
+import ResponsiveDocumentWrapper from '../common/ResponsiveDocumentWrapper'
 import { formatDateIndonesian } from '../../utils/dateFormatter'
 import { exportElementToPdf, exportElementToPng } from '../../utils/documentExportEngine'
 import { generateCertificateShareLink, generateCertificateWhatsAppMessage } from '../../utils/certificateShare'
@@ -488,11 +489,13 @@ export default function CertificateStudio({
         {/* ========================================================================= */}
         {/* RIGHT COLUMN: LIVE CANVAS A4 PREVIEW */}
         {/* ========================================================================= */}
-        <div className="flex-1 w-full overflow-x-auto bg-slate-100/70 p-4 sm:p-6 rounded-fluent border border-fluent-border flex justify-center items-start shadow-inner">
-          <CertificatePreview
-            previewRef={previewRef}
-            certificateData={certificatePayload}
-          />
+        <div className="flex-1 w-full min-w-0 bg-slate-100/70 p-2 sm:p-6 rounded-fluent border border-fluent-border flex justify-center items-start shadow-inner overflow-hidden">
+          <ResponsiveDocumentWrapper>
+            <CertificatePreview
+              previewRef={previewRef}
+              certificateData={certificatePayload}
+            />
+          </ResponsiveDocumentWrapper>
         </div>
       </div>
     </div>

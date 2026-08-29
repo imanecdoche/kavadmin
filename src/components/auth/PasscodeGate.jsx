@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, KeyRound, AlertCircle, ArrowRight, ShieldCheck, Eye, EyeOff, Loader2, Clock, ShieldAlert } from 'lucide-react'
+import { HiKey, HiEye, HiEyeSlash, HiShieldExclamation, HiExclamationCircle } from 'react-icons/hi2'
+import { RiLoader4Line, RiTimeFill } from 'react-icons/ri'
 import { logoSvg } from '../../assets'
 import { useAuth } from '../../context/AuthContext'
 
@@ -124,7 +125,7 @@ export default function PasscodeGate() {
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Main Passcode Modal Card */}
+      {/* Main Passcode Container (Unboxed) */}
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{
@@ -134,17 +135,14 @@ export default function PasscodeGate() {
           x: shake ? [-8, 8, -6, 6, -3, 3, 0] : 0
         }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-7 sm:p-8 shadow-2xl relative z-10 space-y-6"
+        className="w-full max-w-sm relative z-10 space-y-6"
       >
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="p-3 bg-slate-800/70 border border-slate-700/60 rounded-2xl shadow-inner">
-            <img src={logoSvg} alt="Kavio Edu Logo" className="h-10 w-auto object-contain" />
-          </div>
+          <img src={logoSvg} alt="Kavio Edu Logo" className="h-12 w-auto object-contain brightness-0 invert drop-shadow-md" />
           <div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
-              <span>KAVADMIN ACCESS GATE</span>
-              <Lock className="w-4 h-4 text-sky-400" />
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+              KAVADMIN ACCESS GATE
             </h1>
             <p className="text-xs text-slate-400 mt-1">
               Sistem Manajemen Internal & Administrasi Akademik Kavio Edu
@@ -159,11 +157,11 @@ export default function PasscodeGate() {
             animate={{ opacity: 1, y: 0 }}
             className="p-3.5 bg-rose-950/60 border border-rose-800/80 rounded-xl flex items-start gap-3 text-xs text-rose-200"
           >
-            <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <HiShieldExclamation className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p className="font-bold text-rose-200 flex items-center gap-1.5">
                 <span>Proteksi Anti Brute-Force Aktif</span>
-                <Clock className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                <RiTimeFill className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
               </p>
               <p className="text-[11px] leading-relaxed text-rose-300/90">
                 Formulir dikunci sementara untuk mencegah serangan tebakan otomatis. Silakan tunggu <span className="font-bold font-mono text-rose-100 underline">{lockoutSeconds} detik</span> lagi.
@@ -179,7 +177,7 @@ export default function PasscodeGate() {
             animate={{ opacity: 1, y: 0 }}
             className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl flex items-start gap-2.5 text-xs text-amber-300"
           >
-            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <HiExclamationCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
               <p className="font-semibold text-amber-200">Sesi Terputus</p>
               <p className="text-[11px] leading-relaxed text-amber-300/90">{sessionConflictMessage}</p>
@@ -194,7 +192,7 @@ export default function PasscodeGate() {
             animate={{ opacity: 1, scale: 1 }}
             className="p-3 bg-rose-950/40 border border-rose-800/60 rounded-xl flex items-center gap-2.5 text-xs text-rose-300"
           >
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <HiExclamationCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{error}</span>
           </motion.div>
         )}
@@ -204,25 +202,21 @@ export default function PasscodeGate() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-sky-400" />
+                <HiKey className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                 <span>Masukkan Kode Akses</span>
               </label>
               <button
                 type="button"
                 disabled={isLocked}
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-xs text-slate-400 hover:text-slate-200 disabled:opacity-40 transition-colors flex items-center gap-1"
+                title={showPassword ? 'Sembunyikan' : 'Tampilkan'}
+                aria-label={showPassword ? 'Sembunyikan' : 'Tampilkan'}
+                className="p-1 text-slate-400 hover:text-slate-200 disabled:opacity-40 transition-colors flex items-center justify-center rounded"
               >
                 {showPassword ? (
-                  <>
-                    <EyeOff className="w-3.5 h-3.5" />
-                    <span className="text-[10px]">Sembunyikan</span>
-                  </>
+                  <HiEyeSlash className="w-3.5 h-3.5" />
                 ) : (
-                  <>
-                    <Eye className="w-3.5 h-3.5" />
-                    <span className="text-[10px]">Tampilkan</span>
-                  </>
+                  <HiEye className="w-3.5 h-3.5" />
                 )}
               </button>
             </div>
@@ -238,6 +232,7 @@ export default function PasscodeGate() {
                 onChange={(e) => {
                   setPasscode(e.target.value)
                   if (error) setError('')
+                  if (sessionConflictMessage) clearConflictMessage()
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder={isLocked ? 'TERKUNCI' : '••••••'}
@@ -254,31 +249,19 @@ export default function PasscodeGate() {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <RiLoader4Line className="w-4 h-4 animate-spin" />
                 <span>Memverifikasi Sesi...</span>
               </>
             ) : isLocked ? (
               <>
-                <Clock className="w-4 h-4 animate-spin" />
+                <RiTimeFill className="w-4 h-4 animate-spin" />
                 <span>Terkunci ({lockoutSeconds}s)</span>
               </>
             ) : (
-              <>
-                <span>Buka Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
+              <span>Masuk</span>
             )}
           </button>
         </form>
-
-        {/* Security Feature Badges Footer */}
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Rate-Limited & Single Active Session</span>
-          </div>
-          <span className="font-mono text-[10px]">Cloud Firestore Real-Time</span>
-        </div>
       </motion.div>
 
       {/* Footer Copy */}

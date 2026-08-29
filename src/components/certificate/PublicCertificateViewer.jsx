@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { Download, Printer, Share2, Check, ArrowLeft, ShieldCheck, Award } from 'lucide-react'
 import CertificatePreview from './CertificatePreview'
+import ResponsiveDocumentWrapper from '../common/ResponsiveDocumentWrapper'
 import { parseCertificateShareLink } from '../../utils/certificateShare'
 import { exportElementToPdf, exportElementToPng } from '../../utils/documentExportEngine'
 
@@ -136,11 +137,13 @@ export default function PublicCertificateViewer({ certificateData: propData, onB
       </div>
 
       {/* Render Document */}
-      <div className="w-full flex justify-center overflow-x-auto pb-12">
-        <CertificatePreview
-          previewRef={previewRef}
-          certificateData={data}
-        />
+      <div className="w-full flex justify-center pb-12 overflow-hidden">
+        <ResponsiveDocumentWrapper>
+          <CertificatePreview
+            previewRef={previewRef}
+            certificateData={data}
+          />
+        </ResponsiveDocumentWrapper>
       </div>
     </div>
   )

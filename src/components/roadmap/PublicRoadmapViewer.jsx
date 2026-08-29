@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { Download, Printer, Share2, Check, ArrowLeft, BookOpen, ShieldCheck } from 'lucide-react'
 import RoadmapBatchDocument from './RoadmapBatchDocument'
+import ResponsiveDocumentWrapper from '../common/ResponsiveDocumentWrapper'
 import { parseRoadmapShareLink } from '../../utils/roadmapShare'
 import { exportRoadmapToPng, exportRoadmapToPdf } from '../../utils/roadmapExport'
 
@@ -146,12 +147,14 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
       </div>
 
       {/* Main A4 Printable Roadmap Document */}
-      <div className="w-full overflow-x-auto flex justify-center pb-12">
-        <RoadmapBatchDocument
-          roadmapData={data}
-          previewRef={containerRef}
-          readOnly={true}
-        />
+      <div className="w-full flex justify-center pb-12 overflow-hidden">
+        <ResponsiveDocumentWrapper>
+          <RoadmapBatchDocument
+            roadmapData={data}
+            previewRef={containerRef}
+            readOnly={true}
+          />
+        </ResponsiveDocumentWrapper>
       </div>
     </div>
   )

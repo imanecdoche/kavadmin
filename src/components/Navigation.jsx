@@ -1,16 +1,25 @@
 import React from 'react'
-import { LayoutDashboard, FileText, MessageSquare, BookOpen, Library, Award, GraduationCap, LogOut } from 'lucide-react'
+import {
+  RiDashboard3Line,
+  RiFileList3Line,
+  RiAwardLine,
+  RiGraduationCapLine,
+  RiWhatsappLine,
+  RiRouteLine,
+  RiBookReadLine,
+  RiLogoutBoxRLine
+} from 'react-icons/ri'
 import { logoSvg } from '../assets'
 
 export default function Navigation({ activeTab, setActiveTab, onLogout = null }) {
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'invoice', label: 'Invoice', icon: FileText },
-    { id: 'reports', label: 'Rapor Siswa', icon: Award },
-    { id: 'certificates', label: 'Sertifikat Kelulusan', icon: GraduationCap },
-    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
-    { id: 'roadmap', label: 'Roadmap', icon: BookOpen },
-    { id: 'modules', label: 'Modules', icon: Library },
+    { id: 'dashboard', label: 'Dashboard', icon: RiDashboard3Line },
+    { id: 'invoice', label: 'Invoice', icon: RiFileList3Line },
+    { id: 'reports', label: 'Rapor Siswa', icon: RiAwardLine },
+    { id: 'certificates', label: 'Sertifikat Kelulusan', icon: RiGraduationCapLine },
+    { id: 'whatsapp', label: 'WhatsApp', icon: RiWhatsappLine },
+    { id: 'roadmap', label: 'Roadmap', icon: RiRouteLine },
+    { id: 'modules', label: 'Modules', icon: RiBookReadLine },
   ]
 
   return (
@@ -24,7 +33,7 @@ export default function Navigation({ activeTab, setActiveTab, onLogout = null })
             title="Keluar Sesi (Logout)"
             className="p-1.5 text-slate-400 hover:text-rose-600 rounded"
           >
-            <LogOut className="w-4 h-4" />
+            <RiLogoutBoxRLine className="w-4 h-4" />
           </button>
         )}
       </div>
@@ -96,7 +105,7 @@ export default function Navigation({ activeTab, setActiveTab, onLogout = null })
                     aria-label="Keluar Sesi"
                     className="p-2 rounded-fluent text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <RiLogoutBoxRLine className="w-4 h-4" />
                   </button>
                 </div>
               )}

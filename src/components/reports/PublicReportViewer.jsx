@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { Download, Printer, Share2, Check, ArrowLeft, ShieldCheck, Award } from 'lucide-react'
 import ReportCardPreview from './ReportCardPreview'
+import ResponsiveDocumentWrapper from '../common/ResponsiveDocumentWrapper'
 import { parseReportShareLink } from '../../utils/reportShare'
 import { exportReportToPdf, exportReportToPng } from '../../utils/reportPdfExport'
 
@@ -146,8 +147,10 @@ export default function PublicReportViewer({ reportData: propData, onBack = null
       </div>
 
       {/* Rendered A4 Document */}
-      <div className="w-full overflow-x-auto flex justify-center pb-12">
-        <ReportCardPreview reportData={data} previewRef={previewRef} />
+      <div className="w-full flex justify-center pb-12 overflow-hidden">
+        <ResponsiveDocumentWrapper>
+          <ReportCardPreview reportData={data} previewRef={previewRef} />
+        </ResponsiveDocumentWrapper>
       </div>
     </div>
   )

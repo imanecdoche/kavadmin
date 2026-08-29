@@ -20,6 +20,7 @@ import {
   Edit3
 } from 'lucide-react'
 import RoadmapBatchDocument from './RoadmapBatchDocument'
+import ResponsiveDocumentWrapper from '../common/ResponsiveDocumentWrapper'
 import SessionDetailDrawer from './SessionDetailDrawer'
 import RoadmapPresetSelector from './RoadmapPresetSelector'
 import CustomSessionModal from './CustomSessionModal'
@@ -751,15 +752,14 @@ export default function StudentRoadmapStudio({
         {/* ========================================================================= */}
         {/* RIGHT COLUMN: LIVE A4 PRINTABLE DOCUMENT PREVIEW (Flexible & Responsive) */}
         {/* ========================================================================= */}
-        <div className="flex-1 min-w-0 bg-slate-100/70 p-4 lg:p-6 rounded-fluent border border-fluent-border overflow-x-auto flex justify-start xl:justify-center items-start">
-          {/* Wrapper Pembungkus Dokumen dengan Transform Scale Responsif */}
-          <div className="shrink-0 my-auto py-2 transition-transform origin-top scale-[0.75] sm:scale-[0.85] md:scale-[0.9] 2xl:scale-100">
+        <div className="flex-1 min-w-0 bg-slate-100/70 p-2 sm:p-4 lg:p-6 rounded-fluent border border-fluent-border overflow-hidden flex justify-center items-start shadow-inner">
+          <ResponsiveDocumentWrapper>
             <RoadmapBatchDocument
               roadmapData={roadmapPayload}
               previewRef={previewRef}
               onSelectSession={setActiveSession}
             />
-          </div>
+          </ResponsiveDocumentWrapper>
         </div>
 
       </div>
