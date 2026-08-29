@@ -28,7 +28,9 @@ import {
   calculateOverallRoadmapProgress,
   calculateBatchSessionCount,
   autoAdvanceRoadmap,
-  formatSessionNumber
+  formatSessionNumber,
+  resolveSessionStatusByDate,
+  applyDateBasedStatusToSessions
 } from '../../utils/roadmapCalculator'
 import { generateRoadmapShareLink, generateRoadmapWhatsAppMessage } from '../../utils/roadmapShare'
 import { exportRoadmapToPng, exportRoadmapToPdf } from '../../utils/roadmapExport'
@@ -95,7 +97,8 @@ export default function StudentRoadmapStudio({
         setBatchName(activeStudent.roadmap.batchName || 'BATCH 1')
         setLevel(activeStudent.roadmap.level || (CURRICULUM_PRESETS[tier]?.level || 'A2'))
         setStartSessionNumber(Number(activeStudent.roadmap.startSessionNumber) || 1)
-        setSessions(activeStudent.roadmap.sessions)
+        const dateSynced = applyDateBasedStatusToSessions(activeStudent.roadmap.sessions)
+        setSessions(dateSynced)
       } else {
         // Generate initial sessions from preset based on (sessionsPerMonth * durationMonths)
         const initialList = generateBatchSessions(tier, sPerM, durM, startDate, 1)
@@ -163,7 +166,7 @@ export default function StudentRoadmapStudio({
     saveChanges(autoAdvanced)
   }
 
-  // Handle start date change and auto-sync session dates with 7-day interval
+  // Handle start date change and auto-sync session dates with 7-day interval and automatic status
   const handleStartDateChange = (newDate) => {
     setStartDate(newDate)
     if (!newDate) return
@@ -177,9 +180,19 @@ export default function StudentRoadmapStudio({
       const yyyy = d.getFullYear()
       const mm = String(d.getMonth() + 1).padStart(2, '0')
       const dd = String(d.getDate()).padStart(2, '0')
+      const dateStr = `${yyyy}-${mm}-${dd}`
+      const autoStatus = resolveSessionStatusByDate(dateStr)
+      const currentMastery = typeof s.mastery === 'number' ? s.mastery : 0
+      const masteryVal = autoStatus.status === 'SELESAI'
+        ? (currentMastery > 0 ? currentMastery : 100)
+        : currentMastery
+
       return {
         ...s,
-        date: `${yyyy}-${mm}-${dd}`
+        date: dateStr,
+        status: autoStatus.status,
+        isCompleted: autoStatus.isCompleted,
+        mastery: masteryVal
       }
     })
 

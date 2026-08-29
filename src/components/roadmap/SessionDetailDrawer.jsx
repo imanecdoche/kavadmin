@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle2, Clock, Lock, BookOpen, ExternalLink, Calendar, Layers, Activity } from 'lucide-react'
-import { formatSessionNumber } from '../../utils/roadmapCalculator'
+import { formatSessionNumber, resolveSessionStatusByDate } from '../../utils/roadmapCalculator'
 
 export default function SessionDetailDrawer({
   isOpen = false,
@@ -71,7 +71,21 @@ export default function SessionDetailDrawer({
 
   const handleChangeField = (field, val) => {
     if (readOnly) return
-    const updated = { ...formData, [field]: val }
+    let updated = { ...formData, [field]: val }
+    if (field === 'date' && val) {
+      const autoStatus = resolveSessionStatusByDate(val)
+      const currentMastery = typeof formData.mastery === 'number' ? formData.mastery : 0
+      const masteryVal = autoStatus.status === 'SELESAI'
+        ? (currentMastery > 0 ? currentMastery : 100)
+        : currentMastery
+
+      updated = {
+        ...updated,
+        status: autoStatus.status,
+        isCompleted: autoStatus.isCompleted,
+        mastery: masteryVal
+      }
+    }
     setFormData(updated)
     if (onUpdateSession) onUpdateSession(updated)
   }

@@ -182,10 +182,67 @@ export const autoAdvanceRoadmap = (sessions = []) => {
     if ((status === 'COMPLETED' || status === 'SELESAI') && i + 1 < updated.length) {
       const nextStatus = String(updated[i + 1].status || '').toUpperCase()
       if (nextStatus === 'LOCKED' || nextStatus === 'TERKUNCI' || nextStatus === 'BELUM MULAI') {
-        updated[i + 1].status = 'IN_PROGRESS'
+        updated[i + 1].status = 'SEDANG BERJALAN'
       }
     }
   }
 
   return updated
+}
+
+/**
+ * Menghitung status sesi otomatis berdasarkan tanggal sesi vs hari ini
+ * @param {string} sessionDateStr - Format YYYY-MM-DD
+ * @returns {{ status: string, isCompleted: boolean }}
+ */
+export const resolveSessionStatusByDate = (sessionDateStr) => {
+  if (!sessionDateStr) {
+    return { status: "BELUM MULAI", isCompleted: false }
+  }
+
+  // Normalisasi tanggal ke format midnight lokal YYYY-MM-DD
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const [year, month, day] = String(sessionDateStr).split('-').map(Number)
+  if (!year || !month || !day) {
+    return { status: "BELUM MULAI", isCompleted: false }
+  }
+
+  const sessionDate = new Date(year, month - 1, day)
+  sessionDate.setHours(0, 0, 0, 0)
+
+  if (sessionDate.getTime() < today.getTime()) {
+    return { status: "SELESAI", isCompleted: true }
+  } else if (sessionDate.getTime() === today.getTime()) {
+    return { status: "SEDANG BERJALAN", isCompleted: false }
+  } else {
+    return { status: "BELUM MULAI", isCompleted: false }
+  }
+}
+
+/**
+ * Menerapkan evaluasi status otomatis berbasis tanggal untuk seluruh daftar sesi
+ * @param {Array} sessions
+ * @returns {Array} Updated sessions array
+ */
+export const applyDateBasedStatusToSessions = (sessions = []) => {
+  if (!Array.isArray(sessions) || sessions.length === 0) return []
+
+  return sessions.map((session) => {
+    if (!session.date) return session
+
+    const autoStatus = resolveSessionStatusByDate(session.date)
+    const currentMastery = typeof session.mastery === 'number' ? session.mastery : 0
+    const masteryVal = autoStatus.status === 'SELESAI'
+      ? (currentMastery > 0 ? currentMastery : 100)
+      : currentMastery
+
+    return {
+      ...session,
+      status: autoStatus.status,
+      isCompleted: autoStatus.isCompleted,
+      mastery: masteryVal
+    }
+  })
 }

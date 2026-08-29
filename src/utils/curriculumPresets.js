@@ -2,6 +2,7 @@
  * 📚 Granular Curriculum Presets Library for Kavio Edu
  * Pre-configured 1-Batch session-by-session curriculum roadmaps (SEED, GROW, BOOST, MASTER).
  */
+import { resolveSessionStatusByDate } from './roadmapCalculator'
 
 export const CEFR_A1_PRESET = [
   {
@@ -542,31 +543,37 @@ export const getPresetByCefr = (
     const dd = String(sessionDate.getDate()).padStart(2, '0')
     const dateStr = `${yyyy}-${mm}-${dd}`
 
+    const autoStatus = resolveSessionStatusByDate(dateStr)
+
     if (targetIdx < presetArray.length) {
       const template = presetArray[targetIdx]
-      const isCompleted = template.status === 'COMPLETED' || template.status === 'SELESAI' || template.isCompleted
-      const masteryVal = typeof template.mastery === 'number' ? template.mastery : (isCompleted ? 100 : 0)
+      const rawMastery = typeof template.mastery === 'number' ? template.mastery : 0
+      const masteryVal = autoStatus.status === 'SELESAI'
+        ? (rawMastery > 0 ? rawMastery : 100)
+        : rawMastery
 
       result.push({
         ...template,
         id: `session-${String(sessionNumber).padStart(2, '0')}`,
         sessionNumber,
         level: template.level || levelCode,
-        date: template.date || dateStr,
-        status: template.status || (i === 0 ? 'SEDANG BERJALAN' : 'BELUM MULAI'),
+        date: dateStr,
+        status: autoStatus.status,
         mastery: masteryVal,
-        isCompleted
+        isCompleted: autoStatus.isCompleted
       })
     } else {
+      const masteryVal = autoStatus.status === 'SELESAI' ? 100 : 0
+
       result.push({
         id: `session-${String(sessionNumber).padStart(2, '0')}`,
         sessionNumber,
         level: levelCode,
         title: `Pendalaman Materi & Praktik Lanjutan (Sesi ${sessionNumber})`,
         description: `Sesi penguatan konsep, latihan interaktif tambahan, dan studi kasus terapan untuk jenjang ${cefrLevel}.`,
-        status: i === 0 ? 'SEDANG BERJALAN' : 'BELUM MULAI',
-        mastery: 0,
-        isCompleted: false,
+        status: autoStatus.status,
+        mastery: masteryVal,
+        isCompleted: autoStatus.isCompleted,
         date: dateStr,
         linkedModuleId: null
       })
