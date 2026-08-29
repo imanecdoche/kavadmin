@@ -1,8 +1,8 @@
 import React from 'react'
-import { CheckCircle2, Award, Calendar, Clock, UserCheck, ShieldCheck, Sparkles, Target, ArrowRight } from 'lucide-react'
+import { Award, ShieldCheck } from 'lucide-react'
 import ReportRadarChart from './ReportRadarChart'
 import { formatDateIndonesian } from '../../utils/dateFormatter'
-import { logoSvg, logoBaruPng, stempelKavioEduPng, ttdFatihPng } from '../../assets'
+import { logoBaruPng, stempelKavioEduPng, ttdFatihPng } from '../../assets'
 import { INVOICE_CONFIG } from '../../config/stampConfig'
 
 export default function ReportCardPreview({ reportData, previewRef }) {
@@ -37,6 +37,14 @@ export default function ReportCardPreview({ reportData, previewRef }) {
     verification = { isSigned: true, isStamped: true }
   } = reportData
 
+  const INDONESIAN_LABEL_MAP = {
+    grammar: 'Tata Bahasa & Struktur Kalimat',
+    vocabulary: 'Kosakata & Penguasaan Idiom',
+    speaking: 'Kelancaran Berbicara & Pelafalan',
+    listening: 'Pemahaman Mendengar & Simakan',
+    discipline: 'Kedisiplinan & Tugas Mandiri'
+  }
+
   // Color mapper for individual progress bars
   const getScoreBarColor = (score) => {
     const s = Number(score) || 0
@@ -44,14 +52,6 @@ export default function ReportCardPreview({ reportData, previewRef }) {
     if (s >= 75) return 'bg-fluent-blue'
     if (s >= 65) return 'bg-teal-500'
     return 'bg-amber-500'
-  }
-
-  const getScoreBadgeColor = (score) => {
-    const s = Number(score) || 0
-    if (s >= 85) return 'text-emerald-700 bg-emerald-50 border-emerald-200'
-    if (s >= 75) return 'text-blue-700 bg-blue-50 border-blue-200'
-    if (s >= 65) return 'text-teal-700 bg-teal-50 border-teal-200'
-    return 'text-amber-700 bg-amber-50 border-amber-200'
   }
 
   return (
@@ -106,8 +106,8 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         {/* ========================================================================= */}
         {/* 2. STUDENT PROFILE & ATTENDANCE STRIP */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs">
-          <div className="sm:col-span-7 space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs items-center">
+          <div className="sm:col-span-6 space-y-1">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               Profil Siswa Terdaftar
             </div>
@@ -119,19 +119,19 @@ export default function ReportCardPreview({ reportData, previewRef }) {
             </div>
           </div>
 
-          <div className="sm:col-span-5 flex items-center justify-start sm:justify-end sm:border-l sm:border-slate-200 sm:pl-4 space-x-3">
+          <div className="sm:col-span-6 flex items-center justify-start sm:justify-end sm:border-l sm:border-slate-200 sm:pl-4 space-x-4">
             <div className="text-left sm:text-right">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Presensi & Kehadiran
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                PRESENSI & KEHADIRAN
               </div>
-              <div className="text-xs font-bold text-slate-800 mt-0.5">
+              <div className="text-xs font-bold text-slate-800 mt-0.5 whitespace-nowrap font-mono">
                 {attendance.attendedSessions} / {attendance.totalSessions} Sesi
               </div>
-              <div className="text-[10px] text-slate-500">
+              <div className="text-[10px] text-slate-500 whitespace-nowrap">
                 Ketepatan: {attendance.punctualityRate || 100}%
               </div>
             </div>
-            <div className="bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold px-2.5 py-1 rounded text-xs">
+            <div className="text-emerald-700 font-extrabold font-mono text-sm sm:text-base whitespace-nowrap pl-1">
               {attendance.attendanceRate}% Hadir
             </div>
           </div>
@@ -143,9 +143,8 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           {/* Left: Radar Chart Component */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center bg-white p-3 rounded-lg border border-slate-200/80 shadow-2xs">
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-fluent-blue" />
-              Diagram Radar Kompetensi
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              DIAGRAM RADAR KOMPETENSI
             </div>
             <ReportRadarChart
               competencies={competencies}
@@ -165,20 +164,15 @@ export default function ReportCardPreview({ reportData, previewRef }) {
               {competencies.map((comp) => {
                 const s = Number(comp.score) || 0
                 return (
-                  <div key={comp.key} className="bg-slate-50/70 p-2 rounded border border-slate-100 space-y-1">
+                  <div key={comp.key} className="bg-slate-50/70 p-2.5 rounded border border-slate-100 space-y-1.5">
                     <div className="flex justify-between items-center text-xs">
                       <div className="font-semibold text-slate-800 flex items-center gap-1.5">
-                        <span>{comp.label}</span>
+                        <span>{(comp.key && INDONESIAN_LABEL_MAP[comp.key]) || comp.label}</span>
                         <span className="text-[10px] text-slate-400 font-mono">({comp.weight}%)</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded border font-semibold ${getScoreBadgeColor(s)}`}>
-                          {comp.benchmark || 'Proficient'}
-                        </span>
-                        <span className="font-bold font-mono text-xs text-slate-900 min-w-[28px] text-right">
-                          {s}
-                        </span>
-                      </div>
+                      <span className="font-bold font-mono text-xs text-slate-900 min-w-[28px] text-right">
+                        {s}
+                      </span>
                     </div>
                     {/* Visual Progress Bar */}
                     <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
@@ -198,10 +192,8 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         {/* 4. SUMMARY ACHIEVEMENT HIGHLIGHTS BANNER */}
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-gradient-to-r from-blue-900 to-slate-900 text-white p-4 rounded-xl shadow-sm items-center">
-          <div className="sm:col-span-4 flex items-center space-x-3.5 border-b sm:border-b-0 sm:border-r border-blue-700/50 pb-3 sm:pb-0 sm:pr-4">
-            <div className="bg-white/10 p-2.5 rounded-lg border border-white/20">
-              <Award className="w-7 h-7 text-amber-300" />
-            </div>
+          <div className="sm:col-span-4 flex items-center space-x-3 border-b sm:border-b-0 sm:border-r border-blue-700/50 pb-3 sm:pb-0 sm:pr-4">
+            <Award className="w-8 h-8 text-amber-300 shrink-0" />
             <div>
               <div className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider">
                 Skor Komposit Akhir
@@ -215,10 +207,10 @@ export default function ReportCardPreview({ reportData, previewRef }) {
 
           <div className="sm:col-span-3 flex flex-col justify-center items-start sm:items-center border-b sm:border-b-0 sm:border-r border-blue-700/50 pb-3 sm:pb-0 sm:pr-4">
             <div className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider">
-              Predikat Huruf
+              Predikat
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight leading-none mt-0.5">
-              GRADE {letterGrade}
+            <div className="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight leading-none mt-0.5 font-mono">
+              {letterGrade}
             </div>
           </div>
 
@@ -238,16 +230,14 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         {/* 5. EVALUATOR'S QUALITATIVE FEEDBACK & NEXT TARGETS */}
         {/* ========================================================================= */}
         <div className="space-y-3">
-          <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-fluent-blue" />
+          <div className="text-xs font-bold text-slate-800 uppercase tracking-wider">
             Evaluasi Kualitatif & Rekomendasi Mentor
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             {/* Key Strengths */}
             <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-200/80 space-y-1">
-              <div className="font-bold text-emerald-900 flex items-center gap-1 text-[11px] uppercase tracking-wide">
-                <Sparkles className="w-3 h-3 text-emerald-600" />
+              <div className="font-bold text-emerald-900 text-[11px] uppercase tracking-wide">
                 Kekuatan & Capaian Unggulan
               </div>
               <p className="text-[11px] text-emerald-950 leading-relaxed">
@@ -257,8 +247,7 @@ export default function ReportCardPreview({ reportData, previewRef }) {
 
             {/* Areas for Growth */}
             <div className="bg-amber-50/50 p-3 rounded-lg border border-amber-200/80 space-y-1">
-              <div className="font-bold text-amber-900 flex items-center gap-1 text-[11px] uppercase tracking-wide">
-                <Target className="w-3 h-3 text-amber-600" />
+              <div className="font-bold text-amber-900 text-[11px] uppercase tracking-wide">
                 Fokus Peningkatan Selanjutnya
               </div>
               <p className="text-[11px] text-amber-950 leading-relaxed">
@@ -268,16 +257,13 @@ export default function ReportCardPreview({ reportData, previewRef }) {
           </div>
 
           {/* Next Roadmap Target Banner */}
-          <div className="bg-blue-50/60 p-3 rounded-lg border border-blue-200 flex items-start gap-2.5 text-xs">
-            <ArrowRight className="w-4 h-4 text-fluent-blue shrink-0 mt-0.5" />
-            <div>
-              <div className="font-bold text-slate-900 text-[11px] uppercase tracking-wider">
-                Target Kurikulum & Sesi Berikutnya:
-              </div>
-              <p className="text-[11px] text-slate-700 mt-0.5 leading-relaxed">
-                {qualitativeAssessment.nextRoadmapTarget || 'Melanjutkan modul pembelajaran sesuai jenjang kurikulum.'}
-              </p>
+          <div className="bg-blue-50/60 p-3 rounded-lg border border-blue-200 text-xs space-y-1">
+            <div className="font-bold text-slate-900 text-[11px] uppercase tracking-wider">
+              Target Kurikulum & Sesi Berikutnya
             </div>
+            <p className="text-[11px] text-slate-700 leading-relaxed">
+              {qualitativeAssessment.nextRoadmapTarget || 'Melanjutkan modul pembelajaran sesuai jenjang kurikulum.'}
+            </p>
           </div>
         </div>
 

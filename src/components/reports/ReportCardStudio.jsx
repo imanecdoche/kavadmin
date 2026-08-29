@@ -32,6 +32,14 @@ import {
 import { exportReportToPdf, exportReportToPng } from '../../utils/reportPdfExport'
 import { generateReportShareLink, generateReportWhatsAppMessage } from '../../utils/reportShare'
 
+const INDONESIAN_COMPETENCY_MAP = {
+  grammar: { label: 'Tata Bahasa & Struktur Kalimat', shortLabel: 'Tata Bahasa' },
+  vocabulary: { label: 'Kosakata & Penguasaan Idiom', shortLabel: 'Kosakata' },
+  speaking: { label: 'Kelancaran Berbicara & Pelafalan', shortLabel: 'Berbicara' },
+  listening: { label: 'Pemahaman Mendengar & Simakan', shortLabel: 'Mendengar' },
+  discipline: { label: 'Kedisiplinan & Tugas Mandiri', shortLabel: 'Kedisiplinan' }
+}
+
 export default function ReportCardStudio({
   students = [],
   selectedStudent: initialStudent = null,
@@ -242,8 +250,8 @@ export default function ReportCardStudio({
           <div className="hidden sm:flex items-center bg-white px-3 py-1.5 rounded-fluent border border-fluent-border shadow-2xs space-x-2 mr-1">
             <span className="text-xs font-semibold text-fluent-textSecondary">Score:</span>
             <span className="text-xs font-mono font-bold text-fluent-blue">{compositeScore.toFixed(1)}</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-              GRADE {letterGrade}
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+              {letterGrade}
             </span>
           </div>
 
@@ -490,7 +498,7 @@ export default function ReportCardStudio({
                   <div key={comp.key} className="bg-fluent-subtle p-2.5 rounded border border-fluent-border space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <div className="font-semibold text-fluent-text flex items-center gap-1">
-                        <span>{comp.label}</span>
+                        <span>{(comp.key && INDONESIAN_COMPETENCY_MAP[comp.key]?.label) || comp.label}</span>
                         <span className="text-[10px] text-fluent-textSecondary font-mono font-normal">({comp.weight}%)</span>
                       </div>
                       <div className="flex items-center space-x-2">

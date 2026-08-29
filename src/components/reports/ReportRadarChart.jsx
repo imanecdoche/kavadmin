@@ -15,11 +15,11 @@ export default function ReportRadarChart({
   className = ''
 }) {
   const safeData = competencies && competencies.length >= 3 ? competencies : [
-    { label: 'Grammar', shortLabel: 'Grammar', score: 80 },
-    { label: 'Vocabulary', shortLabel: 'Vocab', score: 80 },
-    { label: 'Speaking', shortLabel: 'Speaking', score: 80 },
-    { label: 'Listening', shortLabel: 'Listening', score: 80 },
-    { label: 'Discipline', shortLabel: 'Discipline', score: 80 }
+    { label: 'Tata Bahasa & Struktur Kalimat', shortLabel: 'Tata Bahasa', score: 80 },
+    { label: 'Kosakata & Penguasaan Idiom', shortLabel: 'Kosakata', score: 80 },
+    { label: 'Kelancaran Berbicara & Pelafalan', shortLabel: 'Berbicara', score: 80 },
+    { label: 'Pemahaman Mendengar & Simakan', shortLabel: 'Mendengar', score: 80 },
+    { label: 'Kedisiplinan & Tugas Mandiri', shortLabel: 'Kedisiplinan', score: 80 }
   ]
 
   const numAxes = safeData.length
@@ -38,17 +38,26 @@ export default function ReportRadarChart({
     }).join(' ')
   }
 
+  const COMPETENCY_SHORT_MAP = {
+    grammar: 'Tata Bahasa',
+    vocabulary: 'Kosakata',
+    speaking: 'Berbicara',
+    listening: 'Mendengar',
+    discipline: 'Kedisiplinan'
+  }
+
   // Calculate data polygon vertices
   const dataPoints = safeData.map((item, i) => {
     const angle = (2 * Math.PI / numAxes) * i - Math.PI / 2
     const scoreRatio = Math.max(0, Math.min(100, Number(item.score) || 0)) / 100
     const x = cx + radius * scoreRatio * Math.cos(angle)
     const y = cy + radius * scoreRatio * Math.sin(angle)
+    const label = (item.key && COMPETENCY_SHORT_MAP[item.key]) || item.shortLabel || item.label || `Skill ${i + 1}`
     return {
       x,
       y,
       score: item.score,
-      label: item.shortLabel || item.label || `Skill ${i + 1}`,
+      label,
       fullLabel: item.label,
       angle
     }

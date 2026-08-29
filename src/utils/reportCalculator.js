@@ -7,8 +7,8 @@
 export const DEFAULT_COMPETENCIES = [
   {
     key: 'grammar',
-    label: 'Grammar & Structure',
-    shortLabel: 'Grammar',
+    label: 'Tata Bahasa & Struktur Kalimat',
+    shortLabel: 'Tata Bahasa',
     weight: 25,
     score: 85,
     benchmark: 'Proficient',
@@ -16,8 +16,8 @@ export const DEFAULT_COMPETENCIES = [
   },
   {
     key: 'vocabulary',
-    label: 'Vocabulary & Idiom',
-    shortLabel: 'Vocabulary',
+    label: 'Kosakata & Penguasaan Idiom',
+    shortLabel: 'Kosakata',
     weight: 20,
     score: 85,
     benchmark: 'Proficient',
@@ -25,8 +25,8 @@ export const DEFAULT_COMPETENCIES = [
   },
   {
     key: 'speaking',
-    label: 'Speaking Fluency & Pronunciation',
-    shortLabel: 'Speaking',
+    label: 'Kelancaran Berbicara & Pelafalan',
+    shortLabel: 'Berbicara',
     weight: 25,
     score: 85,
     benchmark: 'Proficient',
@@ -34,8 +34,8 @@ export const DEFAULT_COMPETENCIES = [
   },
   {
     key: 'listening',
-    label: 'Listening & Comprehension',
-    shortLabel: 'Listening',
+    label: 'Pemahaman Mendengar & Simakan',
+    shortLabel: 'Mendengar',
     weight: 15,
     score: 85,
     benchmark: 'Proficient',
@@ -43,8 +43,8 @@ export const DEFAULT_COMPETENCIES = [
   },
   {
     key: 'discipline',
-    label: 'Discipline & Homework',
-    shortLabel: 'Discipline',
+    label: 'Kedisiplinan & Tugas Mandiri',
+    shortLabel: 'Kedisiplinan',
     weight: 15,
     score: 90,
     benchmark: 'Excellent',
@@ -96,16 +96,19 @@ export const calculateCompositeScore = (competencies = []) => {
 /**
  * Returns letter grade based on composite score
  * @param {number} score 0 - 100
- * @returns {"A+" | "A" | "B+" | "B" | "C" | "D"}
+ * @returns {"SS" | "A+" | "A" | "A-" | "B+" | "B" | "B-" | "C" | "Z"}
  */
 export const getLetterGrade = (score) => {
   const s = Number(score) || 0
+  if (s >= 97.0) return 'SS'
   if (s >= 93.0) return 'A+'
-  if (s >= 85.0) return 'A'
+  if (s >= 88.0) return 'A'
+  if (s >= 83.0) return 'A-'
   if (s >= 78.0) return 'B+'
-  if (s >= 70.0) return 'B'
-  if (s >= 60.0) return 'C'
-  return 'D'
+  if (s >= 73.0) return 'B'
+  if (s >= 68.0) return 'B-'
+  if (s >= 55.0) return 'C'
+  return 'Z'
 }
 
 /**
@@ -114,18 +117,29 @@ export const getLetterGrade = (score) => {
  */
 export const getPerformanceCategory = (score) => {
   const s = Number(score) || 0
+  if (s >= 97.0) {
+    return {
+      category: 'Supreme Distinction',
+      label: 'SUPREME DISTINCTION',
+      description: 'Penguasaan materi luar biasa sempurna, mandiri & sangat fasih secara natural.',
+      color: 'text-amber-700',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-300',
+      badgeClass: 'bg-amber-100 text-amber-900 border-amber-300'
+    }
+  }
   if (s >= 93.0) {
     return {
-      category: 'Distinction',
-      label: 'DISTINCTION',
-      description: 'Penguasaan materi luar biasa, mandiri & sangat natural.',
+      category: 'High Distinction',
+      label: 'HIGH DISTINCTION',
+      description: 'Penguasaan materi luar biasa, mandiri & konsisten dalam komunikasi.',
       color: 'text-emerald-700',
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-300',
       badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300'
     }
   }
-  if (s >= 85.0) {
+  if (s >= 88.0) {
     return {
       category: 'Proficient',
       label: 'PROFICIENT',
@@ -134,6 +148,17 @@ export const getPerformanceCategory = (score) => {
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-300',
       badgeClass: 'bg-blue-100 text-blue-800 border-blue-300'
+    }
+  }
+  if (s >= 83.0) {
+    return {
+      category: 'Upper Proficient',
+      label: 'UPPER PROFICIENT',
+      description: 'Pemahaman materi solid dengan penguasaan konsep dan kosakata yang baik.',
+      color: 'text-sky-700',
+      bgColor: 'bg-sky-50',
+      borderColor: 'border-sky-300',
+      badgeClass: 'bg-sky-100 text-sky-800 border-sky-300'
     }
   }
   if (s >= 78.0) {
@@ -147,7 +172,7 @@ export const getPerformanceCategory = (score) => {
       badgeClass: 'bg-indigo-100 text-indigo-800 border-indigo-300'
     }
   }
-  if (s >= 70.0) {
+  if (s >= 73.0) {
     return {
       category: 'Competent',
       label: 'COMPETENT',
@@ -158,7 +183,7 @@ export const getPerformanceCategory = (score) => {
       badgeClass: 'bg-teal-100 text-teal-800 border-teal-300'
     }
   }
-  if (s >= 60.0) {
+  if (s >= 68.0) {
     return {
       category: 'Developing',
       label: 'DEVELOPING',
@@ -169,9 +194,20 @@ export const getPerformanceCategory = (score) => {
       badgeClass: 'bg-amber-100 text-amber-800 border-amber-300'
     }
   }
+  if (s >= 55.0) {
+    return {
+      category: 'Basic',
+      label: 'BASIC',
+      description: 'Perlu bimbingan intensif dan pengulangan konsep materi dasar.',
+      color: 'text-orange-700',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-300',
+      badgeClass: 'bg-orange-100 text-orange-800 border-orange-300'
+    }
+  }
   return {
-    category: 'Novice',
-    label: 'NOVICE',
+    category: 'Needs Reset',
+    label: 'NEEDS RESET',
     description: 'Membutuhkan penguatan dan perombakan fondasi materi dasar secara menyeluruh.',
     color: 'text-rose-700',
     bgColor: 'bg-rose-50',

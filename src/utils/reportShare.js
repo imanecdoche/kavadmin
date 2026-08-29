@@ -91,7 +91,7 @@ Berikut kami sampaikan rincian evaluasi capaian belajar berkala untuk ananda *${
 
 📊 *RINGKASAN CAPAIAN AKADEMIK:*
 • Skor Akhir Komposit: *${Number(compositeScore).toFixed(1)} / 100*
-• Predikat Capaian: *GRADE ${letterGrade}*
+• Predikat Capaian: *${letterGrade}* (${performanceCategory.label || 'PROFICIENT'})
 • Kehadiran Sesi: *${attendance.attendedSessions}/${attendance.totalSessions} Sesi (${attendance.attendanceRate}%)*
 
 🌟 *Sorotan Kemajuan & Keunggulan:*
