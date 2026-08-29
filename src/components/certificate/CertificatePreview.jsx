@@ -107,8 +107,8 @@ export default function CertificatePreview({ certificateData, previewRef }) {
 
         {/* 5. UCAPAN TERIMA KASIH & APRESIASI RESMI */}
         <div className="text-center my-6 max-w-xl mx-auto px-4">
-          <p className="text-xs text-slate-600 italic leading-relaxed">
-            "{gratitudeMessage || 'Terima kasih atas dedikasi, kerja keras, dan komitmen luar biasa yang telah ditunjukkan selama mengikuti program pembelajaran. Semoga pencapaian ini menjadi pijakan kuat untuk meraih kesuksesan akademik dan masa depan yang gemilang.'}"
+          <p className="text-xs text-slate-700 leading-relaxed font-normal">
+            {gratitudeMessage || 'Terima kasih atas dedikasi, kerja keras, dan komitmen luar biasa yang telah ditunjukkan selama mengikuti program pembelajaran. Semoga pencapaian ini menjadi pijakan kuat untuk meraih kesuksesan akademik dan masa depan yang gemilang.'}
           </p>
         </div>
       </div>
