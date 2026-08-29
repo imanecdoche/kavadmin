@@ -235,7 +235,7 @@ export default function PasscodeGate() {
                   if (sessionConflictMessage) clearConflictMessage()
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={isLocked ? 'TERKUNCI' : '••••••'}
+                placeholder={isLocked ? 'TERKUNCI' : ''}
                 disabled={isSubmitting || isLocked}
                 className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700 disabled:bg-slate-900/50 disabled:border-rose-900/50 disabled:text-rose-400 rounded-xl text-center text-xl tracking-[0.3em] font-mono font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
               />
