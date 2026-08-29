@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { logoSvg } from '../assets'
 
 export default function SplashScreen({ onFinish }) {
   const [progress, setProgress] = useState(0)
   const [loadingInfo, setLoadingInfo] = useState('Memuat modul sistem...')
+  const onFinishRef = useRef(onFinish)
+  onFinishRef.current = onFinish
 
   useEffect(() => {
     const startTime = Date.now()
-    const targetDuration = 2200 // 2.2 seconds (strictly < 5s)
+    const targetDuration = 1600 // 1.6 seconds smooth launch
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime
@@ -31,13 +33,13 @@ export default function SplashScreen({ onFinish }) {
       if (rawPct >= 100) {
         clearInterval(interval)
         setTimeout(() => {
-          if (onFinish) onFinish()
-        }, 220)
+          if (onFinishRef.current) onFinishRef.current()
+        }, 120)
       }
     }, 25)
 
     return () => clearInterval(interval)
-  }, [onFinish])
+  }, [])
 
   return (
     <motion.div

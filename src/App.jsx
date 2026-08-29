@@ -57,8 +57,10 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // Browser beforeunload confirmation dialog
+  // Browser beforeunload confirmation dialog (skip in Electron to prevent uncloseable window)
   useEffect(() => {
+    if (window.electronAPI && window.electronAPI.isElectron) return
+
     const handleBeforeUnload = (e) => {
       e.preventDefault()
       e.returnValue = ''
