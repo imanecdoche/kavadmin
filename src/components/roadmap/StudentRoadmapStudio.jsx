@@ -61,6 +61,7 @@ export default function StudentRoadmapStudio({
   const [durationMonths, setDurationMonths] = useState(3)
   const [level, setLevel] = useState('A2')
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [startSessionNumber, setStartSessionNumber] = useState(1)
   const [sessions, setSessions] = useState([])
 
   // Modals & Drawers
@@ -89,13 +90,15 @@ export default function StudentRoadmapStudio({
         setDocId(activeStudent.roadmap.id || `ROA/KEEN/${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2, '0')}/${Math.floor(Math.random()*9000)+1000}`)
         setBatchName(activeStudent.roadmap.batchName || 'BATCH 1')
         setLevel(activeStudent.roadmap.level || (CURRICULUM_PRESETS[tier]?.level || 'A2'))
+        setStartSessionNumber(Number(activeStudent.roadmap.startSessionNumber) || 1)
         setSessions(activeStudent.roadmap.sessions)
       } else {
         // Generate initial sessions from preset based on (sessionsPerMonth * durationMonths)
-        const initialList = generateBatchSessions(tier, sPerM, durM, startDate)
+        const initialList = generateBatchSessions(tier, sPerM, durM, startDate, 1)
         setSessions(initialList)
         setBatchName('BATCH 1')
         setLevel(CURRICULUM_PRESETS[tier]?.level || 'A2')
+        setStartSessionNumber(1)
       }
     }
   }, [activeStudent?.id])
@@ -116,6 +119,7 @@ export default function StudentRoadmapStudio({
     sessionsPerMonth,
     level,
     startDate,
+    startSessionNumber,
     sessions,
     updatedAt: new Date().toISOString()
   }
@@ -131,8 +135,8 @@ export default function StudentRoadmapStudio({
   // Delete session handler
   const handleDeleteSession = (sessionId) => {
     const filtered = sessions.filter(s => s.id !== sessionId)
-    // Re-index session numbers
-    const reindexed = filtered.map((s, idx) => ({ ...s, sessionNumber: idx + 1 }))
+    // Re-index session numbers starting from startSessionNumber
+    const reindexed = filtered.map((s, idx) => ({ ...s, sessionNumber: startSessionNumber + idx }))
     setSessions(reindexed)
     saveChanges(reindexed)
   }
@@ -144,7 +148,7 @@ export default function StudentRoadmapStudio({
     if (exists) {
       nextList = sessions.map(s => s.id === newOrUpdatedS.id ? newOrUpdatedS : s)
     } else {
-      nextList = [...sessions, { ...newOrUpdatedS, sessionNumber: sessions.length + 1 }]
+      nextList = [...sessions, { ...newOrUpdatedS, sessionNumber: startSessionNumber + sessions.length }]
     }
     const autoAdvanced = autoAdvanceRoadmap(nextList)
     setSessions(autoAdvanced)
@@ -175,10 +179,20 @@ export default function StudentRoadmapStudio({
     saveChanges(updated)
   }
 
-  // Regenerate sessions based on current duration, sessionsPerMonth, and selected CEFR level
+  // Handle starting session number change
+  const handleStartSessionChange = (newStartNum) => {
+    const validNum = Math.max(1, Number(newStartNum) || 1)
+    setStartSessionNumber(validNum)
+    const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
+    const generated = getPresetByCefr(level, totalCount, startDate, validNum)
+    setSessions(generated)
+    saveChanges(generated, validNum)
+  }
+
+  // Regenerate sessions based on current duration, sessionsPerMonth, selected CEFR level, and startSessionNumber
   const handleRegenerateSessions = () => {
     const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
-    const generated = getPresetByCefr(level, totalCount, startDate)
+    const generated = getPresetByCefr(level, totalCount, startDate, startSessionNumber)
     setSessions(generated)
     saveChanges(generated)
   }
@@ -187,17 +201,18 @@ export default function StudentRoadmapStudio({
   const handleApplyPreset = (preset) => {
     if (!preset) return
     const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
-    const generated = getPresetByCefr(preset.level || preset.tier, totalCount, startDate)
+    const generated = getPresetByCefr(preset.level || preset.tier, totalCount, startDate, startSessionNumber)
     setSessions(generated)
     setLevel(preset.level || 'A1')
     saveChanges(generated)
   }
 
   // Save changes helper
-  const saveChanges = (latestSessions = sessions) => {
+  const saveChanges = (latestSessions = sessions, curStartNum = startSessionNumber) => {
     if (!activeStudent) return
     const updatedRoadmap = {
       ...roadmapPayload,
+      startSessionNumber: curStartNum,
       sessions: latestSessions,
       updatedAt: new Date().toISOString()
     }
@@ -402,18 +417,33 @@ export default function StudentRoadmapStudio({
               </div>
             </div>
 
-            {/* Tanggal Mulai Batch */}
-            <div>
-              <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1 flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-fluent-blue" />
-                Tanggal Mulai Batch
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => handleStartDateChange(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-mono font-medium"
-              />
+            {/* Tanggal Mulai Batch & Mulai dari Sesi */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-fluent-blue" />
+                  Tanggal Mulai Batch
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-mono font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                  Mulai dari Sesi Ke-
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={startSessionNumber}
+                  onChange={(e) => handleStartSessionChange(Number(e.target.value) || 1)}
+                  className="w-full px-2.5 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-bold text-center"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 pt-1">
