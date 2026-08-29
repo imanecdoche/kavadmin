@@ -272,3 +272,80 @@ export const applyDateBasedStatusToSessions = (sessions = [], defaultStartTime =
     }
   })
 }
+
+/**
+ * Standar Slot Sesi Harian Kavio Edu
+ */
+export const KAVIO_TIME_SLOTS = {
+  slot1: "09:00",
+  slot2: "13:00",
+  slot3: "15:00"
+}
+
+/**
+ * Mengekstrak jam sesi belajar (format HH:mm) dari data profil siswa di Firestore / CRM
+ * @param {Object} student - Objek data siswa
+ * @returns {string} Format HH:mm (contoh: "09:00", "13:00", "15:00")
+ */
+export const extractStudentSlotTime = (student) => {
+  if (!student) return KAVIO_TIME_SLOTS.slot3 // Default 15:00
+
+  // 1. Direct field match
+  if (student.sessionTime && typeof student.sessionTime === 'string') {
+    return student.sessionTime.replace('.', ':').trim()
+  }
+  if (student.timeSlot && typeof student.timeSlot === 'string') {
+    return student.timeSlot.replace('.', ':').trim()
+  }
+  if (student.preferredSlot && typeof student.preferredSlot === 'string') {
+    return student.preferredSlot.replace('.', ':').trim()
+  }
+
+  // 2. Schedule object
+  if (student.schedule && typeof student.schedule === 'object' && student.schedule.time) {
+    return String(student.schedule.time).replace('.', ':').trim()
+  }
+
+  // 3. Numeric slot index (1, 2, 3)
+  if (student.slot === 1 || student.slot === '1') return KAVIO_TIME_SLOTS.slot1 // 09:00
+  if (student.slot === 2 || student.slot === '2') return KAVIO_TIME_SLOTS.slot2 // 13:00
+  if (student.slot === 3 || student.slot === '3') return KAVIO_TIME_SLOTS.slot3 // 15:00
+
+  // 4. Extract from selectedSlots array (e.g. ["Senin 15.00 WIB", "Kamis 15.00 WIB"])
+  if (Array.isArray(student.selectedSlots) && student.selectedSlots.length > 0) {
+    const firstSlot = String(student.selectedSlots[0])
+    if (firstSlot.includes('09.00') || firstSlot.includes('09:00') || firstSlot.toLowerCase().includes('pagi')) {
+      return KAVIO_TIME_SLOTS.slot1
+    }
+    if (firstSlot.includes('13.00') || firstSlot.includes('13:00') || firstSlot.toLowerCase().includes('siang')) {
+      return KAVIO_TIME_SLOTS.slot2
+    }
+    if (firstSlot.includes('15.00') || firstSlot.includes('15:00') || firstSlot.toLowerCase().includes('sore')) {
+      return KAVIO_TIME_SLOTS.slot3
+    }
+    const match = firstSlot.match(/(\d{1,2})[.:](\d{2})/)
+    if (match) {
+      return `${String(match[1]).padStart(2, '0')}:${match[2]}`
+    }
+  }
+
+  // 5. Extract from schedule string (e.g. "Senin 15.00 WIB")
+  if (typeof student.schedule === 'string' && student.schedule.trim()) {
+    const s = student.schedule
+    if (s.includes('09.00') || s.includes('09:00') || s.toLowerCase().includes('pagi')) {
+      return KAVIO_TIME_SLOTS.slot1
+    }
+    if (s.includes('13.00') || s.includes('13:00') || s.toLowerCase().includes('siang')) {
+      return KAVIO_TIME_SLOTS.slot2
+    }
+    if (s.includes('15.00') || s.includes('15:00') || s.toLowerCase().includes('sore')) {
+      return KAVIO_TIME_SLOTS.slot3
+    }
+    const match = s.match(/(\d{1,2})[.:](\d{2})/)
+    if (match) {
+      return `${String(match[1]).padStart(2, '0')}:${match[2]}`
+    }
+  }
+
+  return KAVIO_TIME_SLOTS.slot3 // 15:00
+}

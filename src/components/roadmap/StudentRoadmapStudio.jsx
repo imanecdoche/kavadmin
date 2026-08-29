@@ -31,7 +31,9 @@ import {
   formatSessionNumber,
   resolveSessionStatusByDate,
   resolveSessionStatusByDateTime,
-  applyDateBasedStatusToSessions
+  applyDateBasedStatusToSessions,
+  extractStudentSlotTime,
+  KAVIO_TIME_SLOTS
 } from '../../utils/roadmapCalculator'
 import { generateRoadmapShareLink, generateRoadmapWhatsAppMessage } from '../../utils/roadmapShare'
 import { exportRoadmapToPng, exportRoadmapToPdf } from '../../utils/roadmapExport'
@@ -89,6 +91,7 @@ export default function StudentRoadmapStudio({
       const tier = activeStudent.packageType || 'GROW'
       const sPerM = Number(activeStudent.sessionsPerMonth) || 4
       const durM = Number(activeStudent.durationMonths) || 3
+      const studentSlotTime = extractStudentSlotTime(activeStudent)
 
       setSessionsPerMonth(sPerM)
       setDurationMonths(durM)
@@ -100,15 +103,17 @@ export default function StudentRoadmapStudio({
         setBatchName(activeStudent.roadmap.batchName || 'BATCH 1')
         setLevel(activeStudent.roadmap.level || (CURRICULUM_PRESETS[tier]?.level || 'A2'))
         setStartSessionNumber(Number(activeStudent.roadmap.startSessionNumber) || 1)
-        const sTime = activeStudent.roadmap.defaultStartTime || '16:00'
+        const sTime = activeStudent.roadmap.defaultStartTime || studentSlotTime || '15:00'
         const sDur = Number(activeStudent.roadmap.defaultDuration) || 90
         setDefaultStartTime(sTime)
         setDefaultDuration(sDur)
         const dateSynced = applyDateBasedStatusToSessions(activeStudent.roadmap.sessions, sTime, sDur)
         setSessions(dateSynced)
       } else {
-        // Generate initial sessions from preset based on (sessionsPerMonth * durationMonths)
-        const initialList = generateBatchSessions(tier, sPerM, durM, startDate, 1, defaultStartTime, defaultDuration)
+        // Generate initial sessions from preset based on student's CRM slot time
+        setDefaultStartTime(studentSlotTime)
+        setDefaultDuration(90)
+        const initialList = generateBatchSessions(tier, sPerM, durM, startDate, 1, studentSlotTime, 90)
         setSessions(initialList)
         setRoadmapTitle('PETA ALUR BELAJAR MODULAR 1-BATCH')
         setRoadmapSubtitle('OFFICIAL 1-BATCH MODULAR LEARNING ROADMAP & SESSION MATRIX')
@@ -443,11 +448,14 @@ export default function StudentRoadmapStudio({
               }}
               className="w-full px-3 py-2 text-xs font-bold text-fluent-text border border-fluent-border rounded-fluent bg-white focus:outline-none focus:border-fluent-blue"
             >
-              {students.map((st) => (
-                <option key={st.id} value={st.id}>
-                  {st.name} — Paket {st.packageType || 'GROW'} ({st.parentName ? `Wali: ${st.parentName}` : '-'})
-                </option>
-              ))}
+              {students.map((st) => {
+                const slotTime = extractStudentSlotTime(st)
+                return (
+                  <option key={st.id} value={st.id}>
+                    {st.name} — Paket {st.packageType || 'GROW'} (Slot: {slotTime} WIB)
+                  </option>
+                )
+              })}
             </select>
           </div>
 
@@ -481,7 +489,7 @@ export default function StudentRoadmapStudio({
                     const newLevel = e.target.value
                     setLevel(newLevel)
                     const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
-                    const generated = getPresetByCefr(newLevel, totalCount, startDate)
+                    const generated = getPresetByCefr(newLevel, totalCount, startDate, startSessionNumber, defaultStartTime, defaultDuration)
                     setSessions(generated)
                     saveChanges(generated)
                   }}
@@ -538,6 +546,45 @@ export default function StudentRoadmapStudio({
                   onChange={(e) => handleStartTimeChange(e.target.value)}
                   className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-mono font-medium"
                 />
+                {/* Quick Slot Preset Buttons */}
+                <div className="flex items-center gap-1 mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleStartTimeChange(KAVIO_TIME_SLOTS.slot1)}
+                    className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition-colors ${
+                      defaultStartTime === KAVIO_TIME_SLOTS.slot1
+                        ? 'bg-fluent-blue text-white border-fluent-blue font-bold'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                    title="Slot 1 (Pagi)"
+                  >
+                    09:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStartTimeChange(KAVIO_TIME_SLOTS.slot2)}
+                    className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition-colors ${
+                      defaultStartTime === KAVIO_TIME_SLOTS.slot2
+                        ? 'bg-fluent-blue text-white border-fluent-blue font-bold'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                    title="Slot 2 (Siang)"
+                  >
+                    13:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStartTimeChange(KAVIO_TIME_SLOTS.slot3)}
+                    className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition-colors ${
+                      defaultStartTime === KAVIO_TIME_SLOTS.slot3
+                        ? 'bg-fluent-blue text-white border-fluent-blue font-bold'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                    title="Slot 3 (Sore)"
+                  >
+                    15:00
+                  </button>
+                </div>
               </div>
 
               <div>
