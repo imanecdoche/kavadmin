@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { Download, Printer, Check, Copy, FileText, ArrowLeft, MessageSquare, Award } from 'lucide-react'
+import { Download, Printer, Check, Copy, FileText, ArrowLeft, MessageSquare, Receipt } from 'lucide-react'
 import { exportElementToPdf, exportElementToPng } from '../utils/documentExportEngine'
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
@@ -138,7 +138,7 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
             title="Lihat / Cetak Kwitansi Pembayaran"
             aria-label="Lihat / Cetak Kwitansi Pembayaran"
           >
-            <Award className="w-4 h-4 text-emerald-600" />
+            <Receipt className="w-4 h-4 text-emerald-600" />
           </button>
         </div>
       </header>

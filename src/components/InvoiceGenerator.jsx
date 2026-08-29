@@ -7,7 +7,7 @@ import {
   Printer,
   Share2,
   Palette,
-  Award,
+  Receipt,
   ArrowLeftRight
 } from 'lucide-react'
 import { exportElementToPdf, exportElementToPng } from '../utils/documentExportEngine'
@@ -463,7 +463,7 @@ Kavio Edu Management`
             title="Cetak Kwitansi Pembayaran Resmi"
             aria-label="Cetak Kwitansi Pembayaran Resmi"
           >
-            <Award className="w-4 h-4 text-emerald-600" />
+            <Receipt className="w-4 h-4 text-emerald-600" />
           </button>
         </div>
       </div>
