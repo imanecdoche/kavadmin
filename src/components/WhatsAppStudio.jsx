@@ -82,6 +82,29 @@ Sampai jumpa di kelas.
 
 Salam hangat,
 Kavio Edu Team`
+    },
+    {
+      title: 'Laporan Capaian Belajar Siswa (Academic Progress Report)',
+      category: 'Laporan Rapor',
+      generate: () => `*LAPORAN PERKEMBANGAN BELAJAR SISWA (ACADEMIC PROGRESS REPORT)*
+*KAVIO EDU — Private English Class & Academic Mentoring*
+━━━━━━━━━━━━━━━━━━━━━
+
+Yth. Bpk/Ibu ${parentName || studentName},
+
+Berikut kami sampaikan rincian evaluasi capaian belajar berkala ananda *${studentName}*:
+
+📊 *RINGKASAN AKADEMIK:*
+• Status: *Laporan Resmi Selesai Dievaluasi*
+• Jadwal Sesi: *${scheduleText}*
+
+🌟 Dokumen digital resmi lengkap dengan visualisasi Radar Chart 5 Kompetensi, catatan keunggulan, serta tanda tangan & stempel Founder dapat dilihat melalui tautan rapor siswa.
+
+Terima kasih atas kepercayaan dan kerja sama Bapak/Ibu dalam mendukung proses belajar ananda ${studentName}.
+
+Salam hangat,
+*Fatih Farhat Asshidiq*
+Founder & Academic Director, Kavio Edu`
     }
   ]
 

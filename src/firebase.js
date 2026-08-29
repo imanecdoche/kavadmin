@@ -171,6 +171,49 @@ export const seedAllModulesToFirebase = async (modulesList) => {
   }
 }
 
+// Real-time Firestore Reports Listener
+export const subscribeReports = (onDataUpdate, onError) => {
+  try {
+    const reportsCol = collection(db, 'reports')
+    return onSnapshot(reportsCol, (snapshot) => {
+      const reportList = []
+      snapshot.forEach((docSnap) => {
+        reportList.push({ id: docSnap.id, ...docSnap.data() })
+      })
+      onDataUpdate(reportList)
+    }, (err) => {
+      console.warn('Firestore reports subscription error (fallback to local):', err)
+      if (onError) onError(err)
+    })
+  } catch (e) {
+    console.warn('Firebase init error:', e)
+    if (onError) onError(e)
+    return () => {}
+  }
+}
+
+// Save or Update Single Report to Firestore
+export const syncReportToFirebase = async (reportItem) => {
+  if (!reportItem || !reportItem.id) return
+  try {
+    const reportDoc = doc(db, 'reports', reportItem.id)
+    await setDoc(reportDoc, { ...reportItem, updatedAt: new Date().toISOString() }, { merge: true })
+  } catch (e) {
+    console.error('Error syncing report to Firebase:', e)
+  }
+}
+
+// Delete Report from Firestore
+export const deleteReportFromFirebase = async (reportId) => {
+  if (!reportId) return
+  try {
+    const reportDoc = doc(db, 'reports', reportId)
+    await deleteDoc(reportDoc)
+  } catch (e) {
+    console.error('Error deleting report from Firebase:', e)
+  }
+}
+
 // Save Custom Firebase Credentials to LocalStorage
 export const saveCustomFirebaseConfig = (newConfig) => {
   try {

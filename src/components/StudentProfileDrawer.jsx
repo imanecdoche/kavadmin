@@ -19,7 +19,14 @@ import {
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
 
-export default function StudentProfileDrawer({ student, onClose, onGenerateInvoice, onOpenRoadmap }) {
+export default function StudentProfileDrawer({
+  student,
+  onClose,
+  onGenerateInvoice,
+  onOpenRoadmap,
+  onOpenReportCard = null,
+  reports = []
+}) {
   const [activeReceiptData, setActiveReceiptData] = useState(null)
 
   // Lock body scroll while drawer/modal is open
@@ -330,6 +337,75 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
               )}
             </div>
 
+            {/* Riwayat Rapor & Evaluasi Berkala */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-fluent-border pb-1">
+                <h3 className="text-xs font-bold text-fluent-textSecondary uppercase tracking-wider">
+                  Riwayat Rapor & Evaluasi Berkala
+                </h3>
+                {onOpenReportCard && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenReportCard(student)
+                      onClose()
+                    }}
+                    className="text-[10px] text-fluent-blue hover:underline font-semibold flex items-center gap-1"
+                  >
+                    + Buat Rapor Baru
+                  </button>
+                )}
+              </div>
+
+              {(() => {
+                const studentReports = Array.isArray(reports)
+                  ? reports.filter(r => (r.studentId && r.studentId === student.id) || (r.studentName && r.studentName.toLowerCase() === student.name.toLowerCase()))
+                  : []
+
+                if (studentReports.length > 0) {
+                  return (
+                    <div className="space-y-2">
+                      {studentReports.map((rep, idx) => (
+                        <div key={idx} className="p-3 bg-blue-50/40 rounded border border-blue-200/80 flex items-center justify-between text-xs">
+                          <div>
+                            <div className="font-mono font-bold text-slate-900">{rep.id}</div>
+                            <div className="text-[11px] font-semibold text-fluent-blue">{rep.periodName || 'Periode Belajar'}</div>
+                            <div className="text-[10px] text-slate-500">Terbit: {formatDateIndonesian(rep.issueDate)}</div>
+                          </div>
+                          <div className="text-right flex flex-col items-end space-y-1">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="font-mono font-bold text-xs text-slate-900">
+                                {Number(rep.compositeScore || 0).toFixed(1)}
+                              </span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                                {rep.letterGrade || 'A'}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onOpenReportCard) onOpenReportCard(student, rep)
+                                onClose()
+                              }}
+                              className="text-[10px] text-fluent-blue hover:underline font-semibold"
+                            >
+                              Buka di Studio
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                }
+
+                return (
+                  <p className="text-xs text-fluent-textSecondary italic bg-fluent-subtle p-3 rounded border border-fluent-border">
+                    Belum ada dokumen rapor diterbitkan untuk siswa ini.
+                  </p>
+                )
+              })()}
+            </div>
+
           </div>
         </div>
 
@@ -347,6 +423,19 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
             >
               <FileText className="w-4 h-4" />
             </button>
+            {onOpenReportCard && (
+              <button
+                onClick={() => {
+                  onOpenReportCard(student)
+                  onClose()
+                }}
+                title="Buka / Buat Rapor Akademik Siswa"
+                aria-label="Buka / Buat Rapor Akademik Siswa"
+                className="p-2.5 bg-white border border-fluent-border hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 text-fluent-text rounded-fluent flex items-center justify-center transition-colors shadow-xs"
+              >
+                <Award className="w-4 h-4 text-amber-600" />
+              </button>
+            )}
             {onOpenRoadmap && (
               <button
                 onClick={() => {

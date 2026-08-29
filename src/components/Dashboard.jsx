@@ -274,7 +274,14 @@ const createSessionReminderMessage = (student, dayItem, sess) => {
   return `Halo, ini pengingat sesi bimbingan belajar Kavio Edu untuk ${recipientName} pada ${dateStr} jam ${timeStr}. Mohon persiapkan diri. Terima kasih.`
 }
 
-export default function Dashboard({ students, setStudents, onGenerateInvoice, onOpenRoadmap }) {
+export default function Dashboard({
+  students,
+  setStudents,
+  onGenerateInvoice,
+  onOpenRoadmap,
+  onOpenReportCard = null,
+  reports = []
+}) {
   const [searchTerm, setSearchTerm] = useState('')
   const [packageFilter, setPackageFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -1471,6 +1478,11 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice, on
             setViewingStudent(null)
             if (onOpenRoadmap) onOpenRoadmap(st)
           }}
+          onOpenReportCard={(st, rep) => {
+            setViewingStudent(null)
+            if (onOpenReportCard) onOpenReportCard(st, rep)
+          }}
+          reports={reports}
         />
       )}
 

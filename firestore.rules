@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Koleksi Laporan Rapor Siswa (Reports)
+    match /reports/{reportId} {
+      // Membaca diperbolehkan secara publik jika mengakses ID dokumen valid (untuk wali murid)
+      allow read: if true;
+      // Menulis/Mengubah/Menghapus
+      allow write: if true;
+    }
+
+    // Koleksi Siswa (Students)
+    match /students/{studentId} {
+      allow read, write: if true;
+    }
+
+    // Koleksi Modul Pembelajaran (Modules)
+    match /modules/{moduleId} {
+      allow read, write: if true;
+    }
+  }
+}

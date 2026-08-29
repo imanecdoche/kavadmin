@@ -7,6 +7,8 @@ import InvoiceGenerator from './components/InvoiceGenerator'
 import WhatsAppStudio from './components/WhatsAppStudio'
 import StudentRoadmap from './components/StudentRoadmap'
 import ModulesManager from './components/modules/ModulesManager'
+import ReportCardStudio from './components/reports/ReportCardStudio'
+import PublicReportViewer from './components/reports/PublicReportViewer'
 import CursorTooltip from './components/CursorTooltip'
 import SplashScreen from './components/SplashScreen'
 import ExitConfirmModal from './components/ExitConfirmModal'
@@ -19,12 +21,16 @@ import {
   syncModuleToFirebase,
   deleteModuleFromFirebase,
   seedAllModulesToFirebase,
+  subscribeReports,
+  syncReportToFirebase,
+  deleteReportFromFirebase,
   saveCustomFirebaseConfig
 } from './firebase'
 import { INITIAL_STUDENTS_BACKUP } from './backupData'
 import { INITIAL_MODULES_BACKUP } from './utils/defaultModules'
 
 import { parseInvoiceShareLink } from './utils/invoiceShare'
+import { parseReportShareLink } from './utils/reportShare'
 import PublicInvoiceView from './components/PublicInvoiceView'
 
 export default function App() {
@@ -32,11 +38,13 @@ export default function App() {
   const [showExitModal, setShowExitModal] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [publicInvoiceData, setPublicInvoiceData] = useState(() => parseInvoiceShareLink())
+  const [publicReportData, setPublicReportData] = useState(() => parseReportShareLink())
 
   // Browser navigation and popstate listener
   useEffect(() => {
     const handlePopState = () => {
       setPublicInvoiceData(parseInvoiceShareLink())
+      setPublicReportData(parseReportShareLink())
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -103,8 +111,23 @@ export default function App() {
     return INITIAL_MODULES_BACKUP
   })
 
+  // Reports State (LocalStorage & Firebase Sync)
+  const [reports, setReports] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kavio_reports')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch (e) {
+      console.error('Failed to load reports from localStorage', e)
+    }
+    return []
+  })
+
   const [selectedStudentForInvoice, setSelectedStudentForInvoice] = useState(null)
   const [selectedStudentForRoadmap, setSelectedStudentForRoadmap] = useState(null)
+  const [selectedStudentForReport, setSelectedStudentForReport] = useState(null)
   const [isFirebaseConnected, setIsFirebaseConnected] = useState(false)
   const [showConfigModal, setShowConfigModal] = useState(false)
 
@@ -156,6 +179,37 @@ export default function App() {
     }
   }, [])
 
+  // Firebase Real-time Reports Subscription Listener
+  useEffect(() => {
+    let isMounted = true
+    const unsubscribe = subscribeReports(
+      (realtimeReports) => {
+        if (!isMounted) return
+        if (Array.isArray(realtimeReports) && realtimeReports.length > 0) {
+          setReports(realtimeReports)
+        }
+      },
+      (error) => {
+        if (!isMounted) return
+        console.warn('Using LocalStorage mode for reports.')
+      }
+    )
+
+    return () => {
+      isMounted = false
+      unsubscribe()
+    }
+  }, [])
+
+  // Persist reports to LocalStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('kavio_reports', JSON.stringify(reports))
+    } catch (e) {
+      console.error('Failed to save reports to localStorage', e)
+    }
+  }, [reports])
+
   // Persist modules to LocalStorage whenever modules state changes
   useEffect(() => {
     try {
@@ -194,6 +248,20 @@ export default function App() {
     showToast('Modul pembelajaran berhasil dihapus.', 'success')
   }
 
+  // Save / Update Report Handler
+  const handleSaveReport = (reportRecord) => {
+    if (!reportRecord || !reportRecord.id) return
+    setReports(prev => {
+      const exists = prev.some(r => r.id === reportRecord.id)
+      const next = exists
+        ? prev.map(r => r.id === reportRecord.id ? reportRecord : r)
+        : [reportRecord, ...prev]
+      syncReportToFirebase(reportRecord)
+      return next
+    })
+    showToast('Laporan rapor akademik berhasil disimpan ke database!', 'success')
+  }
+
   // Custom setStudents handler with Firebase Sync
   const updateStudentsWithSync = (newStudentsOrUpdater) => {
     setStudents(prev => {
@@ -228,6 +296,12 @@ export default function App() {
   const handleOpenRoadmapFromDashboard = (student) => {
     setSelectedStudentForRoadmap(student)
     setActiveTab('roadmap')
+  }
+
+  // Handle navigating to student report card from dashboard / drawer
+  const handleOpenReportCardFromDashboard = (student, reportData = null) => {
+    setSelectedStudentForReport(student)
+    setActiveTab('reports')
   }
 
   // Handle saving generated invoice into student's history
@@ -322,6 +396,18 @@ export default function App() {
     )
   }
 
+  if (publicReportData) {
+    return (
+      <PublicReportViewer
+        reportData={publicReportData}
+        onBack={() => {
+          window.history.pushState({}, '', window.location.pathname)
+          setPublicReportData(null)
+        }}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-fluent-bg text-fluent-text font-sans flex flex-col antialiased selection:bg-fluent-blue selection:text-white">
 
@@ -344,6 +430,8 @@ export default function App() {
             setStudents={updateStudentsWithSync}
             onGenerateInvoice={handleGenerateInvoiceFromDashboard}
             onOpenRoadmap={handleOpenRoadmapFromDashboard}
+            onOpenReportCard={handleOpenReportCardFromDashboard}
+            reports={reports}
           />
         </div>
 
@@ -355,6 +443,14 @@ export default function App() {
             onSaveToDashboard={(updatedStudent) => {
               updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
             }}
+          />
+        </div>
+
+        <div className={activeTab === 'reports' ? 'block' : 'hidden'}>
+          <ReportCardStudio
+            students={students}
+            selectedStudent={selectedStudentForReport}
+            onSaveReport={handleSaveReport}
           />
         </div>
 
