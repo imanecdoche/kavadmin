@@ -11,6 +11,8 @@ export function generateReportShareLink(reportData) {
   try {
     const payload = {
       id: reportData.id,
+      documentTitle: reportData.documentTitle,
+      documentSubtitle: reportData.documentSubtitle,
       studentName: reportData.studentName,
       guardianName: reportData.guardianName,
       programTier: reportData.programTier,

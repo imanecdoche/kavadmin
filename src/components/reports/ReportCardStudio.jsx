@@ -51,6 +51,8 @@ export default function ReportCardStudio({
 
   // Report Form State
   const [reportId, setReportId] = useState(() => generateReportNumber())
+  const [documentTitle, setDocumentTitle] = useState('LAPORAN PERKEMBANGAN BELAJAR RESMI')
+  const [documentSubtitle, setDocumentSubtitle] = useState('Official Academic Progress & Competency Evaluation')
   const [studentName, setStudentName] = useState('')
   const [guardianName, setGuardianName] = useState('')
   const [programTier, setProgramTier] = useState('GROW')
@@ -160,7 +162,9 @@ export default function ReportCardStudio({
   // Assembled Report Data Object
   const reportPayload = {
     id: reportId,
-    studentName,
+    documentTitle: documentTitle || 'LAPORAN PERKEMBANGAN BELAJAR RESMI',
+    documentSubtitle: documentSubtitle || 'Official Academic Progress & Competency Evaluation',
+    studentName: studentName.trim(),
     guardianName,
     programTier,
     periodName,
@@ -435,6 +439,20 @@ export default function ReportCardStudio({
                   className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue"
                 />
               </div>
+            </div>
+
+            {/* Judul Dokumen Rapor */}
+            <div>
+              <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
+                Judul Dokumen Rapor
+              </label>
+              <input
+                type="text"
+                value={documentTitle}
+                onChange={(e) => setDocumentTitle(e.target.value)}
+                placeholder="LAPORAN PERKEMBANGAN BELAJAR RESMI"
+                className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-medium"
+              />
             </div>
           </div>
 

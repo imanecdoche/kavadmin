@@ -10,6 +10,8 @@ export default function ReportCardPreview({ reportData, previewRef }) {
 
   const {
     id = 'REP/KEEN/202608/0000',
+    documentTitle = 'LAPORAN PERKEMBANGAN BELAJAR RESMI',
+    documentSubtitle = 'Official Academic Progress & Competency Evaluation',
     studentName = '-',
     guardianName = '-',
     programTier = 'GROW',
@@ -69,12 +71,12 @@ export default function ReportCardPreview({ reportData, previewRef }) {
       </div>
 
       {/* Main Content Sections (Above Watermark) */}
-      <div className="relative z-10 space-y-6">
+      <div className="relative z-10 space-y-5">
         
         {/* ========================================================================= */}
         {/* 1. TOP HEADER SECTION */}
         {/* ========================================================================= */}
-        <div className="flex justify-between items-center border-b-2 border-slate-900 pb-5">
+        <div className="flex justify-between items-center border-b-2 border-slate-900 pb-4">
           <div className="flex items-center space-x-3.5">
             <img src={logoBaruPng} alt="Kavio Edu Logo" className="h-12 w-auto object-contain" />
             <div>
@@ -101,6 +103,18 @@ export default function ReportCardPreview({ reportData, previewRef }) {
               Program: <span className="font-bold text-fluent-blue">Paket {programTier}</span> | {periodName}
             </p>
           </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 1.5 FORMAL DOCUMENT TITLE BANNER */}
+        {/* ========================================================================= */}
+        <div className="text-center py-1.5 border-b border-slate-300">
+          <h2 className="text-sm font-black tracking-widest text-slate-900 uppercase font-mono">
+            {documentTitle || 'LAPORAN PERKEMBANGAN BELAJAR RESMI'}
+          </h2>
+          <p className="text-[10px] font-semibold text-slate-500 tracking-wide uppercase mt-0.5">
+            {documentSubtitle || 'Official Academic Progress & Competency Evaluation'}
+          </p>
         </div>
 
         {/* ========================================================================= */}
