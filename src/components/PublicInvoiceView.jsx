@@ -154,10 +154,9 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
           {/* Header */}
           <div className="flex justify-between items-start border-b border-fluent-border pb-6">
             <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-2xl tracking-wider text-fluent-text">KAVIO</span>
-                <span className="font-light text-2xl tracking-widest text-fluent-blue">EDU</span>
-              </div>
+              <h1 className="text-2xl font-brand-header text-slate-900 leading-none">
+                KAVIO EDU
+              </h1>
               <p className="text-xs text-fluent-textSecondary font-medium">
                 Private Tutoring & Language Learning Center
               </p>

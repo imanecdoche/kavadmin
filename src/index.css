@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.cdnfonts.com/css/tiktok-sans');
 @import './components/modules/editor.css';
 
 @tailwind base;
@@ -8,6 +9,12 @@
 @layer utilities {
   .font-jetbrains {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+  .font-brand-header {
+    font-family: 'TikTok Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 }
 

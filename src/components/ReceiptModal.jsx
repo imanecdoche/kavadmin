@@ -230,8 +230,8 @@ _Keterangan: Dokumen ini merupakan bukti pembayaran resmi yang sah dari Kavio Ed
                 <div className="flex items-center space-x-3">
                   <img src={logoBaruPng} alt="Kavio Edu" className="h-12 w-auto object-contain flex-shrink-0" />
                   <div>
-                    <h1 className="font-bold text-sm text-slate-900 tracking-tight leading-snug uppercase">
-                      KAVIO EDU MANAGEMENT
+                    <h1 className="font-brand-header text-sm text-slate-900 leading-snug">
+                      KAVIO EDU
                     </h1>
                     <p className="text-[10px] font-semibold text-slate-700 leading-tight uppercase">
                       PRIVATE ENGLISH CLASS & ACADEMIC MENTORING

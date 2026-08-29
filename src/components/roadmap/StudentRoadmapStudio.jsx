@@ -56,6 +56,8 @@ export default function StudentRoadmapStudio({
 
   // Roadmap Document Meta State
   const [docId, setDocId] = useState('ROA/KEEN/202608/0001')
+  const [roadmapTitle, setRoadmapTitle] = useState('PETA ALUR BELAJAR MODULAR 1-BATCH')
+  const [roadmapSubtitle, setRoadmapSubtitle] = useState('OFFICIAL 1-BATCH MODULAR LEARNING ROADMAP & SESSION MATRIX')
   const [batchName, setBatchName] = useState('BATCH 1')
   const [sessionsPerMonth, setSessionsPerMonth] = useState(4)
   const [durationMonths, setDurationMonths] = useState(3)
@@ -88,6 +90,8 @@ export default function StudentRoadmapStudio({
 
       if (activeStudent.roadmap && Array.isArray(activeStudent.roadmap.sessions) && activeStudent.roadmap.sessions.length > 0) {
         setDocId(activeStudent.roadmap.id || `ROA/KEEN/${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2, '0')}/${Math.floor(Math.random()*9000)+1000}`)
+        setRoadmapTitle(activeStudent.roadmap.roadmapTitle || 'PETA ALUR BELAJAR MODULAR 1-BATCH')
+        setRoadmapSubtitle(activeStudent.roadmap.roadmapSubtitle || 'OFFICIAL 1-BATCH MODULAR LEARNING ROADMAP & SESSION MATRIX')
         setBatchName(activeStudent.roadmap.batchName || 'BATCH 1')
         setLevel(activeStudent.roadmap.level || (CURRICULUM_PRESETS[tier]?.level || 'A2'))
         setStartSessionNumber(Number(activeStudent.roadmap.startSessionNumber) || 1)
@@ -96,6 +100,8 @@ export default function StudentRoadmapStudio({
         // Generate initial sessions from preset based on (sessionsPerMonth * durationMonths)
         const initialList = generateBatchSessions(tier, sPerM, durM, startDate, 1)
         setSessions(initialList)
+        setRoadmapTitle('PETA ALUR BELAJAR MODULAR 1-BATCH')
+        setRoadmapSubtitle('OFFICIAL 1-BATCH MODULAR LEARNING ROADMAP & SESSION MATRIX')
         setBatchName('BATCH 1')
         setLevel(CURRICULUM_PRESETS[tier]?.level || 'A2')
         setStartSessionNumber(1)
@@ -110,6 +116,8 @@ export default function StudentRoadmapStudio({
   // Assembled Roadmap Payload
   const roadmapPayload = {
     id: docId,
+    roadmapTitle: roadmapTitle || 'PETA ALUR BELAJAR MODULAR 1-BATCH',
+    roadmapSubtitle: roadmapSubtitle || 'OFFICIAL 1-BATCH MODULAR LEARNING ROADMAP & SESSION MATRIX',
     studentId: activeStudent?.id || '',
     studentName: activeStudent?.name || 'Nama Siswa',
     guardianName: activeStudent?.parentName || '-',
@@ -479,6 +487,20 @@ export default function StudentRoadmapStudio({
                   {totalCalculatedSessions} Sesi
                 </div>
               </div>
+            </div>
+
+            {/* Judul Dokumen Roadmap */}
+            <div className="pt-1">
+              <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                Judul Dokumen Roadmap
+              </label>
+              <input
+                type="text"
+                value={roadmapTitle}
+                onChange={(e) => setRoadmapTitle(e.target.value)}
+                placeholder="PETA ALUR BELAJAR MODULAR 1-BATCH"
+                className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-medium"
+              />
             </div>
 
             <button

@@ -989,16 +989,21 @@ export default function StudentRoadmap({
             {/* Document Header with Kavio Edu Branding */}
             <div className="flex justify-between items-start border-b-2 border-slate-900 pb-4 gap-4">
               <div>
-                <img
-                  src={logoSvg}
-                  alt="Kavio Edu Logo"
-                  className="h-9 sm:h-10 w-auto object-contain mb-2"
-                />
-                <h1 className="text-xs sm:text-sm font-bold tracking-wider uppercase text-slate-900">
+                <div className="flex items-center space-x-3 mb-1.5">
+                  <img
+                    src={logoSvg}
+                    alt="Kavio Edu Logo"
+                    className="h-8 sm:h-9 w-auto object-contain"
+                  />
+                  <h1 className="text-base sm:text-lg font-brand-header text-slate-900 leading-none">
+                    KAVIO EDU
+                  </h1>
+                </div>
+                <h2 className="text-xs sm:text-sm font-bold tracking-wider uppercase text-slate-900">
                   KURIKULUM & ROADMAP PEMBELAJARAN
-                </h1>
+                </h2>
                 <p className="text-[11px] sm:text-xs text-slate-600">
-                  Private English Class & Academic Mentoring • Kavio Edu
+                  Private English Class & Academic Mentoring
                 </p>
               </div>
 

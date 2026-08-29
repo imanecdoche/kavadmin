@@ -80,8 +80,8 @@ export default function ReportCardPreview({ reportData, previewRef }) {
           <div className="flex items-center space-x-3.5">
             <img src={logoBaruPng} alt="Kavio Edu Logo" className="h-12 w-auto object-contain" />
             <div>
-              <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none uppercase">
-                Kavio Edu
+              <h1 className="text-lg font-brand-header text-slate-900 leading-none">
+                KAVIO EDU
               </h1>
               <p className="text-[11px] font-bold text-fluent-blue mt-0.5 leading-tight tracking-wide">
                 Private English Class & Academic Mentoring

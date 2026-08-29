@@ -16,6 +16,8 @@ export default function RoadmapBatchDocument({
 
   const {
     id = 'ROA/KEEN/202608/0001',
+    roadmapTitle = 'PETA ALUR BELAJAR MODULAR 1-BATCH',
+    roadmapSubtitle = 'OFFICIAL 1-BATCH MODULAR LEARNING ROADMAP & SESSION MATRIX',
     studentName = 'Nama Siswa',
     guardianName = '-',
     packageTier = 'GROW',
@@ -50,17 +52,17 @@ export default function RoadmapBatchDocument({
       </div>
 
       {/* Main Content (Above Watermark) */}
-      <div className="relative z-10 space-y-4">
+      <div className="relative z-10 space-y-3.5">
         
         {/* ========================================================================= */}
         {/* 1. TOP HEADER SECTION */}
         {/* ========================================================================= */}
-        <div className="flex justify-between items-center pb-3">
+        <div className="flex justify-between items-center pb-2.5">
           <div className="flex items-center space-x-3.5">
             <img src={logoBaruPng} alt="Kavio Edu Logo" className="h-12 w-auto object-contain" />
             <div>
-              <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none uppercase">
-                Kavio Edu
+              <h1 className="text-lg font-brand-header text-slate-900 leading-none">
+                KAVIO EDU
               </h1>
               <p className="text-[11px] font-bold text-fluent-blue mt-0.5 leading-tight tracking-wide">
                 Private English Class & Academic Mentoring
@@ -85,9 +87,21 @@ export default function RoadmapBatchDocument({
         </div>
 
         {/* ========================================================================= */}
+        {/* 1.5 FORMAL DOCUMENT TITLE BANNER */}
+        {/* ========================================================================= */}
+        <div className="text-center py-1.5 border-y border-slate-300">
+          <h2 className="text-sm font-black tracking-widest text-slate-900 uppercase font-mono">
+            {roadmapTitle || 'PETA ALUR BELAJAR MODULAR 1-BATCH'}
+          </h2>
+          <p className="text-[10px] font-semibold text-slate-500 tracking-wide uppercase mt-0.5">
+            {roadmapSubtitle || 'OFFICIAL 1-BATCH MODULAR LEARNING ROADMAP & SESSION MATRIX'}
+          </p>
+        </div>
+
+        {/* ========================================================================= */}
         {/* 2. STUDENT INFO & BATCH PROGRESS STRIP */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-12 gap-4 pb-3 border-t border-slate-300 pt-3 text-xs items-center">
+        <div className="grid grid-cols-12 gap-4 pb-3 border-b border-slate-300 pt-1 text-xs items-center">
           <div className="col-span-6 space-y-0.5">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               PROFIL SISWA

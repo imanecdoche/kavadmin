@@ -11,6 +11,8 @@ export function generateRoadmapShareLink(roadmapData) {
   try {
     const payload = {
       id: roadmapData.id || 'ROA/KEEN/202608/0001',
+      roadmapTitle: roadmapData.roadmapTitle,
+      roadmapSubtitle: roadmapData.roadmapSubtitle,
       studentId: roadmapData.studentId,
       studentName: roadmapData.studentName,
       guardianName: roadmapData.guardianName || roadmapData.parentName || '-',
