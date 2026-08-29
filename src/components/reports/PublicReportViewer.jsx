@@ -146,7 +146,7 @@ export default function PublicReportViewer({ reportData: propData, onBack = null
       </div>
 
       {/* Rendered A4 Document */}
-      <div className="w-full flex justify-center pb-12">
+      <div className="w-full overflow-x-auto flex justify-center pb-12">
         <ReportCardPreview reportData={data} previewRef={previewRef} />
       </div>
     </div>

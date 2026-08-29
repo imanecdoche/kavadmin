@@ -58,8 +58,8 @@ export default function ReportCardPreview({ reportData, previewRef }) {
     <div
       ref={previewRef}
       id="report-card-canvas"
-      className="w-full max-w-[820px] bg-white border border-slate-200 shadow-2xl rounded-sm p-8 sm:p-10 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 relative overflow-hidden"
-      style={{ minHeight: '1080px' }}
+      className="w-[794px] min-h-[1123px] max-w-[794px] shrink-0 bg-white border border-slate-200 shadow-2xl rounded-sm p-8 sm:p-10 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 relative overflow-hidden"
+      style={{ width: '794px', minHeight: '1123px', maxWidth: '794px', boxSizing: 'border-box' }}
     >
       {/* Background Watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 opacity-[0.035]">
