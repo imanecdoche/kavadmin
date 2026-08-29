@@ -50,6 +50,9 @@ export default function CertificateStudio({
   const [signLocation, setSignLocation] = useState('Pandeglang')
   const [directorName, setDirectorName] = useState('Fatih Farhat Asshidiq')
   const [directorTitle, setDirectorTitle] = useState('Founder & Academic Director')
+  const [gratitudeMessage, setGratitudeMessage] = useState(
+    'Terima kasih atas dedikasi, kerja keras, dan komitmen luar biasa yang telah ditunjukkan selama mengikuti program pembelajaran. Semoga pencapaian ini menjadi pijakan kuat untuk meraih kesuksesan akademik dan masa depan yang gemilang.'
+  )
   const [isSigned, setIsSigned] = useState(true)
   const [isStamped, setIsStamped] = useState(true)
 
@@ -93,6 +96,7 @@ export default function CertificateStudio({
         setSignLocation(cert.signLocation || 'Pandeglang')
         setDirectorName(cert.directorName || 'Fatih Farhat Asshidiq')
         setDirectorTitle(cert.directorTitle || 'Founder & Academic Director')
+        setGratitudeMessage(cert.gratitudeMessage || 'Terima kasih atas dedikasi, kerja keras, dan komitmen luar biasa yang telah ditunjukkan selama mengikuti program pembelajaran. Semoga pencapaian ini menjadi pijakan kuat untuk meraih kesuksesan akademik dan masa depan yang gemilang.')
         if (cert.verification) {
           setIsSigned(cert.verification.isSigned !== false)
           setIsStamped(cert.verification.isStamped !== false)
@@ -103,6 +107,7 @@ export default function CertificateStudio({
         setCefrLevel(tier === 'SEED' ? 'A1 - Beginner' : tier === 'GROW' ? 'A2 - Elementary' : tier === 'BOOST' ? 'B1 - Intermediate' : 'B2/C1 - Advanced')
         setPredicate('SANGAT BAIK (EXCELLENT)')
         setCompletionDate(formatDateIndonesian(new Date().toISOString()))
+        setGratitudeMessage('Terima kasih atas dedikasi, kerja keras, dan komitmen luar biasa yang telah ditunjukkan selama mengikuti program pembelajaran. Semoga pencapaian ini menjadi pijakan kuat untuk meraih kesuksesan akademik dan masa depan yang gemilang.')
       }
     }
   }, [activeStudent?.id])
@@ -122,6 +127,7 @@ export default function CertificateStudio({
     signLocation,
     directorName,
     directorTitle,
+    gratitudeMessage,
     verification: {
       isSigned,
       isStamped
@@ -285,7 +291,7 @@ export default function CertificateStudio({
 
             <div>
               <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
-                No. Sertifikat Resmi
+                Doc. No. (Nomor Dokumen)
               </label>
               <input
                 type="text"
@@ -406,6 +412,19 @@ export default function CertificateStudio({
                   className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-medium"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                Ucapan Terima Kasih & Pesan Apresiasi
+              </label>
+              <textarea
+                rows={3}
+                value={gratitudeMessage}
+                onChange={(e) => setGratitudeMessage(e.target.value)}
+                placeholder="Tulis ucapan terima kasih dan apresiasi untuk siswa..."
+                className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-medium leading-relaxed"
+              />
             </div>
           </div>
 

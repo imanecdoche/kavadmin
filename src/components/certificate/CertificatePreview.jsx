@@ -1,5 +1,5 @@
 import React from 'react'
-import { logoSvg, logoBaruPng, stempelKavioEduPng, ttdFatihPng } from '../../assets'
+import { logoSvg, stempelKavioEduPng, ttdFatihPng } from '../../assets'
 import { INVOICE_CONFIG } from '../../config/stampConfig'
 
 export default function CertificatePreview({ certificateData, previewRef }) {
@@ -18,6 +18,7 @@ export default function CertificatePreview({ certificateData, previewRef }) {
     signLocation = "Pandeglang",
     directorName = "Fatih Farhat Asshidiq",
     directorTitle = "Founder & Academic Director",
+    gratitudeMessage = "Terima kasih atas dedikasi, kerja keras, dan komitmen luar biasa yang telah ditunjukkan selama mengikuti program pembelajaran. Semoga pencapaian ini menjadi pijakan kuat untuk meraih kesuksesan akademik dan masa depan yang gemilang.",
     verification = { isSigned: true, isStamped: true }
   } = certificateData
 
@@ -37,24 +38,16 @@ export default function CertificatePreview({ certificateData, previewRef }) {
 
       {/* 1. MASTER HEADER & METADATA */}
       <div className="relative z-10">
-        <div className="flex items-start justify-between pb-3">
-          <div className="flex items-center gap-4">
-            <img src={logoBaruPng} alt="Kavio Edu Logo" className="w-14 h-14 object-contain shrink-0" />
-            <div className="flex flex-col justify-center">
-              <h1 className="font-brand-header text-2xl text-slate-900 leading-none">
-                KAVIO EDU
-              </h1>
-              <p className="text-xs font-semibold text-fluent-blue mt-1 leading-none tracking-wide">
-                Private English Class & Academic Mentoring
-              </p>
-            </div>
+        <div className="flex items-center justify-between pb-2">
+          <div className="flex items-center">
+            <img src={logoSvg} alt="Kavio Edu Logo" className="h-16 w-auto max-w-[240px] object-contain shrink-0" />
           </div>
 
-          <div className="text-right flex flex-col justify-center">
-            <p className="text-[11px] font-mono font-bold text-slate-900 tracking-wider">
-              NO. SERTIFIKAT: {documentId}
+          <div className="text-right flex flex-col justify-center shrink-0">
+            <p className="text-[11px] font-mono font-bold text-slate-900 tracking-wider whitespace-nowrap">
+              Doc. No. : {documentId}
             </p>
-            <p className="text-xs text-slate-600 mt-0.5">
+            <p className="text-xs text-slate-600 mt-0.5 whitespace-nowrap">
               Tanggal Terbit: <span className="font-semibold text-slate-800">{completionDate}</span>
             </p>
           </div>
@@ -79,7 +72,10 @@ export default function CertificatePreview({ certificateData, previewRef }) {
           <p className="text-xs text-slate-500 font-medium italic">
             Diberikan dengan penuh penghargaan dan pengakuan resmi kepada:
           </p>
-          <h3 className="text-3xl font-black text-slate-900 tracking-tight my-4 underline decoration-slate-300 underline-offset-8">
+          <h3
+            className="text-4xl font-semibold italic text-slate-900 tracking-tight my-4 underline decoration-slate-300 underline-offset-8 font-serif"
+            style={{ fontFamily: 'Georgia, "Playfair Display", "Times New Roman", Times, serif' }}
+          >
             {studentName}
           </h3>
           <p className="text-xs text-slate-700 max-w-xl mx-auto leading-relaxed mt-2">
@@ -107,6 +103,13 @@ export default function CertificatePreview({ certificateData, previewRef }) {
               <span className="text-xs font-bold text-emerald-700">{predicate}</span>
             </div>
           </div>
+        </div>
+
+        {/* 5. UCAPAN TERIMA KASIH & APRESIASI RESMI */}
+        <div className="text-center my-6 max-w-xl mx-auto px-4">
+          <p className="text-xs text-slate-600 italic leading-relaxed">
+            "{gratitudeMessage || 'Terima kasih atas dedikasi, kerja keras, dan komitmen luar biasa yang telah ditunjukkan selama mengikuti program pembelajaran. Semoga pencapaian ini menjadi pijakan kuat untuk meraih kesuksesan akademik dan masa depan yang gemilang.'}"
+          </p>
         </div>
       </div>
 

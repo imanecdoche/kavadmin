@@ -22,6 +22,7 @@ export function generateCertificateShareLink(certData) {
       signLocation: certData.signLocation,
       directorName: certData.directorName,
       directorTitle: certData.directorTitle,
+      gratitudeMessage: certData.gratitudeMessage,
       verification: certData.verification
     }
 
@@ -72,7 +73,7 @@ export function generateCertificateWhatsAppMessage(certData) {
 Halo *${certData.studentName || 'Siswa'}*, selamat atas keberhasilan menyelesaikan program pembelajaran di *Kavio Edu*! 🌟
 
 📋 *Rincian Sertifikat:*
-• No. Dokumen: *${certData.documentId || '-'}*
+• Doc. No. : *${certData.documentId || '-'}*
 • Program: *${certData.programName || '-'}*
 • Batch / Periode: *${certData.batchName || '-'}*
 • Jenjang CEFR: *${certData.cefrLevel || '-'}*
