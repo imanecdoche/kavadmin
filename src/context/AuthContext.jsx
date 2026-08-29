@@ -46,23 +46,23 @@ export const AuthProvider = ({ children }) => {
               handleRemoteLogout('Sesi Anda telah berakhir karena akun dibuka di perangkat/tab lain.')
             }
           } else {
-            // Jika dokumen belum ada, validasi token lokal saat ini
-            setIsAuthenticated(true)
+            // Jika dokumen belum ada di Firestore, sesi lokal dianggap tidak valid
+            handleRemoteLogout('Sesi tidak valid atau belum terdaftar di server.')
           }
           setIsLoading(false)
         },
         (error) => {
-          console.warn('[Auth Listener Fallback]:', error)
-          // Fallback lokal jika jaringan offline / Firestore timeout
-          setIsAuthenticated(true)
+          console.error('[Auth Listener Fail-Closed]:', error)
+          // Prinsip Fail-Closed: Tidak memberikan akses jika listener gagal
+          handleRemoteLogout('Gagal memvalidasi sesi keamanan ke server cloud.')
           setIsLoading(false)
         }
       )
 
       return () => unsubscribe()
     } catch (err) {
-      console.warn('[Auth Init Error]:', err)
-      setIsAuthenticated(true)
+      console.error('[Auth Init Fail-Closed]:', err)
+      handleRemoteLogout('Terjadi kesalahan inisialisasi otorisasi server.')
       setIsLoading(false)
     }
   }, [])
@@ -89,19 +89,15 @@ export const AuthProvider = ({ children }) => {
         { merge: true }
       )
 
-      // Simpan ke storage lokal
+      // Simpan ke storage lokal setelah berhasil terverifikasi ke Firestore
       localStorage.setItem(SESSION_STORAGE_KEY, newSessionToken)
       setIsAuthenticated(true)
       setSessionConflictMessage('')
       return true
     } catch (err) {
-      console.error('[Login Error]:', err)
-      // Jika jaringan gagal kontak Firestore, tetap simpan sesi lokal
-      const fallbackToken = `sess_local_${Date.now()}`
-      localStorage.setItem(SESSION_STORAGE_KEY, fallbackToken)
-      setIsAuthenticated(true)
-      setSessionConflictMessage('')
-      return true
+      console.error('[Login Error - Fail Closed]:', err)
+      // Prinsip Fail-Closed: Jangan berikan akses jika gagal menulis ke server
+      throw new Error('Gagal mengamankan sesi ke cloud server. Periksa koneksi internet Anda.')
     }
   }
 

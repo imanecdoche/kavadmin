@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import DOMPurify from 'dompurify'
 import {
   X,
   Printer,
@@ -213,10 +214,15 @@ export default function ModuleDetailModal({
               </div>
             )}
 
-            {/* Rich Text Body Content with Custom CSS Styling */}
+            {/* Rich Text Body Content with Custom CSS Styling (Sanitized) */}
             <div
               className="tiptap-content module-rich-content max-w-none text-slate-800 leading-relaxed min-h-0 p-0"
-              dangerouslySetInnerHTML={{ __html: moduleItem.content || '<p className="text-slate-400 italic">Belum ada isi konten modul.</p>' }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(
+                  moduleItem.content || '<p className="text-slate-400 italic">Belum ada isi konten modul.</p>',
+                  { ADD_ATTR: ['target', 'rel'] }
+                )
+              }}
             />
 
             {/* Tags Footer */}
