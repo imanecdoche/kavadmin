@@ -38,7 +38,7 @@ export default function RoadmapBatchDocument({
   return (
     <div
       ref={previewRef}
-      id="roadmap-batch-canvas"
+      id="roadmap-export-canvas"
       className="w-[794px] min-h-[1123px] max-w-[794px] shrink-0 bg-white border border-slate-200 shadow-2xl p-8 sm:p-10 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 relative overflow-hidden flex flex-col justify-between"
       style={{ width: '794px', minHeight: '1123px', maxWidth: '794px', boxSizing: 'border-box' }}
     >

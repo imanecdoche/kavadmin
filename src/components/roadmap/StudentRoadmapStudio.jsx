@@ -241,10 +241,11 @@ export default function StudentRoadmapStudio({
   }
 
   const handleDownloadPng = async () => {
-    if (previewRef.current) {
+    const target = previewRef.current || document.getElementById('roadmap-export-canvas')
+    if (target) {
       setIsExportingPng(true)
       try {
-        await exportRoadmapToPng(previewRef.current, roadmapPayload)
+        await exportRoadmapToPng(target, roadmapPayload)
       } catch (err) {
         console.error('Export PNG error:', err)
       } finally {
@@ -254,10 +255,11 @@ export default function StudentRoadmapStudio({
   }
 
   const handleDownloadPdf = async () => {
-    if (previewRef.current) {
+    const target = previewRef.current || document.getElementById('roadmap-export-canvas')
+    if (target) {
       setIsExportingPdf(true)
       try {
-        await exportReportToPdf(previewRef.current, roadmapPayload)
+        await exportRoadmapToPdf(target, roadmapPayload)
       } catch (err) {
         console.error('Export PDF error:', err)
       } finally {
