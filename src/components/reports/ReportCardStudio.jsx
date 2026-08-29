@@ -309,13 +309,13 @@ export default function ReportCardStudio({
         </div>
       </div>
 
-      {/* Split Screen Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Main Studio Split-Screen Container */}
+      <div className="flex flex-col lg:flex-row w-full gap-6 items-start">
         
         {/* ========================================================================= */}
-        {/* LEFT COLUMN: CONTROL CENTER & EVALUATION FORM (45%) */}
+        {/* LEFT COLUMN: CONTROL CENTER & EVALUATION FORM (Fixed Width) */}
         {/* ========================================================================= */}
-        <div className="lg:col-span-5 bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent space-y-5 no-print">
+        <div className="w-full lg:w-[420px] xl:w-[460px] shrink-0 bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent space-y-5 no-print">
           
           {/* Section: Student & Metadata */}
           <div className="space-y-3 pb-3 border-b border-fluent-border">
@@ -581,10 +581,11 @@ export default function ReportCardStudio({
         </div>
 
         {/* ========================================================================= */}
-        {/* RIGHT COLUMN: LIVE A4 PRINTABLE CANVAS PREVIEW (55%) */}
+        {/* RIGHT COLUMN: LIVE A4 PRINTABLE CANVAS PREVIEW (Flexible & Responsive) */}
         {/* ========================================================================= */}
-        <div className="lg:col-span-7 flex flex-col items-center">
-          <div className="w-full overflow-x-auto pb-6 flex justify-center">
+        <div className="flex-1 min-w-0 bg-slate-100/70 p-4 lg:p-6 rounded-fluent border border-fluent-border overflow-x-auto flex justify-start xl:justify-center items-start">
+          {/* Wrapper Pembungkus Dokumen dengan Transform Scale Responsif */}
+          <div className="shrink-0 my-auto py-2 transition-transform origin-top scale-[0.75] sm:scale-[0.85] md:scale-[0.9] 2xl:scale-100">
             <ReportCardPreview
               reportData={reportPayload}
               previewRef={previewRef}
