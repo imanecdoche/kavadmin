@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle2, Clock, Lock, BookOpen, ExternalLink, Calendar, Layers, Activity } from 'lucide-react'
-import { formatSessionNumber, resolveSessionStatusByDate } from '../../utils/roadmapCalculator'
+import { formatSessionNumber, resolveSessionStatusByDateTime } from '../../utils/roadmapCalculator'
 
 export default function SessionDetailDrawer({
   isOpen = false,
@@ -72,18 +72,24 @@ export default function SessionDetailDrawer({
   const handleChangeField = (field, val) => {
     if (readOnly) return
     let updated = { ...formData, [field]: val }
-    if (field === 'date' && val) {
-      const autoStatus = resolveSessionStatusByDate(val)
-      const currentMastery = typeof formData.mastery === 'number' ? formData.mastery : 0
-      const masteryVal = autoStatus.status === 'SELESAI'
-        ? (currentMastery > 0 ? currentMastery : 100)
-        : currentMastery
+    if (field === 'date' || field === 'time' || field === 'duration') {
+      const targetDate = field === 'date' ? val : formData.date
+      const targetTime = field === 'time' ? val : (formData.time || '16:00')
+      const targetDuration = field === 'duration' ? Number(val) : Number(formData.duration || 90)
 
-      updated = {
-        ...updated,
-        status: autoStatus.status,
-        isCompleted: autoStatus.isCompleted,
-        mastery: masteryVal
+      if (targetDate) {
+        const autoStatus = resolveSessionStatusByDateTime(targetDate, targetTime, targetDuration)
+        const currentMastery = typeof formData.mastery === 'number' ? formData.mastery : 0
+        const masteryVal = autoStatus.status === 'SELESAI'
+          ? (currentMastery > 0 ? currentMastery : 100)
+          : currentMastery
+
+        updated = {
+          ...updated,
+          status: autoStatus.status,
+          isCompleted: autoStatus.isCompleted,
+          mastery: masteryVal
+        }
       }
     }
     setFormData(updated)
@@ -247,6 +253,39 @@ export default function SessionDetailDrawer({
                 onChange={(e) => handleChangeField('date', e.target.value)}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-fluent-blue font-mono"
               />
+            </div>
+
+            {/* Jam Sesi & Durasi */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase">
+                  Jam Mulai Sesi
+                </label>
+                <input
+                  type="time"
+                  disabled={readOnly}
+                  value={formData.time || '16:00'}
+                  onChange={(e) => handleChangeField('time', e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-fluent-blue font-mono"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase">
+                  Durasi Sesi
+                </label>
+                <select
+                  disabled={readOnly}
+                  value={formData.duration || 90}
+                  onChange={(e) => handleChangeField('duration', Number(e.target.value) || 90)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-fluent-blue"
+                >
+                  <option value={45}>45 Menit</option>
+                  <option value={60}>60 Menit (1 Jam)</option>
+                  <option value={90}>90 Menit (1.5 Jam)</option>
+                  <option value={120}>120 Menit (2 Jam)</option>
+                </select>
+              </div>
             </div>
 
             {/* Judul Materi */}

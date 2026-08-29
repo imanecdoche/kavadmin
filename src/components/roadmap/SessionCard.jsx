@@ -64,7 +64,7 @@ export default function SessionCard({
         </span>
         <span className="text-slate-400">•</span>
         <span className="text-slate-500 font-mono text-[11px]">
-          {formattedDate}
+          {formattedDate}{session.time ? ` (${session.time})` : ''}
         </span>
       </div>
 

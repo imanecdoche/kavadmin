@@ -508,7 +508,9 @@ export const getPresetByCefr = (
   cefrLevel = 'A1',
   totalCount = 12,
   startDate = new Date(),
-  startSessionNumber = 1
+  startSessionNumber = 1,
+  defaultStartTime = '16:00',
+  defaultDuration = 90
 ) => {
   const normalized = String(cefrLevel || 'A1').trim().toUpperCase()
   let presetArray = []
@@ -543,7 +545,7 @@ export const getPresetByCefr = (
     const dd = String(sessionDate.getDate()).padStart(2, '0')
     const dateStr = `${yyyy}-${mm}-${dd}`
 
-    const autoStatus = resolveSessionStatusByDate(dateStr)
+    const autoStatus = resolveSessionStatusByDate(dateStr, defaultStartTime, defaultDuration)
 
     if (targetIdx < presetArray.length) {
       const template = presetArray[targetIdx]
@@ -558,6 +560,8 @@ export const getPresetByCefr = (
         sessionNumber,
         level: template.level || levelCode,
         date: dateStr,
+        time: defaultStartTime,
+        duration: defaultDuration,
         status: autoStatus.status,
         mastery: masteryVal,
         isCompleted: autoStatus.isCompleted
@@ -575,6 +579,8 @@ export const getPresetByCefr = (
         mastery: masteryVal,
         isCompleted: autoStatus.isCompleted,
         date: dateStr,
+        time: defaultStartTime,
+        duration: defaultDuration,
         linkedModuleId: null
       })
     }
@@ -590,6 +596,8 @@ export const getPresetByCefr = (
  * @param {number} durationMonths e.g. 3
  * @param {string|Date} startDate e.g. '2026-08-01'
  * @param {number} startSessionNumber e.g. 1
+ * @param {string} defaultStartTime e.g. '16:00'
+ * @param {number} defaultDuration e.g. 90
  * @returns {Array} List of session objects
  */
 export const generateBatchSessions = (
@@ -597,10 +605,12 @@ export const generateBatchSessions = (
   sessionsPerMonth = 4,
   durationMonths = 3,
   startDate = new Date(),
-  startSessionNumber = 1
+  startSessionNumber = 1,
+  defaultStartTime = '16:00',
+  defaultDuration = 90
 ) => {
   const selectedTier = CURRICULUM_PRESETS[tier] || CURRICULUM_PRESETS.GROW
   const level = selectedTier.level || tier
   const totalNeeded = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
-  return getPresetByCefr(level, totalNeeded, startDate, startSessionNumber)
+  return getPresetByCefr(level, totalNeeded, startDate, startSessionNumber, defaultStartTime, defaultDuration)
 }

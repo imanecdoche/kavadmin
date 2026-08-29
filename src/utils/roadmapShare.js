@@ -20,6 +20,8 @@ export function generateRoadmapShareLink(roadmapData) {
       batchName: roadmapData.batchName || 'BATCH 1',
       durationMonths: roadmapData.durationMonths || 3,
       sessionsPerMonth: roadmapData.sessionsPerMonth || 4,
+      defaultStartTime: roadmapData.defaultStartTime || '16:00',
+      defaultDuration: roadmapData.defaultDuration || 90,
       level: roadmapData.level || 'A2',
       moduleTitle: roadmapData.moduleTitle || 'Kurikulum Bahasa Inggris',
       issueDate: roadmapData.issueDate || new Date().toISOString().split('T')[0],

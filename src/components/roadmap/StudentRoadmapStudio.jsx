@@ -30,6 +30,7 @@ import {
   autoAdvanceRoadmap,
   formatSessionNumber,
   resolveSessionStatusByDate,
+  resolveSessionStatusByDateTime,
   applyDateBasedStatusToSessions
 } from '../../utils/roadmapCalculator'
 import { generateRoadmapShareLink, generateRoadmapWhatsAppMessage } from '../../utils/roadmapShare'
@@ -65,6 +66,8 @@ export default function StudentRoadmapStudio({
   const [durationMonths, setDurationMonths] = useState(3)
   const [level, setLevel] = useState('A2')
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [defaultStartTime, setDefaultStartTime] = useState('16:00')
+  const [defaultDuration, setDefaultDuration] = useState(90)
   const [startSessionNumber, setStartSessionNumber] = useState(1)
   const [sessions, setSessions] = useState([])
 
@@ -97,11 +100,15 @@ export default function StudentRoadmapStudio({
         setBatchName(activeStudent.roadmap.batchName || 'BATCH 1')
         setLevel(activeStudent.roadmap.level || (CURRICULUM_PRESETS[tier]?.level || 'A2'))
         setStartSessionNumber(Number(activeStudent.roadmap.startSessionNumber) || 1)
-        const dateSynced = applyDateBasedStatusToSessions(activeStudent.roadmap.sessions)
+        const sTime = activeStudent.roadmap.defaultStartTime || '16:00'
+        const sDur = Number(activeStudent.roadmap.defaultDuration) || 90
+        setDefaultStartTime(sTime)
+        setDefaultDuration(sDur)
+        const dateSynced = applyDateBasedStatusToSessions(activeStudent.roadmap.sessions, sTime, sDur)
         setSessions(dateSynced)
       } else {
         // Generate initial sessions from preset based on (sessionsPerMonth * durationMonths)
-        const initialList = generateBatchSessions(tier, sPerM, durM, startDate, 1)
+        const initialList = generateBatchSessions(tier, sPerM, durM, startDate, 1, defaultStartTime, defaultDuration)
         setSessions(initialList)
         setRoadmapTitle('PETA ALUR BELAJAR MODULAR 1-BATCH')
         setRoadmapSubtitle('OFFICIAL 1-BATCH MODULAR LEARNING ROADMAP & SESSION MATRIX')
@@ -130,6 +137,8 @@ export default function StudentRoadmapStudio({
     sessionsPerMonth,
     level,
     startDate,
+    defaultStartTime,
+    defaultDuration,
     startSessionNumber,
     sessions,
     updatedAt: new Date().toISOString()
@@ -181,7 +190,9 @@ export default function StudentRoadmapStudio({
       const mm = String(d.getMonth() + 1).padStart(2, '0')
       const dd = String(d.getDate()).padStart(2, '0')
       const dateStr = `${yyyy}-${mm}-${dd}`
-      const autoStatus = resolveSessionStatusByDate(dateStr)
+      const sTime = s.time || defaultStartTime || '16:00'
+      const sDur = Number(s.duration || defaultDuration || 90)
+      const autoStatus = resolveSessionStatusByDateTime(dateStr, sTime, sDur)
       const currentMastery = typeof s.mastery === 'number' ? s.mastery : 0
       const masteryVal = autoStatus.status === 'SELESAI'
         ? (currentMastery > 0 ? currentMastery : 100)
@@ -190,6 +201,8 @@ export default function StudentRoadmapStudio({
       return {
         ...s,
         date: dateStr,
+        time: sTime,
+        duration: sDur,
         status: autoStatus.status,
         isCompleted: autoStatus.isCompleted,
         mastery: masteryVal
@@ -200,12 +213,61 @@ export default function StudentRoadmapStudio({
     saveChanges(updated)
   }
 
+  // Handle start time change
+  const handleStartTimeChange = (newTime) => {
+    setDefaultStartTime(newTime)
+    const updated = sessions.map(s => {
+      const sDate = s.date || startDate
+      const sDur = Number(s.duration || defaultDuration || 90)
+      const autoStatus = resolveSessionStatusByDateTime(sDate, newTime, sDur)
+      const currentMastery = typeof s.mastery === 'number' ? s.mastery : 0
+      const masteryVal = autoStatus.status === 'SELESAI'
+        ? (currentMastery > 0 ? currentMastery : 100)
+        : currentMastery
+
+      return {
+        ...s,
+        time: newTime,
+        status: autoStatus.status,
+        isCompleted: autoStatus.isCompleted,
+        mastery: masteryVal
+      }
+    })
+    setSessions(updated)
+    saveChanges(updated)
+  }
+
+  // Handle default duration change
+  const handleDefaultDurationChange = (newDur) => {
+    const durNum = Number(newDur) || 90
+    setDefaultDuration(durNum)
+    const updated = sessions.map(s => {
+      const sDate = s.date || startDate
+      const sTime = s.time || defaultStartTime || '16:00'
+      const autoStatus = resolveSessionStatusByDateTime(sDate, sTime, durNum)
+      const currentMastery = typeof s.mastery === 'number' ? s.mastery : 0
+      const masteryVal = autoStatus.status === 'SELESAI'
+        ? (currentMastery > 0 ? currentMastery : 100)
+        : currentMastery
+
+      return {
+        ...s,
+        duration: durNum,
+        status: autoStatus.status,
+        isCompleted: autoStatus.isCompleted,
+        mastery: masteryVal
+      }
+    })
+    setSessions(updated)
+    saveChanges(updated)
+  }
+
   // Handle starting session number change
   const handleStartSessionChange = (newStartNum) => {
     const validNum = Math.max(1, Number(newStartNum) || 1)
     setStartSessionNumber(validNum)
     const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
-    const generated = getPresetByCefr(level, totalCount, startDate, validNum)
+    const generated = getPresetByCefr(level, totalCount, startDate, validNum, defaultStartTime, defaultDuration)
     setSessions(generated)
     saveChanges(generated, validNum)
   }
@@ -213,7 +275,7 @@ export default function StudentRoadmapStudio({
   // Regenerate sessions based on current duration, sessionsPerMonth, selected CEFR level, and startSessionNumber
   const handleRegenerateSessions = () => {
     const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
-    const generated = getPresetByCefr(level, totalCount, startDate, startSessionNumber)
+    const generated = getPresetByCefr(level, totalCount, startDate, startSessionNumber, defaultStartTime, defaultDuration)
     setSessions(generated)
     saveChanges(generated)
   }
@@ -222,7 +284,7 @@ export default function StudentRoadmapStudio({
   const handleApplyPreset = (preset) => {
     if (!preset) return
     const totalCount = Math.max(1, Number(sessionsPerMonth || 4) * Number(durationMonths || 3))
-    const generated = getPresetByCefr(preset.level || preset.tier, totalCount, startDate, startSessionNumber)
+    const generated = getPresetByCefr(preset.level || preset.tier, totalCount, startDate, startSessionNumber, defaultStartTime, defaultDuration)
     setSessions(generated)
     setLevel(preset.level || 'A1')
     saveChanges(generated)
@@ -460,6 +522,38 @@ export default function StudentRoadmapStudio({
                   onChange={(e) => handleStartSessionChange(Number(e.target.value) || 1)}
                   className="w-full px-2.5 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-bold text-center"
                 />
+              </div>
+            </div>
+
+            {/* Jam Mulai Sesi & Durasi Sesi Default */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-fluent-blue" />
+                  Jam Mulai Sesi
+                </label>
+                <input
+                  type="time"
+                  value={defaultStartTime}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-mono font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-fluent-textSecondary mb-1">
+                  Durasi Sesi
+                </label>
+                <select
+                  value={defaultDuration}
+                  onChange={(e) => handleDefaultDurationChange(Number(e.target.value) || 90)}
+                  className="w-full px-2.5 py-1.5 text-xs border border-fluent-border rounded-fluent bg-white focus:outline-none focus:border-fluent-blue font-medium"
+                >
+                  <option value={45}>45 Menit</option>
+                  <option value={60}>60 Menit (1 Jam)</option>
+                  <option value={90}>90 Menit (1.5 Jam)</option>
+                  <option value={120}>120 Menit (2 Jam)</option>
+                </select>
               </div>
             </div>
 

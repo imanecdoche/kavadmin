@@ -191,30 +191,42 @@ export const autoAdvanceRoadmap = (sessions = []) => {
 }
 
 /**
- * Menghitung status sesi otomatis berdasarkan tanggal sesi vs hari ini
- * @param {string} sessionDateStr - Format YYYY-MM-DD
+ * Menghitung status sesi berdasarkan tanggal dan jam sesi presisi
+ * @param {string} sessionDateStr - Format YYYY-MM-DD (misal: "2026-08-29")
+ * @param {string} startTimeStr - Format HH:mm (misal: "16:00", default: "16:00")
+ * @param {number} durationMinutes - Durasi belajar dalam menit (default: 90)
  * @returns {{ status: string, isCompleted: boolean }}
  */
-export const resolveSessionStatusByDate = (sessionDateStr) => {
+export const resolveSessionStatusByDateTime = (
+  sessionDateStr,
+  startTimeStr = "16:00",
+  durationMinutes = 90
+) => {
   if (!sessionDateStr) {
     return { status: "BELUM MULAI", isCompleted: false }
   }
 
-  // Normalisasi tanggal ke format midnight lokal YYYY-MM-DD
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const now = new Date()
 
+  // Parsing waktu mulai sesi
   const [year, month, day] = String(sessionDateStr).split('-').map(Number)
   if (!year || !month || !day) {
     return { status: "BELUM MULAI", isCompleted: false }
   }
 
-  const sessionDate = new Date(year, month - 1, day)
-  sessionDate.setHours(0, 0, 0, 0)
+  const [startHour, startMinute] = String(startTimeStr || "16:00").split(':').map(Number)
+  const safeHour = isNaN(startHour) ? 16 : startHour
+  const safeMinute = isNaN(startMinute) ? 0 : startMinute
+  const safeDuration = Number(durationMinutes) > 0 ? Number(durationMinutes) : 90
 
-  if (sessionDate.getTime() < today.getTime()) {
+  const sessionStart = new Date(year, month - 1, day, safeHour, safeMinute, 0, 0)
+  
+  // Hitung waktu selesai sesi berdasarkan durasi
+  const sessionEnd = new Date(sessionStart.getTime() + safeDuration * 60 * 1000)
+
+  if (now.getTime() > sessionEnd.getTime()) {
     return { status: "SELESAI", isCompleted: true }
-  } else if (sessionDate.getTime() === today.getTime()) {
+  } else if (now.getTime() >= sessionStart.getTime() && now.getTime() <= sessionEnd.getTime()) {
     return { status: "SEDANG BERJALAN", isCompleted: false }
   } else {
     return { status: "BELUM MULAI", isCompleted: false }
@@ -222,17 +234,29 @@ export const resolveSessionStatusByDate = (sessionDateStr) => {
 }
 
 /**
- * Menerapkan evaluasi status otomatis berbasis tanggal untuk seluruh daftar sesi
+ * Menghitung status sesi otomatis (kompatibilitas backward)
+ */
+export const resolveSessionStatusByDate = (sessionDateStr, startTimeStr = "16:00", durationMinutes = 90) => {
+  return resolveSessionStatusByDateTime(sessionDateStr, startTimeStr, durationMinutes)
+}
+
+/**
+ * Menerapkan evaluasi status otomatis berbasis tanggal & jam presisi untuk seluruh daftar sesi
  * @param {Array} sessions
+ * @param {string} defaultStartTime
+ * @param {number} defaultDuration
  * @returns {Array} Updated sessions array
  */
-export const applyDateBasedStatusToSessions = (sessions = []) => {
+export const applyDateBasedStatusToSessions = (sessions = [], defaultStartTime = "16:00", defaultDuration = 90) => {
   if (!Array.isArray(sessions) || sessions.length === 0) return []
 
   return sessions.map((session) => {
     if (!session.date) return session
 
-    const autoStatus = resolveSessionStatusByDate(session.date)
+    const sTime = session.time || session.startTime || defaultStartTime || "16:00"
+    const sDuration = Number(session.duration || session.durationMinutes || defaultDuration || 90)
+
+    const autoStatus = resolveSessionStatusByDateTime(session.date, sTime, sDuration)
     const currentMastery = typeof session.mastery === 'number' ? session.mastery : 0
     const masteryVal = autoStatus.status === 'SELESAI'
       ? (currentMastery > 0 ? currentMastery : 100)
@@ -240,6 +264,8 @@ export const applyDateBasedStatusToSessions = (sessions = []) => {
 
     return {
       ...session,
+      time: sTime,
+      duration: sDuration,
       status: autoStatus.status,
       isCompleted: autoStatus.isCompleted,
       mastery: masteryVal
