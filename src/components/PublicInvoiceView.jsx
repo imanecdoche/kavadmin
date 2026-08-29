@@ -5,6 +5,8 @@ import jsPDF from 'jspdf'
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
 import { INVOICE_CONFIG } from '../config/stampConfig'
+import CursorTooltip from './CursorTooltip'
+import { ttdFatihPng, stempelKavioEduPng } from '../assets'
 
 export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
   const invoiceRef = useRef(null)
@@ -102,10 +104,11 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
           {onBackToApp && (
             <button
               onClick={onBackToApp}
-              className="px-2.5 py-1.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded text-xs flex items-center space-x-1.5 font-medium"
+              title="Buka Dashboard Admin"
+              aria-label="Buka Dashboard Admin"
+              className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded flex items-center justify-center transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Buka Dashboard Admin</span>
+              <ArrowLeft className="w-4 h-4" />
             </button>
           )}
           <div>
@@ -114,44 +117,48 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5">
           <button
             onClick={handleCopyCurrentLink}
-            className="px-3 py-1.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded text-xs font-medium flex items-center space-x-1.5"
+            title={copiedLink ? 'Link Disalin!' : 'Salin Link'}
+            aria-label="Salin Link"
+            className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded flex items-center justify-center transition-colors"
           >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedLink ? 'Link Disalin' : 'Salin Link'}</span>
+            {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
           </button>
           <button
             onClick={() => window.print()}
-            className="hidden sm:flex px-3 py-1.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded text-xs font-medium items-center space-x-1.5"
+            title="Cetak Invoice"
+            aria-label="Cetak Invoice"
+            className="hidden sm:flex p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded items-center justify-center transition-colors"
           >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Cetak</span>
+            <Printer className="w-4 h-4" />
           </button>
           <button
             onClick={handleDownloadPNG}
             disabled={isExporting}
-            className="px-3 py-1.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded text-xs font-medium flex items-center space-x-1.5"
+            title="Download PNG"
+            aria-label="Download PNG"
+            className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded flex items-center justify-center transition-colors disabled:opacity-50"
           >
-            <Download className="w-3.5 h-3.5 text-fluent-blue" />
-            <span>Download PNG</span>
+            <Download className="w-4 h-4 text-fluent-blue" />
           </button>
           <button
             onClick={handleDownloadPDF}
             disabled={isExporting}
-            className="px-3.5 py-1.5 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded text-xs font-medium flex items-center space-x-1.5 shadow-xs"
+            title="Download PDF"
+            aria-label="Download PDF"
+            className="p-2 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded flex items-center justify-center transition-colors shadow-xs disabled:opacity-50"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>{isExporting ? 'Memproses...' : 'Download PDF'}</span>
+            <Download className="w-4 h-4" />
           </button>
           <button
             onClick={() => setIsReceiptOpen(true)}
-            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+            className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded flex items-center justify-center transition-colors shadow-2xs"
             title="Lihat / Cetak Kwitansi Pembayaran"
+            aria-label="Lihat / Cetak Kwitansi Pembayaran"
           >
-            <Award className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Kwitansi</span>
+            <Award className="w-4 h-4 text-emerald-600" />
           </button>
         </div>
       </header>
@@ -314,7 +321,7 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
               <div className="relative inline-block">
                 {/* Founder Digital Signature (Tanda Tangan) */}
                 <img
-                  src="/ttd_fatih_founderkavio.png"
+                  src={ttdFatihPng}
                   alt="Tanda Tangan Founder Kavio"
                   style={{
                     height: `${INVOICE_CONFIG.signature.sizeHeightPx}px`,
@@ -326,7 +333,7 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
 
                 {/* Official Kavio Edu Stamp Overlay (Stempel Ungu) */}
                 <img
-                  src="/stempel_kavioedu.png"
+                  src={stempelKavioEduPng}
                   alt="Stempel Resmi Kavio Edu"
                   style={{
                     height: `${INVOICE_CONFIG.kavioStamp.sizeHeightPx}px`,
@@ -369,6 +376,9 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
         onClose={() => setIsReceiptOpen(false)}
         data={invoiceData}
       />
+
+      {/* Global Real-Time Cursor Follow Tooltip */}
+      <CursorTooltip />
     </div>
   )
 }

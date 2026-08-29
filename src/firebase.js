@@ -106,6 +106,71 @@ export const seedAllStudentsToFirebase = async (studentsList) => {
   }
 }
 
+// Real-time Firestore Modules Listener
+export const subscribeModules = (onDataUpdate, onError) => {
+  try {
+    const modulesCol = collection(db, 'modules')
+    return onSnapshot(modulesCol, (snapshot) => {
+      const moduleList = []
+      snapshot.forEach((docSnap) => {
+        moduleList.push({ id: docSnap.id, ...docSnap.data() })
+      })
+      onDataUpdate(moduleList)
+    }, (err) => {
+      console.warn('Firestore modules subscription error (fallback to local):', err)
+      if (onError) onError(err)
+    })
+  } catch (e) {
+    console.warn('Firebase init error:', e)
+    if (onError) onError(e)
+    return () => {}
+  }
+}
+
+// Save or Update Single Module to Firestore
+export const syncModuleToFirebase = async (moduleItem) => {
+  if (!moduleItem || !moduleItem.id) return
+  try {
+    const moduleDoc = doc(db, 'modules', moduleItem.id)
+    await setDoc(moduleDoc, moduleItem, { merge: true })
+  } catch (e) {
+    console.error('Error syncing module to Firebase:', e)
+  }
+}
+
+// Delete Module from Firestore
+export const deleteModuleFromFirebase = async (moduleId) => {
+  if (!moduleId) return
+  try {
+    const moduleDoc = doc(db, 'modules', moduleId)
+    await deleteDoc(moduleDoc)
+  } catch (e) {
+    console.error('Error deleting module from Firebase:', e)
+  }
+}
+
+// Seed All Modules (Bulk Upload / Backup Sync) with Timeout
+export const seedAllModulesToFirebase = async (modulesList) => {
+  if (!Array.isArray(modulesList) || modulesList.length === 0) return false
+  try {
+    const batch = writeBatch(db)
+    modulesList.forEach(m => {
+      const ref = doc(db, 'modules', m.id)
+      batch.set(ref, m, { merge: true })
+    })
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Firebase timeout (5s)')), 5000)
+    )
+
+    await Promise.race([batch.commit(), timeoutPromise])
+    return true
+  } catch (e) {
+    console.error('Error seeding modules to Firebase:', e)
+    return false
+  }
+}
+
 // Save Custom Firebase Credentials to LocalStorage
 export const saveCustomFirebaseConfig = (newConfig) => {
   try {

@@ -22,6 +22,8 @@ export const INITIAL_STUDENTS_BACKUP = [
     "outstanding": 0,
     "schedule": "Selasa 15.00 WIB",
     "selectedSlots": ["Selasa 15.00 WIB"],
+    "startDate": "2026-08-01",
+    "registrationDate": "2026-08-01",
     "notes": "Lunas periode Agustus 2026",
     "invoices": [
       {

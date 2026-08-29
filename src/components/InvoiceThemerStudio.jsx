@@ -129,70 +129,76 @@ export default function InvoiceThemerStudio({ currentTheme, onApplyTheme, onSave
           />
           <button
             onClick={handleSaveTheme}
-            className="px-3 py-1 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded text-xs font-semibold flex items-center space-x-1.5 shadow-xs"
+            title={savedSuccess ? 'Tersimpan!' : 'Simpan Tema'}
+            aria-label="Simpan Tema"
+            className="p-1.5 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded flex items-center justify-center shadow-xs transition-colors"
           >
-            {savedSuccess ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
-            <span>{savedSuccess ? 'Tersimpan!' : 'Simpan Tema'}</span>
+            {savedSuccess ? <Check className="w-4 h-4 text-white" /> : <Save className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Studio Navigation Bar */}
+      {/* Studio Navigation Bar - Icon Only */}
       <div className="flex border-b border-fluent-border space-x-1">
         <button
           onClick={() => setActiveSubTab('presets')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 transition-colors flex items-center space-x-1.5 ${
+          title="Pustaka Tema"
+          aria-label="Pustaka Tema"
+          className={`p-2 border-b-2 transition-colors flex items-center justify-center ${
             activeSubTab === 'presets'
-              ? 'border-fluent-blue text-fluent-blue font-bold'
-              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
+              ? 'border-fluent-blue text-fluent-blue font-bold bg-fluent-subtle'
+              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text hover:bg-fluent-subtle'
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Pustaka Tema</span>
+          <Sparkles className="w-4 h-4" />
         </button>
         <button
           onClick={() => setActiveSubTab('colors')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 transition-colors flex items-center space-x-1.5 ${
+          title="Warna Utama"
+          aria-label="Warna Utama"
+          className={`p-2 border-b-2 transition-colors flex items-center justify-center ${
             activeSubTab === 'colors'
-              ? 'border-fluent-blue text-fluent-blue font-bold'
-              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
+              ? 'border-fluent-blue text-fluent-blue font-bold bg-fluent-subtle'
+              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text hover:bg-fluent-subtle'
           }`}
         >
-          <Palette className="w-3.5 h-3.5" />
-          <span>Warna Utama</span>
+          <Palette className="w-4 h-4" />
         </button>
         <button
           onClick={() => setActiveSubTab('typography')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 transition-colors flex items-center space-x-1.5 ${
+          title="Font & Ukuran"
+          aria-label="Font & Ukuran"
+          className={`p-2 border-b-2 transition-colors flex items-center justify-center ${
             activeSubTab === 'typography'
-              ? 'border-fluent-blue text-fluent-blue font-bold'
-              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
+              ? 'border-fluent-blue text-fluent-blue font-bold bg-fluent-subtle'
+              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text hover:bg-fluent-subtle'
           }`}
         >
-          <Type className="w-3.5 h-3.5" />
-          <span>Font & Ukuran</span>
+          <Type className="w-4 h-4" />
         </button>
         <button
           onClick={() => setActiveSubTab('layout')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 transition-colors flex items-center space-x-1.5 ${
+          title="Tata Letak"
+          aria-label="Tata Letak"
+          className={`p-2 border-b-2 transition-colors flex items-center justify-center ${
             activeSubTab === 'layout'
-              ? 'border-fluent-blue text-fluent-blue font-bold'
-              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
+              ? 'border-fluent-blue text-fluent-blue font-bold bg-fluent-subtle'
+              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text hover:bg-fluent-subtle'
           }`}
         >
-          <Layout className="w-3.5 h-3.5" />
-          <span>Tata Letak</span>
+          <Layout className="w-4 h-4" />
         </button>
         <button
           onClick={() => setActiveSubTab('watermark')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 transition-colors flex items-center space-x-1.5 ${
+          title="Watermark & Catatan"
+          aria-label="Watermark & Catatan"
+          className={`p-2 border-b-2 transition-colors flex items-center justify-center ${
             activeSubTab === 'watermark'
-              ? 'border-fluent-blue text-fluent-blue font-bold'
-              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
+              ? 'border-fluent-blue text-fluent-blue font-bold bg-fluent-subtle'
+              : 'border-transparent text-fluent-textSecondary hover:text-fluent-text hover:bg-fluent-subtle'
           }`}
         >
-          <Sliders className="w-3.5 h-3.5" />
-          <span>Watermark & Catatan</span>
+          <Sliders className="w-4 h-4" />
         </button>
       </div>
 

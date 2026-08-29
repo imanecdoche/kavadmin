@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import './components/modules/editor.css';
 
 @tailwind base;
 @tailwind components;
@@ -43,8 +44,54 @@
   background: transparent;
 }
 
+/* Tiptap Table & Image Styling */
+.ProseMirror table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+  table-layout: fixed;
+  overflow: hidden;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  min-width: 1.5em;
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.ProseMirror th {
+  font-weight: 600;
+  background-color: #f1f5f9;
+  text-align: left;
+}
+
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(0, 120, 212, 0.15);
+  pointer-events: none;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0.75rem 0;
+  display: block;
+}
+
 /* Print Rules */
 @media print {
+  @page {
+    margin: 12mm 15mm 15mm 15mm;
+    size: auto;
+  }
   body {
     background-color: white !important;
     color: black !important;
@@ -54,5 +101,38 @@
   }
   .print-only {
     display: block !important;
+  }
+
+  /* When printing module exclusively */
+  body.printing-module > #root {
+    display: none !important;
+  }
+
+  body.printing-module > #module-print-portal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.printing-module .module-modal-window {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body.printing-module .module-content-area {
+    padding: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+    width: 100% !important;
   }
 }

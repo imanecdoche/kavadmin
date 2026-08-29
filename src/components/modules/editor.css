@@ -1,0 +1,324 @@
+/* Tiptap & Module Content Styling (Overrides Tailwind Preflight Resets & Microsoft Word A4 Layout) */
+
+/* A4 Word Canvas Paper */
+.word-page {
+  background-color: #ffffff;
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Calibri, Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.6;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+.word-page .ProseMirror {
+  outline: none;
+  min-height: 980px; /* A4 Ratio Height */
+}
+
+.tiptap-content,
+.ProseMirror,
+.module-rich-content {
+  outline: none;
+  color: #1e293b;
+  line-height: 1.65;
+}
+
+/* Headings with clear visual hierarchy */
+.tiptap-content h1,
+.ProseMirror h1,
+.word-page h1,
+.module-rich-content h1 {
+  display: block;
+  font-size: 1.875rem !important; /* 30px */
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+  color: #0f172a !important;
+  letter-spacing: -0.025em;
+}
+
+.tiptap-content h2,
+.ProseMirror h2,
+.word-page h2,
+.module-rich-content h2 {
+  display: block;
+  font-size: 1.5rem !important; /* 24px */
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+  color: #1e293b !important;
+  letter-spacing: -0.02em;
+}
+
+.tiptap-content h3,
+.ProseMirror h3,
+.word-page h3,
+.module-rich-content h3 {
+  display: block;
+  font-size: 1.25rem !important; /* 20px */
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+  color: #334155 !important;
+}
+
+.tiptap-content h4,
+.ProseMirror h4,
+.word-page h4,
+.module-rich-content h4 {
+  display: block;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.25rem !important;
+  color: #334155 !important;
+}
+
+/* Paragraphs & Text */
+.tiptap-content p,
+.ProseMirror p,
+.word-page p,
+.module-rich-content p {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.65 !important;
+}
+
+/* Lists (Bulleting & Numbering) */
+.tiptap-content ul,
+.ProseMirror ul,
+.word-page ul,
+.module-rich-content ul {
+  display: block !important;
+  list-style-type: disc !important;
+  padding-left: 1.75rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.tiptap-content ol,
+.ProseMirror ol,
+.word-page ol,
+.module-rich-content ol {
+  display: block !important;
+  list-style-type: decimal !important;
+  padding-left: 1.75rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.tiptap-content li,
+.ProseMirror li,
+.word-page li,
+.module-rich-content li {
+  display: list-item !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+  line-height: 1.6 !important;
+}
+
+.tiptap-content li > p,
+.ProseMirror li > p,
+.word-page li > p,
+.module-rich-content li > p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  display: inline !important;
+}
+
+/* Blockquote */
+.tiptap-content blockquote,
+.ProseMirror blockquote,
+.word-page blockquote,
+.module-rich-content blockquote {
+  border-left: 4px solid #0078D4 !important;
+  background-color: #f8fafc;
+  padding: 0.75rem 1rem !important;
+  margin: 1rem 0 !important;
+  font-style: italic;
+  color: #475569 !important;
+  border-radius: 0 4px 4px 0;
+}
+
+.tiptap-content blockquote p,
+.ProseMirror blockquote p,
+.word-page blockquote p,
+.module-rich-content blockquote p {
+  margin: 0 !important;
+}
+
+/* Code Blocks & Inline Code */
+.tiptap-content code,
+.ProseMirror code,
+.word-page code,
+.module-rich-content code {
+  font-family: 'JetBrains Mono', Consolas, Monaco, monospace !important;
+  font-size: 0.85em !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  padding: 0.15rem 0.35rem !important;
+  border-radius: 3px !important;
+}
+
+.tiptap-content pre,
+.ProseMirror pre,
+.word-page pre,
+.module-rich-content pre {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  padding: 0.85rem 1rem !important;
+  border-radius: 6px !important;
+  overflow-x: auto;
+  margin: 0.75rem 0 !important;
+}
+
+.tiptap-content pre code,
+.ProseMirror pre code,
+.word-page pre code,
+.module-rich-content pre code {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  font-size: 0.85rem !important;
+}
+
+/* Horizontal Rule */
+.tiptap-content hr,
+.ProseMirror hr,
+.word-page hr,
+.module-rich-content hr {
+  border: none !important;
+  border-top: 1px solid #e2e8f0 !important;
+  margin: 1.5rem 0 !important;
+}
+
+/* Tables */
+.tiptap-content table,
+.ProseMirror table,
+.word-page table,
+.module-rich-content table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 1rem 0 !important;
+  table-layout: auto !important;
+}
+
+.tiptap-content td,
+.tiptap-content th,
+.ProseMirror td,
+.ProseMirror th,
+.word-page td,
+.word-page th,
+.module-rich-content td,
+.module-rich-content th {
+  border: 1px solid #cbd5e1 !important;
+  padding: 8px 12px !important;
+  text-align: left;
+  vertical-align: top;
+  box-sizing: border-box;
+}
+
+.tiptap-content th,
+.ProseMirror th,
+.word-page th,
+.module-rich-content th {
+  background-color: #f1f5f9 !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+}
+
+/* Text Alignment Support */
+[style*="text-align: left"] {
+  text-align: left !important;
+}
+
+[style*="text-align: center"] {
+  text-align: center !important;
+}
+
+[style*="text-align: right"] {
+  text-align: right !important;
+}
+
+[style*="text-align: justify"] {
+  text-align: justify !important;
+}
+
+/* Images */
+.tiptap-content img,
+.ProseMirror img,
+.word-page img,
+.module-rich-content img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 6px;
+  margin: 0.75rem 0;
+  display: block;
+}
+
+/* Word Selection highlight */
+.word-page ::selection {
+  background: #bfdbfe;
+}
+
+/* Print Rules for A4 Word Document & PDF Export */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 20mm 15mm;
+  }
+
+  /* Sembunyikan elemen antarmuka web, navigasi, toolbar, dan tombol */
+  header,
+  footer,
+  nav,
+  .no-print,
+  button,
+  input,
+  select {
+    display: none !important;
+  }
+
+  /* Reset layout body & main workspace */
+  body, 
+  html,
+  #root,
+  main {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Kertas Word borderless saat cetak / ekspor PDF */
+  .word-page {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: auto !important;
+    background: white !important;
+  }
+
+  /* Cegah pemotongan canggung elemen antar halaman */
+  .word-page .ProseMirror table,
+  .word-page .ProseMirror blockquote,
+  .word-page .ProseMirror img,
+  .word-page .ProseMirror pre {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .word-page .ProseMirror h1,
+  .word-page .ProseMirror h2,
+  .word-page .ProseMirror h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}

@@ -7,7 +7,8 @@ import {
   Printer,
   Share2,
   Palette,
-  Award
+  Award,
+  ArrowLeftRight
 } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
@@ -17,6 +18,7 @@ import { formatDateIndonesian } from '../utils/dateFormatter'
 import InvoiceThemerStudio, { BUILTIN_THEMES } from './InvoiceThemerStudio'
 import ReceiptModal from './ReceiptModal'
 import { INVOICE_CONFIG } from '../config/stampConfig'
+import { logoSvg, ttdFatihPng, stempelKavioEduPng } from '../assets'
 
 export default function InvoiceGenerator({ students = [], selectedStudent, onSaveInvoiceToHistory, onSaveToDashboard }) {
   const invoiceRef = useRef(null)
@@ -71,7 +73,8 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   const [customValPerMonth, setCustomValPerMonth] = useState('')
   const [customSessionsPerMonth, setCustomSessionsPerMonth] = useState('')
   const [durationMonths, setDurationMonths] = useState(1)
-  const [discountPercent, setDiscountPercent] = useState(0)
+  const [discountType, setDiscountType] = useState('PERCENT') // 'PERCENT' or 'FIXED'
+  const [discountValue, setDiscountValue] = useState(0)
 
   const [paymentType, setPaymentType] = useState('FULL') // FULL, DP50, CUSTOM
   const [customPaidAmount, setCustomPaidAmount] = useState('')
@@ -100,6 +103,24 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   }
 
   const prevSelectedIdRef = useRef(null)
+  const durationInputRef = useRef(null)
+
+  useEffect(() => {
+    const el = durationInputRef.current
+    if (!el) return
+
+    const handleWheel = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const delta = e.deltaY < 0 ? 1 : -1
+      setDurationMonths((prev) => Math.max(1, (Number(prev) || 0) + delta))
+    }
+
+    el.addEventListener('wheel', handleWheel, { passive: false })
+    return () => {
+      el.removeEventListener('wheel', handleWheel)
+    }
+  }, [])
 
   const getInvoiceDataPayload = () => ({
     invoiceNo,
@@ -114,7 +135,7 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
     valPerMonth,
     totalSessions,
     subtotal,
-    discountPercent,
+    discountPercent: pct,
     discountAmount,
     totalInvestment,
     paidAmount,
@@ -166,6 +187,7 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
       setPaymentType('FULL')
     } else if (st.paid > 0) {
       setPaymentType('DP50')
+      setCustomPaidAmount(st.paid || '')
     } else {
       setPaymentType('CUSTOM')
       setCustomPaidAmount(st.paid || '')
@@ -199,6 +221,7 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
         setPaymentType('FULL')
       } else if (selectedStudent.paid > 0) {
         setPaymentType('DP50')
+        setCustomPaidAmount(selectedStudent.paid || '')
       } else {
         setPaymentType('CUSTOM')
         setCustomPaidAmount(selectedStudent.paid || '')
@@ -224,21 +247,47 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   const subtotal = valPerMonth * Number(durationMonths)
   const totalSessions = sessionsPerMonth * Number(durationMonths)
 
-  const pct = Math.max(0, Math.min(100, Number(discountPercent) || 0))
-  const discountAmount = Math.round((subtotal * pct) / 100)
+  let discountAmount = 0
+  let pct = 0
+  if (discountType === 'PERCENT') {
+    pct = Math.max(0, Math.min(100, Number(discountValue) || 0))
+    discountAmount = Math.round((subtotal * pct) / 100)
+  } else {
+    discountAmount = Math.max(0, Math.min(subtotal, Number(discountValue) || 0))
+    pct = subtotal > 0 ? Math.round((discountAmount / subtotal) * 100) : 0
+  }
   const totalInvestment = Math.max(0, subtotal - discountAmount)
+
+  const toggleDiscountType = () => {
+    if (discountType === 'PERCENT') {
+      const nominal = Math.round((subtotal * (Number(discountValue) || 0)) / 100)
+      setDiscountType('FIXED')
+      setDiscountValue(nominal > 0 ? nominal : '')
+    } else {
+      const percent = subtotal > 0 ? Math.min(100, Math.round(((Number(discountValue) || 0) / subtotal) * 100)) : 0
+      setDiscountType('PERCENT')
+      setDiscountValue(percent > 0 ? percent : '')
+    }
+  }
 
   let paidAmount = 0
   if (paymentType === 'FULL') {
     paidAmount = totalInvestment
   } else if (paymentType === 'DP50') {
-    paidAmount = totalInvestment * 0.5
+    if (customPaidAmount !== '' && Number(customPaidAmount) > 0 && Number(customPaidAmount) < totalInvestment) {
+      paidAmount = Number(customPaidAmount)
+    } else {
+      paidAmount = totalInvestment * 0.5
+    }
   } else {
     paidAmount = Number(customPaidAmount) || 0
   }
 
   const outstandingBalance = Math.max(0, totalInvestment - paidAmount)
   const paidPct = totalInvestment > 0 ? Math.min(100, Math.round((paidAmount / totalInvestment) * 100)) : 0
+  const dpPercentValue = totalInvestment > 0 && paidAmount > 0 && paidAmount < totalInvestment
+    ? Math.round((paidAmount / totalInvestment) * 100)
+    : 50
 
   // Status Text Logic
   const isLunas = paidAmount >= totalInvestment && totalInvestment > 0
@@ -246,7 +295,7 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   if (isLunas) {
     statusBadge = { label: 'LUNAS (100%)', text: 'text-emerald-600' }
   } else if (paidAmount > 0) {
-    statusBadge = { label: `DP TERBAYAR (${paidPct}%)`, text: 'text-amber-600' }
+    statusBadge = { label: `TERBAYAR (${paidPct}%)`, text: 'text-amber-600' }
   }
 
   const formatIDR = (amount) => {
@@ -367,61 +416,67 @@ Kavio Edu Management`
       {/* Page Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-fluent-text tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-fluent-text tracking-tight">
             Invoice Generator
           </h1>
-          <p className="text-sm text-fluent-textSecondary">
-            Buat, cetak, dan ekspor invoice resmi untuk kursus private Kavio Edu.
+          <p className="text-xs text-fluent-textSecondary mt-0.5">
+            Buat dan kelola dokumen invoice resmi Kavio Edu.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* Desktop Only Invoice Themer Toggle Button */}
           <button
             onClick={() => setIsThemerOpen(!isThemerOpen)}
-            className={`hidden lg:flex items-center space-x-2 px-3 py-2 border text-sm font-semibold rounded-fluent transition-colors ${isThemerOpen
+            className={`hidden lg:flex items-center justify-center p-2.5 border rounded-fluent transition-colors ${isThemerOpen
               ? 'bg-fluent-blue text-white border-fluent-blue shadow-xs'
               : 'border-fluent-border bg-white text-fluent-text hover:bg-fluent-subtle'
               }`}
-            title="Buka Themer Studio untuk mendesain kustom template invoice"
+            title="Studio Desain Tema Invoice"
+            aria-label="Studio Desain Tema Invoice"
           >
             <Palette className="w-4 h-4" />
           </button>
           <button
             onClick={handleCopyShareLink}
-            className="px-3 py-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent text-sm font-medium flex items-center space-x-2"
-            title="Salin link publik invoice untuk dibagikan ke siswa/wali"
+            className="p-2.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent transition-colors flex items-center justify-center"
+            title="Salin Link Berbagi Publik"
+            aria-label="Salin Link Berbagi Publik"
           >
             {copiedShareLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-fluent-blue" />}
           </button>
           <button
             onClick={() => window.print()}
-            className="px-3 py-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent text-sm font-medium flex items-center space-x-2"
+            className="p-2.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent transition-colors flex items-center justify-center"
+            title="Cetak Invoice"
+            aria-label="Cetak Invoice"
           >
             <Printer className="w-4 h-4" />
           </button>
           <button
             onClick={handleDownloadPNG}
             disabled={isExporting}
-            className="px-3 py-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent text-sm font-medium flex items-center space-x-2"
+            className="p-2.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded-fluent transition-colors flex items-center justify-center disabled:opacity-50"
+            title="Download Gambar PNG"
+            aria-label="Download Gambar PNG"
           >
             <Download className="w-4 h-4 text-fluent-blue" />
-            <span>PNG</span>
           </button>
           <button
             onClick={handleDownloadPDF}
             disabled={isExporting}
-            className="px-4 py-2 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent text-sm font-medium flex items-center space-x-2 shadow-sm"
+            className="p-2.5 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent transition-colors flex items-center justify-center shadow-xs disabled:opacity-50"
+            title="Download PDF"
+            aria-label="Download PDF"
           >
             <Download className="w-4 h-4" />
-            <span>{isExporting ? 'Memproses...' : 'PDF'}</span>
           </button>
           <button
             onClick={() => setIsReceiptModalOpen(true)}
-            className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-fluent text-sm font-semibold flex items-center space-x-1.5 transition-colors shadow-2xs"
+            className="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-fluent flex items-center justify-center transition-colors shadow-2xs"
             title="Cetak Kwitansi Pembayaran Resmi"
+            aria-label="Cetak Kwitansi Pembayaran Resmi"
           >
             <Award className="w-4 h-4 text-emerald-600" />
-            <span>Kwitansi</span>
           </button>
         </div>
       </div>
@@ -498,9 +553,7 @@ Kavio Edu Management`
                   Nama Siswa *
                 </label>
                 {isStudentLocked && (
-                  <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-semibold">
-                    Terdaftar di Database
-                  </span>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
                 )}
               </div>
               <input
@@ -519,28 +572,19 @@ Kavio Edu Management`
                 <div className="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-fluent-border rounded-fluent shadow-lg max-h-48 overflow-y-auto">
                   {(Array.isArray(students) ? students : [])
                     .filter(st => (st.name || '').toLowerCase().includes(studentName.toLowerCase().trim()))
-                    .map((st) => {
-                      const pText = formatParentDisplayText(st)
-
-                      return (
-                        <button
-                          key={st.id}
-                          type="button"
-                          onMouseDown={() => handleSelectStudent(st)}
-                          className="w-full text-left px-3 py-2 hover:bg-fluent-subtle border-b border-slate-100 last:border-0 text-xs transition-colors flex items-center justify-between"
-                        >
-                          <div>
-                            <span className="font-bold text-fluent-text block">{st.name}</span>
-                            <span className="text-[11px] text-fluent-textSecondary">
-                              Wali: {pText || 'Belum diisi'}
-                            </span>
-                          </div>
-                          <span className="text-[10px] bg-fluent-subtle px-1.5 py-0.5 rounded text-fluent-blue font-semibold border border-fluent-border">
-                            Paket {st.packageType || 'GROW'}
-                          </span>
-                        </button>
-                      )
-                    })}
+                    .map((st) => (
+                      <button
+                        key={st.id}
+                        type="button"
+                        onMouseDown={() => handleSelectStudent(st)}
+                        className="w-full text-left px-3 py-2 hover:bg-fluent-subtle border-b border-slate-100 last:border-0 text-xs transition-colors flex items-center justify-between"
+                      >
+                        <span className="font-semibold text-fluent-text">{st.name}</span>
+                        <span className="text-[11px] font-semibold text-fluent-blue">
+                          {st.packageType || 'GROW'}
+                        </span>
+                      </button>
+                    ))}
                 </div>
               )}
             </div>
@@ -597,30 +641,57 @@ Kavio Edu Management`
               <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
                 Durasi (Bulan)
               </label>
-              <select
+              <input
+                ref={durationInputRef}
+                type="number"
+                min="1"
+                data-lenis-prevent
                 value={durationMonths}
-                onChange={(e) => setDurationMonths(Number(e.target.value))}
-                className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue bg-white"
-              >
-                <option value={1}>1 Bulan</option>
-                <option value={3}>3 Bulan</option>
-                <option value={6}>6 Bulan</option>
-                <option value={12}>12 Bulan</option>
-              </select>
+                onChange={(e) => {
+                  const val = e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10) || 1)
+                  setDurationMonths(val)
+                }}
+                onBlur={() => {
+                  if (!durationMonths || Number(durationMonths) < 1) {
+                    setDurationMonths(1)
+                  }
+                }}
+                placeholder="1"
+                className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue bg-white overscroll-contain [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-fluent-textSecondary mb-1">
-                Diskon (%)
+                Diskon ({discountType === 'PERCENT' ? '%' : 'Rp'})
               </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={discountPercent}
-                onChange={(e) => setDiscountPercent(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-                placeholder="0"
-                className="w-full px-3 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-bold text-emerald-700 bg-white"
-              />
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  max={discountType === 'PERCENT' ? 100 : subtotal}
+                  value={discountValue}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (val === '') {
+                      setDiscountValue('')
+                    } else if (discountType === 'PERCENT') {
+                      setDiscountValue(Math.max(0, Math.min(100, Number(val) || 0)))
+                    } else {
+                      setDiscountValue(Math.max(0, Math.min(subtotal, Number(val) || 0)))
+                    }
+                  }}
+                  placeholder="0"
+                  className="w-full pl-3 pr-7 py-1.5 text-xs border border-fluent-border rounded-fluent focus:outline-none focus:border-fluent-blue font-bold text-emerald-700 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button
+                  type="button"
+                  onClick={toggleDiscountType}
+                  title={discountType === 'PERCENT' ? 'Ganti ke Diskon Nominal (Rp)' : 'Ganti ke Diskon Persentase (%)'}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-fluent-blue hover:bg-slate-100 rounded transition-colors flex items-center justify-center"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -670,13 +741,18 @@ Kavio Edu Management`
               </button>
               <button
                 type="button"
-                onClick={() => setPaymentType('DP50')}
+                onClick={() => {
+                  setPaymentType('DP50')
+                  if (!customPaidAmount || Number(customPaidAmount) <= 0 || Number(customPaidAmount) >= totalInvestment) {
+                    setCustomPaidAmount(totalInvestment * 0.5)
+                  }
+                }}
                 className={`py-1.5 px-2 text-xs font-medium rounded-fluent border ${paymentType === 'DP50'
                   ? 'bg-amber-50 border-amber-500 text-amber-700 font-bold'
                   : 'border-fluent-border bg-white text-fluent-text'
                   }`}
               >
-                DP 50%
+                DP ({dpPercentValue}%)
               </button>
               <button
                 type="button"
@@ -720,13 +796,14 @@ Kavio Edu Management`
           </div>
 
           {/* Quick Copy WhatsApp Prompt */}
-          <div className="pt-2">
+          <div className="pt-2 flex justify-end">
             <button
               onClick={handleCopyWA}
-              className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-fluent font-medium text-xs flex items-center justify-center space-x-2 transition-colors shadow-sm"
+              title={copied ? 'Pesan WhatsApp Tersalin!' : 'Salin Pesan WhatsApp Invoice'}
+              aria-label="Salin Pesan WhatsApp Invoice"
+              className="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-fluent flex items-center justify-center transition-colors shadow-xs"
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Pesan WhatsApp Tersalin!' : 'Salin Pesan WhatsApp Invoice'}</span>
             </button>
           </div>
 
@@ -760,7 +837,7 @@ Kavio Edu Management`
                 : ''
               }`}>
               <div>
-                <img src="/logo.svg" alt="Kavio Edu Logo" className="h-10 w-auto object-contain mb-2" />
+                <img src={logoSvg} alt="Kavio Edu Logo" className="h-10 w-auto object-contain mb-2" />
                 <p className="text-xs text-fluent-textSecondary font-semibold">
                   Private English Class & Academic Mentoring
                 </p>
@@ -915,7 +992,7 @@ Kavio Edu Management`
                 <div className="relative inline-block">
                   {/* Founder Digital Signature (Tanda Tangan) */}
                   <img
-                    src="/ttd_fatih_founderkavio.png"
+                    src={ttdFatihPng}
                     alt="Tanda Tangan Founder Kavio"
                     style={{
                       height: `${INVOICE_CONFIG.signature.sizeHeightPx}px`,
@@ -927,7 +1004,7 @@ Kavio Edu Management`
 
                   {/* Official Kavio Edu Stamp Overlay (Stempel Ungu) */}
                   <img
-                    src="/stempel_kavioedu.png"
+                    src={stempelKavioEduPng}
                     alt="Stempel Resmi Kavio Edu"
                     style={{
                       height: `${INVOICE_CONFIG.kavioStamp.sizeHeightPx}px`,

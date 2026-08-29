@@ -2,14 +2,19 @@
   "name": "kavio-inv-generator",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "main": "electron.cjs",
   "scripts": {
+    "start": "vite build && electron .",
+    "app": "electron .",
     "dev": "vite --host",
     "build": "vite build",
     "lint": "vite build",
     "preview": "vite preview",
     "electron:dev": "electron .",
     "electron:build": "vite build && electron-builder",
+    "electron:linux": "rm -rf release/linux-unpacked && vite build && electron-builder --linux",
+    "electron:linux:dir": "rm -rf release/linux-unpacked && vite build && electron-builder --linux dir",
     "electron:package": "vite build && electron-packager . \"Kavio Edu\" --platform=win32 --arch=x64 --out=release --overwrite"
   },
   "build": {
@@ -20,9 +25,20 @@
     },
     "files": [
       "dist/**/*",
+      "public/**/*",
       "electron.cjs",
+      "preload.cjs",
       "package.json"
     ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "dir"
+      ],
+      "icon": "public/logobaru.png",
+      "category": "Office",
+      "executableName": "kavio-edu"
+    },
     "win": {
       "target": "nsis",
       "icon": "public/logobaru.png"
@@ -33,15 +49,32 @@
     }
   },
   "dependencies": {
+    "@tiptap/extension-color": "^3.30.2",
+    "@tiptap/extension-highlight": "^3.30.2",
+    "@tiptap/extension-image": "^3.30.2",
+    "@tiptap/extension-strike": "^3.30.2",
+    "@tiptap/extension-table": "^3.30.2",
+    "@tiptap/extension-table-cell": "^3.30.2",
+    "@tiptap/extension-table-header": "^3.30.2",
+    "@tiptap/extension-table-row": "^3.30.2",
+    "@tiptap/extension-text-align": "^3.30.2",
+    "@tiptap/extension-text-style": "^3.30.2",
+    "@tiptap/extension-underline": "^3.30.2",
+    "@tiptap/pm": "^3.30.2",
+    "@tiptap/react": "^3.30.2",
+    "@tiptap/starter-kit": "^3.30.2",
     "firebase": "^12.17.0",
-    "framer-motion": "^11.11.17",
+    "framer-motion": "^11.18.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
+    "lenis": "^1.3.26",
     "lucide-react": "^0.460.0",
+    "mammoth": "^1.12.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.20",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

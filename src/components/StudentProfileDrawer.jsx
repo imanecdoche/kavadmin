@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   X,
   User,
@@ -17,8 +19,20 @@ import {
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
 
-export default function StudentProfileDrawer({ student, onClose, onGenerateInvoice }) {
+export default function StudentProfileDrawer({ student, onClose, onGenerateInvoice, onOpenRoadmap }) {
   const [activeReceiptData, setActiveReceiptData] = useState(null)
+
+  // Lock body scroll while drawer/modal is open
+  React.useEffect(() => {
+    if (student) {
+      document.body.style.overflow = 'hidden'
+      document.documentElement.classList.add('lenis-stopped')
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.classList.remove('lenis-stopped')
+    }
+  }, [student])
 
   if (!student) return null
 
@@ -48,11 +62,17 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
   if (paid >= totalInvestment && totalInvestment > 0) {
     statusBadge = { label: 'LUNAS', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
   } else if (paid > 0) {
-    statusBadge = { label: `DP TERBAYAR (${paidPct}%)`, bg: 'bg-amber-50 text-amber-700 border-amber-200' }
+    statusBadge = { label: `TERBAYAR (${paidPct}%)`, bg: 'bg-amber-50 text-amber-700 border-amber-200' }
   }
 
-  const formatIDR = (amount) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount || 0)
+  const formatIDR = (amount, rpSize = 'text-[0.65em]') => {
+    const numStr = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(amount || 0)
+    return (
+      <span className="inline-flex items-baseline">
+        <span className={`${rpSize} font-semibold opacity-45 mr-0.5 select-none`}>Rp</span>
+        <span>{numStr}</span>
+      </span>
+    )
   }
 
   // Open Direct WhatsApp Link
@@ -64,15 +84,33 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
     window.open(url, '_blank')
   }
 
-  return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl bg-white rounded-fluent shadow-fluent-modal border border-fluent-border flex flex-col max-h-[90vh] overflow-hidden my-auto"
+  return typeof document !== 'undefined' ? createPortal(
+    <AnimatePresence>
+      <motion.div
+        data-lenis-prevent="true"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        onClick={onClose}
+        className="fixed inset-0 top-0 left-0 w-screen h-screen z-[60] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
       >
+        <motion.div
+          data-lenis-prevent="true"
+          initial={{ opacity: 0, scale: 0.82, scaleY: 0.72, scaleX: 0.90, y: 48 }}
+          animate={{ opacity: 1, scale: 1, scaleY: 1, scaleX: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.84, scaleY: 0.74, scaleX: 0.92, y: 38 }}
+          transition={{
+            type: 'spring',
+            damping: 25,
+            stiffness: 280,
+            mass: 0.85,
+            opacity: { duration: 0.22, ease: 'easeOut' }
+          }}
+          style={{ transformOrigin: '50% 85%' }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-2xl bg-white rounded-fluent shadow-fluent-modal border border-fluent-border flex flex-col max-h-[90vh] overflow-hidden my-auto will-change-transform"
+        >
 
         {/* Header */}
         <div className="p-5 sm:p-6 border-b border-fluent-border bg-fluent-subtle flex items-start justify-between flex-shrink-0">
@@ -275,10 +313,11 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
                             packageType: student.packageType,
                             paidAmount: inv.totalInvestment
                           })}
-                          className="mt-1 text-[10px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 font-semibold flex items-center space-x-1 transition-colors"
+                          title="Cetak Kwitansi"
+                          aria-label="Cetak Kwitansi"
+                          className="mt-1 p-1 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 flex items-center justify-center transition-colors"
                         >
-                          <Award className="w-3 h-3 text-emerald-600" />
-                          <span>Kwitansi</span>
+                          <Award className="w-3.5 h-3.5 text-emerald-600" />
                         </button>
                       </div>
                     </div>
@@ -296,32 +335,49 @@ export default function StudentProfileDrawer({ student, onClose, onGenerateInvoi
 
         {/* Action Footer */}
         <div className="p-4 border-t border-fluent-border bg-fluent-subtle flex items-center justify-between gap-3 flex-shrink-0">
-          <button
-            onClick={() => {
-              onGenerateInvoice(student)
-              onClose()
-            }}
-            className="flex-1 py-2 px-4 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent font-medium text-xs flex items-center justify-center space-x-2 transition-colors shadow-sm"
-          >
-            <FileText className="w-4 h-4" />
-            <span>Generate Invoice Direct</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                onGenerateInvoice(student)
+                onClose()
+              }}
+              title="Generate Invoice Siswa"
+              aria-label="Generate Invoice Siswa"
+              className="p-2.5 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent flex items-center justify-center transition-colors shadow-xs"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
+            {onOpenRoadmap && (
+              <button
+                onClick={() => {
+                  onOpenRoadmap(student)
+                  onClose()
+                }}
+                title="Buka Roadmap Pembelajaran Siswa"
+                aria-label="Buka Roadmap Pembelajaran Siswa"
+                className="p-2.5 bg-white border border-fluent-border hover:bg-blue-50 hover:text-fluent-blue hover:border-blue-200 text-fluent-text rounded-fluent flex items-center justify-center transition-colors shadow-xs"
+              >
+                <BookOpen className="w-4 h-4" />
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="py-2 px-4 border border-fluent-border hover:bg-white text-fluent-text rounded-fluent font-medium text-xs"
           >
             Tutup
           </button>
-        </div>
+          </div>
+        </motion.div>
 
-      </div>
-
-      {/* Kwitansi Modal */}
-      <ReceiptModal
-        isOpen={!!activeReceiptData}
-        onClose={() => setActiveReceiptData(null)}
-        data={activeReceiptData}
-      />
-    </div>
-  )
+        {/* Kwitansi Modal */}
+        <ReceiptModal
+          isOpen={!!activeReceiptData}
+          onClose={() => setActiveReceiptData(null)}
+          data={activeReceiptData}
+        />
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  ) : null
 }

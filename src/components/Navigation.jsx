@@ -1,5 +1,6 @@
 import React from 'react'
-import { LayoutDashboard, FileText, MessageSquare, BookOpen } from 'lucide-react'
+import { LayoutDashboard, FileText, MessageSquare, BookOpen, Library } from 'lucide-react'
+import { logoSvg } from '../assets'
 
 export default function Navigation({ activeTab, setActiveTab }) {
   const tabs = [
@@ -7,18 +8,19 @@ export default function Navigation({ activeTab, setActiveTab }) {
     { id: 'invoice', label: 'Invoice', icon: FileText },
     { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
     { id: 'roadmap', label: 'Roadmap', icon: BookOpen },
+    { id: 'modules', label: 'Modules', icon: Library },
   ]
 
   return (
     <>
-      {/* MOBILE ONLY: Top Header with Logo Only (Scrolls with Parent) */}
-      <div className="sm:hidden bg-white border-b border-fluent-border py-3 px-4 flex items-center justify-center no-print">
-        <img src="/logo.svg" alt="Kavio Edu Logo" className="h-8 w-auto object-contain" />
+      {/* MOBILE ONLY: Top Header with Logo */}
+      <div className="sm:hidden bg-white border-b border-fluent-border py-2.5 px-4 flex items-center justify-center no-print">
+        <img src={logoSvg} alt="Kavio Edu Logo" className="h-7 w-auto object-contain" />
       </div>
 
-      {/* MOBILE ONLY: Sticky Navbar Header (Stops at Top) */}
+      {/* MOBILE ONLY: Sticky Navbar Header */}
       <div className="sm:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-fluent-border shadow-xs no-print">
-        <nav className="flex justify-around py-2 px-1">
+        <nav className="flex justify-around py-2 px-2">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -26,14 +28,15 @@ export default function Navigation({ activeTab, setActiveTab }) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center px-3 py-1 text-xs font-medium rounded-fluent transition-colors ${
+                title={tab.label}
+                aria-label={tab.label}
+                className={`p-2.5 rounded-fluent transition-all flex items-center justify-center ${
                   isActive
-                    ? 'text-fluent-blue font-bold border-b-2 border-fluent-blue pb-0.5'
-                    : 'text-fluent-textSecondary hover:text-fluent-text'
+                    ? 'bg-fluent-blue text-white shadow-xs'
+                    : 'text-fluent-textSecondary hover:text-fluent-blue hover:bg-fluent-subtle'
                 }`}
               >
-                <Icon className="w-4 h-4 mb-0.5" />
-                <span className="text-[11px] tracking-tight">{tab.label}</span>
+                <Icon className="w-5 h-5" />
               </button>
             )
           })}
@@ -41,17 +44,17 @@ export default function Navigation({ activeTab, setActiveTab }) {
       </div>
 
       {/* DESKTOP ONLY: Combined Top Header & Navbar (Sticky) */}
-      <header className="hidden sm:block sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-fluent-border shadow-xs no-print">
+      <header className="hidden sm:block sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-fluent-border shadow-xs no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14">
             
             {/* Logo & Brand Header */}
             <div className="flex items-center">
-              <img src="/logo.svg" alt="Kavio Edu Logo" className="h-8 w-auto object-contain" />
+              <img src={logoSvg} alt="Kavio Edu Logo" className="h-7 w-auto object-contain" />
             </div>
 
-            {/* Desktop Navigation Tabs */}
-            <nav className="flex space-x-2">
+            {/* Desktop Navigation Tabs - Icon Only with Tooltips */}
+            <nav className="flex items-center space-x-1.5">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 const isActive = activeTab === tab.id
@@ -59,14 +62,15 @@ export default function Navigation({ activeTab, setActiveTab }) {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-3.5 py-2 text-sm font-medium rounded-fluent transition-all duration-150 ${
+                    title={tab.label}
+                    aria-label={tab.label}
+                    className={`p-2.5 rounded-fluent transition-all duration-150 flex items-center justify-center ${
                       isActive
-                        ? 'bg-fluent-blue text-white shadow-xs font-semibold'
-                        : 'text-fluent-text hover:bg-fluent-subtle hover:text-fluent-blue'
+                        ? 'bg-fluent-blue text-white shadow-xs'
+                        : 'text-fluent-textSecondary hover:bg-fluent-subtle hover:text-fluent-blue'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span>{tab.label}</span>
+                    <Icon className="w-5 h-5" />
                   </button>
                 )
               })}

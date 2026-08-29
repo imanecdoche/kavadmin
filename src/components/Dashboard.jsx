@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Users,
   DollarSign,
@@ -19,10 +20,21 @@ import {
   Lock,
   Check,
   Grid,
-  List
+  List,
+  Maximize2,
+  ChevronRight,
+  ChevronDown,
+  ExternalLink
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import StudentProfileDrawer from './StudentProfileDrawer'
+import UpcomingSessionsModal from './UpcomingSessionsModal'
+import SlotCalendarModal from './SlotCalendarModal'
+import {
+  getAggregatedSessionsMap,
+  getUpcomingSessions3DaysValidated,
+  formatDateKey
+} from '../utils/scheduleManager'
 
 export const PACKAGE_RATES = {
   SEED: { valPerMonth: 150000, sessionsPerMonth: 3, minutesPerSession: 60 },
@@ -262,20 +274,49 @@ const createSessionReminderMessage = (student, dayItem, sess) => {
   return `Halo, ini pengingat sesi bimbingan belajar Kavio Edu untuk ${recipientName} pada ${dateStr} jam ${timeStr}. Mohon persiapkan diri. Terima kasih.`
 }
 
-export default function Dashboard({ students, setStudents, onGenerateInvoice }) {
+export default function Dashboard({ students, setStudents, onGenerateInvoice, onOpenRoadmap }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [packageFilter, setPackageFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [dayFilter, setDayFilter] = useState('ALL')
 
-  // View Mode: 'table' or 'matrix'
-  const [viewMode, setViewMode] = useState('table')
+  // View Mode: 'table' or 'matrix' with sliding transition direction
+  const [viewMode, setViewModeState] = useState('table')
+  const [slideDirection, setSlideDirection] = useState(0)
+
+  const handleSetViewMode = (newMode) => {
+    if (newMode === viewMode) return
+    setSlideDirection(newMode === 'matrix' ? 1 : -1)
+    setViewModeState(newMode)
+  }
   const [matrixWeekTab, setMatrixWeekTab] = useState(0) // 0 = Pekan 1, 1 = Pekan 2, 2 = Pekan 3, 3 = Pekan 4, 'ALL' = Semua Pekan
 
   const fourWeeks = getFourWeeksData()
 
   // Selected student for Profile Drawer
   const [viewingStudent, setViewingStudent] = useState(null)
+
+  // Upcoming Sessions Popup Modal State & Collapsible State
+  const [isUpcomingModalOpen, setIsUpcomingModalOpen] = useState(false)
+  const [isSlotCalendarOpen, setIsSlotCalendarOpen] = useState(false)
+  const [isUpcomingCollapsed, setIsUpcomingCollapsed] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kavio_dashboard_upcoming_collapsed')
+      return saved === 'true'
+    } catch (e) {
+      return false
+    }
+  })
+
+  const toggleUpcomingCollapse = () => {
+    setIsUpcomingCollapsed(prev => {
+      const nextVal = !prev
+      try {
+        localStorage.setItem('kavio_dashboard_upcoming_collapsed', String(nextVal))
+      } catch (e) {}
+      return nextVal
+    })
+  }
 
   // Modal State for Add/Edit
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -305,6 +346,22 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
 
     return () => clearInterval(interval)
   }, [deleteId])
+
+  // Lock body scroll whenever ANY modal/popup is open
+  useEffect(() => {
+    const isAnyModalOpen = isModalOpen || !!deleteId || isUpcomingModalOpen || isSlotCalendarOpen || !!viewingStudent
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden'
+      document.documentElement.classList.add('lenis-stopped')
+    } else {
+      document.body.style.overflow = ''
+      document.documentElement.classList.remove('lenis-stopped')
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.classList.remove('lenis-stopped')
+    }
+  }, [isModalOpen, deleteId, isUpcomingModalOpen, isSlotCalendarOpen, viewingStudent])
 
   // Form State Roadmap 02 Extended Schema
   const [formData, setFormData] = useState({
@@ -340,15 +397,31 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
     return acc + (out > 0 ? out : 0)
   }, 0)
 
-  // Total Hours calculation
+  const totalGrossInvestment = totalMonthlyRevenue + totalOutstanding
+  const revenueRealizationPct = totalGrossInvestment > 0 ? Math.min(100, Math.round((totalMonthlyRevenue / totalGrossInvestment) * 100)) : 100
+
+  const outstandingStudentsCount = students.filter(s => {
+    const totalInv = (s.valPerMonth || 0) * (s.durationMonths || 1)
+    return (totalInv - (Number(s.paid) || 0)) > 0
+  }).length
+
+  // Total Hours and Total Sessions calculation
+  const totalSessionsOverall = students.reduce((acc, curr) => acc + ((curr.sessionsPerMonth || 0) * (curr.durationMonths || 1)), 0)
   const totalStudyMinutesOverall = students.reduce((acc, curr) => {
     const sessions = (curr.sessionsPerMonth || 0) * (curr.durationMonths || 1)
     const mins = curr.minutesPerSession || 60
     return acc + (sessions * mins)
   }, 0)
 
-  // Upcoming 3 Days Sessions calculation
-  const upcoming3DaysData = getUpcomingSessions3Days(students)
+  // Agregasi seluruh sesi tervalidasi kuota
+  const aggregatedSessionsMap = useMemo(() => {
+    return getAggregatedSessionsMap(students)
+  }, [students])
+
+  // Upcoming 3 Days Sessions calculation (Strictly Quota-Bound)
+  const upcoming3DaysData = useMemo(() => {
+    return getUpcomingSessions3DaysValidated(students)
+  }, [students])
   const totalUpcoming3DaysCount = upcoming3DaysData.reduce((acc, curr) => acc + curr.sessions.length, 0)
 
   // Filtered Students List
@@ -543,261 +616,482 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
     }
   }
 
-  const formatIDR = (amount) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount || 0)
+  const formatIDR = (amount, rpSize = 'text-[0.65em]') => {
+    const numStr = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(amount || 0)
+    return (
+      <span className="inline-flex items-baseline">
+        <span className={`${rpSize} font-semibold opacity-45 mr-0.5 select-none`}>Rp</span>
+        <span>{numStr}</span>
+      </span>
+    )
+  }
+
+  // Apple / Fluent Design ultra-smooth deceleration curve for seamless 60fps layout shifts
+  const smoothTransition = {
+    duration: 0.42,
+    ease: [0.16, 1, 0.3, 1]
+  }
+
+  // Directional sliding variants for Daftar Siswa <-> Matriks Jadwal
+  const viewSlideVariants = {
+    enter: (dir) => ({
+      x: dir > 0 ? 36 : dir < 0 ? -36 : 0,
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        x: { duration: 0.38, ease: [0.16, 1, 0.3, 1] },
+        opacity: { duration: 0.28, ease: 'easeOut' }
+      }
+    },
+    exit: (dir) => ({
+      x: dir > 0 ? -36 : dir < 0 ? 36 : 0,
+      opacity: 0,
+      transition: {
+        x: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
+        opacity: { duration: 0.16, ease: 'easeIn' }
+      }
+    })
   }
 
   return (
-    <div className="space-y-6 pb-12">
+    <motion.div layout transition={smoothTransition} className="space-y-6 pb-12">
 
       {/* Top Title & Primary Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div layout transition={smoothTransition} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-fluent-text tracking-tight">
-            Dashboard Siswa & Penjadwalan Sesi
+          <h1 className="text-xl sm:text-2xl font-bold text-fluent-text tracking-tight">
+            Dashboard Siswa
           </h1>
-          <p className="text-sm text-fluent-textSecondary">
-            Kelola data demografi, durasi bimbingan, serta matriks 3 slot harian Kavio Edu.
+          <p className="text-xs text-fluent-textSecondary mt-0.5">
+            Manajemen data siswa, reservasi slot, dan status pembayaran.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
-          {/* View Mode Toggle */}
-          <div className="bg-fluent-subtle p-1 border border-fluent-border rounded-fluent flex items-center space-x-1">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center space-x-1.5 ${viewMode === 'table'
-                ? 'bg-white text-fluent-blue shadow-sm'
-                : 'text-fluent-textSecondary hover:text-fluent-text'
-                }`}
-            >
-              <List className="w-3.5 h-3.5" />
-              <span>Daftar Siswa</span>
-            </button>
-            <button
-              onClick={() => setViewMode('matrix')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center space-x-1.5 ${viewMode === 'matrix'
-                ? 'bg-white text-fluent-blue shadow-sm'
-                : 'text-fluent-textSecondary hover:text-fluent-text'
-                }`}
-            >
-              <Grid className="w-3.5 h-3.5" />
-              <span>Matriks Jadwal
-              </span>
-            </button>
-          </div>
-
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => openModal(null)}
-            className="px-4 py-2 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent text-sm font-medium flex items-center space-x-2 shadow-sm transition-all"
+            className="px-4 py-2 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent shadow-xs transition-all flex items-center space-x-2 text-xs font-semibold"
           >
             <Plus className="w-4 h-4" />
-            <span>Siswa Baru</span>
+            <span>Tambah Siswa</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-fluent-textSecondary uppercase tracking-wider">
-              Siswa Aktif
-            </p>
-            <p className="text-2xl font-bold text-fluent-text mt-1">
-              {totalActiveStudents} Siswa
-            </p>
-          </div>
-          <div className="p-3 bg-blue-50 text-fluent-blue rounded-fluent">
-            <Users className="w-6 h-6" />
-          </div>
-        </div>
+      {/* 4 Dynamic Reconstructed KPI Cards Row */}
+      <motion.div layout transition={smoothTransition} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-        <div className="bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-fluent-textSecondary uppercase tracking-wider">
-              Pendapatan Terbayar
-            </p>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">
-              {formatIDR(totalMonthlyRevenue)}
-            </p>
-          </div>
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-fluent font-extrabold text-base flex items-center justify-center min-w-12 h-12">
-            Rp
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-fluent-textSecondary uppercase tracking-wider">
-              Outstanding
-            </p>
-            <p className="text-2xl font-bold text-amber-600 mt-1">
-              {formatIDR(totalOutstanding)}
-            </p>
-          </div>
-          <div className="p-3 bg-amber-50 text-amber-600 rounded-fluent">
-            <AlertCircle className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-fluent border border-fluent-border shadow-fluent flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-fluent-textSecondary uppercase tracking-wider">
-              Total Jam Belajar Siswa
-            </p>
-            <p className="text-2xl font-bold text-purple-700 mt-1">
-              {(totalStudyMinutesOverall / 60).toFixed(1)} Jam
-            </p>
-          </div>
-          <div className="p-3 bg-purple-50 text-purple-600 rounded-fluent">
-            <Clock className="w-6 h-6" />
-          </div>
-        </div>
-      </div>
-
-      {/* Widget: Sesi Mendatang 3 Hari Ke Depan */}
-      <div className="bg-white rounded-fluent border border-fluent-border shadow-fluent p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-fluent-border pb-3">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 bg-fluent-blue/10 text-fluent-blue rounded-fluent">
-              <Calendar className="w-5 h-5" />
-            </div>
+        {/* CARD 1: SISWA AKTIF */}
+        <div className="group relative bg-white p-5 rounded-fluent border border-fluent-border hover:border-fluent-blue/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-fluent-blue rounded-t" />
+          <div className="flex items-start justify-between gap-2">
             <div>
-              <h2 className="text-base font-bold text-fluent-text">
-                Sesi Mendatang (3 Hari Ke Depan)
-              </h2>
-              <p className="text-xs text-fluent-textSecondary">
-                Ringkasan jadwal bimbingan belajar siswa untuk Hari Ini, Besok, dan Lusa
+              <div className="flex items-center space-x-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fluent-blue opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-fluent-blue"></span>
+                </span>
+                <p className="text-[11px] font-bold text-fluent-textSecondary uppercase tracking-wider">
+                  Siswa Aktif
+                </p>
+              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-fluent-text mt-2 tracking-tight">
+                {totalActiveStudents} <span className="text-sm font-semibold text-fluent-textSecondary font-normal">Siswa</span>
               </p>
             </div>
+            <div className="p-3 bg-blue-50 text-fluent-blue rounded-fluent group-hover:bg-fluent-blue group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs">
+              <Users className="w-5 h-5" />
+            </div>
           </div>
-          <div className="flex items-center space-x-2 self-start sm:self-center">
-            <span className="px-3 py-1 bg-fluent-blue/10 text-fluent-blue text-xs font-bold rounded-full border border-fluent-blue/20">
-              Total {totalUpcoming3DaysCount} Sesi
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-fluent-textSecondary font-medium">Status Reservasi</span>
+            <span className="font-bold text-fluent-blue bg-blue-50 px-2 py-0.5 rounded text-[11px] border border-blue-100">
+              100% Aktif Bimbingan
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {upcoming3DaysData.map((dayItem, dayIdx) => (
-            <div
-              key={dayIdx}
-              className={`rounded-fluent border p-3 space-y-3 ${
-                dayItem.dateLabel === 'Hari Ini'
-                  ? 'bg-blue-50/40 border-blue-200'
-                  : 'bg-fluent-subtle/30 border-fluent-border'
-              }`}
-            >
-              {/* Day Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-fluent-border/60">
-                <div className="flex items-center space-x-2">
-                  <span
-                    className={`px-2 py-0.5 text-[11px] font-bold rounded ${
-                      dayItem.dateLabel === 'Hari Ini'
-                        ? 'bg-fluent-blue text-white'
-                        : 'bg-slate-200 text-slate-700'
-                    }`}
-                  >
-                    {dayItem.dateLabel}
-                  </span>
-                  <span className="text-xs font-semibold text-fluent-text">
-                    {dayItem.dateFormatted}
-                  </span>
-                </div>
-                <span className="text-[11px] font-medium text-fluent-textSecondary">
-                  {dayItem.sessions.length} Sesi
+        {/* CARD 2: PENDAPATAN TERBAYAR */}
+        <div className="group relative bg-white p-5 rounded-fluent border border-fluent-border hover:border-emerald-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500 rounded-t" />
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
+                <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
+                  Pendapatan Terbayar
+                </p>
               </div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-2 tracking-tight">
+                {formatIDR(totalMonthlyRevenue)}
+              </p>
+            </div>
+            <div className="w-11 h-11 bg-emerald-50 text-emerald-600 rounded-fluent group-hover:bg-emerald-600 group-hover:text-white transition-all duration-200 group-hover:scale-105 flex items-center justify-center font-extrabold text-sm shadow-2xs">
+              Rp
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full"
+                  style={{ width: `${revenueRealizationPct}%` }}
+                />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-500">{revenueRealizationPct}% Realisasi</span>
+            </div>
+            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] border border-emerald-100">
+              Kas Masuk
+            </span>
+          </div>
+        </div>
 
-              {/* Sessions List */}
-              {dayItem.sessions.length === 0 ? (
-                <div className="py-6 px-3 text-center text-xs text-fluent-textSecondary bg-white rounded border border-dashed border-fluent-border">
-                  Tidak ada sesi bimbingan
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {dayItem.sessions.map((sess, sessIdx) => (
-                    <div
-                      key={sessIdx}
-                      onClick={() => setViewingStudent(sess.student)}
-                      className="p-3 bg-white hover:bg-slate-50/90 rounded-fluent border border-fluent-border hover:border-fluent-blue/50 transition-all cursor-pointer space-y-2 shadow-sm group"
-                      title="Klik untuk melihat profil lengkap siswa"
+        {/* CARD 3: OUTSTANDING */}
+        <div className="group relative bg-white p-5 rounded-fluent border border-fluent-border hover:border-amber-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500 rounded-t" />
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="relative flex h-2 w-2">
+                  {outstandingStudentsCount > 0 && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  )}
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
+                  Outstanding
+                </p>
+              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-2 tracking-tight">
+                {formatIDR(totalOutstanding)}
+              </p>
+            </div>
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-fluent group-hover:bg-amber-500 group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-fluent-textSecondary font-medium">
+              {outstandingStudentsCount > 0 ? `${outstandingStudentsCount} Siswa Menunggu` : 'Semua Lunas'}
+            </span>
+            <span className={`font-bold px-2 py-0.5 rounded text-[11px] border ${
+              outstandingStudentsCount > 0
+                ? 'text-amber-700 bg-amber-50 border-amber-200'
+                : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+            }`}>
+              {outstandingStudentsCount > 0 ? 'Belum Lunas' : 'Nihil'}
+            </span>
+          </div>
+        </div>
+
+        {/* CARD 4: TOTAL JAM BELAJAR */}
+        <div className="group relative bg-white p-5 rounded-fluent border border-fluent-border hover:border-purple-500/50 shadow-fluent hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-purple-600 rounded-t" />
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+                </span>
+                <p className="text-[11px] font-bold text-purple-900 uppercase tracking-wider">
+                  Total Jam Belajar
+                </p>
+              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-purple-700 mt-2 tracking-tight">
+                {(totalStudyMinutesOverall / 60).toFixed(1)} <span className="text-sm font-semibold text-fluent-textSecondary font-normal">Jam</span>
+              </p>
+            </div>
+            <div className="p-3 bg-purple-50 text-purple-600 rounded-fluent group-hover:bg-purple-600 group-hover:text-white transition-all duration-200 group-hover:scale-105 shadow-2xs">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-fluent-textSecondary font-medium">Akumulasi Kuota</span>
+            <span className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded text-[11px] border border-purple-100">
+              {totalSessionsOverall} Sesi Terjadwal
+            </span>
+          </div>
+        </div>
+
+      </motion.div>
+
+      {/* Widget: Sesi Mendatang 3 Hari Ke Depan (Summary Ringkas) - Collapsible */}
+      <motion.div
+        layout
+        transition={smoothTransition}
+        className="bg-white rounded-fluent border border-fluent-border shadow-fluent p-5 transition-shadow"
+      >
+        {/* Card Header with Expand / Collapse Toggle */}
+        <div
+          onClick={toggleUpcomingCollapse}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none group"
+        >
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 bg-fluent-blue/10 text-fluent-blue rounded-fluent group-hover:bg-fluent-blue/20 transition-colors">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-fluent-text group-hover:text-fluent-blue transition-colors flex items-center gap-2">
+                  Sesi Mendatang (3 Hari)
+                </h2>
+                <AnimatePresence>
+                  {isUpcomingCollapsed && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.85 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-[11px] font-semibold text-fluent-textSecondary bg-fluent-subtle px-2 py-0.5 rounded border border-fluent-border"
                     >
+                      Disembunyikan
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+              <p className="text-xs text-fluent-textSecondary">
+                Ringkasan sesi bimbingan belajar 3 hari ke depan
+              </p>
+            </div>
+          </div>
+
+          <div
+            className="flex items-center space-x-2 self-start sm:self-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AnimatePresence>
+              {isUpcomingCollapsed && upcoming3DaysData.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.25 }}
+                  className="hidden lg:flex items-center space-x-1.5 text-xs text-fluent-textSecondary bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200 mr-1"
+                >
+                  {upcoming3DaysData.map((d, i) => (
+                    <span key={i} className="flex items-center space-x-1">
+                      <span className="font-medium text-slate-600">{d.dateLabel}:</span>
+                      <span className="font-bold text-fluent-blue">{d.sessions.length}</span>
+                      {i < upcoming3DaysData.length - 1 && <span className="text-slate-300">•</span>}
+                    </span>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <span className="px-3 py-1 bg-fluent-blue/10 text-fluent-blue text-xs font-bold rounded-full border border-fluent-blue/20">
+              Total {totalUpcoming3DaysCount} Sesi
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setIsUpcomingModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-fluent-blue hover:bg-fluent-blueDark text-white text-xs font-semibold rounded-fluent shadow-xs transition-all group/btn"
+              title="Buka detail lengkap sesi mendatang dalam jendela popup"
+            >
+              <Maximize2 className="w-3.5 h-3.5 transition-transform group-hover/btn:scale-110" />
+              <span>Buka Detail</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleUpcomingCollapse}
+              aria-expanded={!isUpcomingCollapsed}
+              className="p-1.5 text-fluent-textSecondary hover:text-fluent-text hover:bg-fluent-subtle rounded-fluent border border-fluent-border transition-all flex items-center justify-center"
+              title={isUpcomingCollapsed ? "Tampilkan Sesi Mendatang" : "Sembunyikan Sesi Mendatang"}
+            >
+              <motion.div
+                animate={{ rotate: isUpcomingCollapsed ? -90 : 0 }}
+                transition={smoothTransition}
+              >
+                <ChevronDown className="w-4 h-4 text-slate-600 group-hover:text-fluent-blue transition-colors" />
+              </motion.div>
+            </button>
+          </div>
+        </div>
+
+        {/* Collapsible Content Area - Pure zero-margin container preventing snap */}
+        <AnimatePresence initial={false}>
+          {!isUpcomingCollapsed && (
+            <motion.div
+              key="upcoming-collapsible-content"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{
+                opacity: 1,
+                height: 'auto',
+                transition: {
+                  height: smoothTransition,
+                  opacity: { duration: 0.28, delay: 0.05, ease: 'easeOut' }
+                }
+              }}
+              exit={{
+                opacity: 0,
+                height: 0,
+                transition: {
+                  height: smoothTransition,
+                  opacity: { duration: 0.18, ease: 'easeIn' }
+                }
+              }}
+              className="overflow-hidden"
+            >
+              <div className="pt-4 border-t border-fluent-border mt-3.5">
+                {/* 3-Days Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  {upcoming3DaysData.map((dayItem, dayIdx) => (
+                    <div
+                      key={dayIdx}
+                      onClick={() => setIsUpcomingModalOpen(true)}
+                      className={`group rounded-fluent border p-3.5 space-y-2.5 transition-all cursor-pointer hover:shadow-md ${
+                        dayItem.dateLabel === 'Hari Ini'
+                          ? 'bg-blue-50/40 hover:bg-blue-50/70 border-blue-200 hover:border-fluent-blue/60'
+                          : 'bg-fluent-subtle/30 hover:bg-white border-fluent-border hover:border-fluent-blue/40'
+                      }`}
+                      title="Klik untuk membuka rincian lengkap dalam popup"
+                    >
+                      {/* Day Header */}
                       <div className="flex items-center justify-between">
-                        <span className="inline-flex items-center text-xs font-bold text-fluent-blue bg-fluent-blue/10 px-2 py-0.5 rounded">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {sess.timeLabel}
-                        </span>
-                        
-                        <div className="flex items-center space-x-1.5">
-                          <span className="text-[10px] font-semibold text-fluent-textSecondary bg-slate-100 px-1.5 py-0.5 rounded">
-                            {sess.student.packageType || 'GROW'}
+                        <div className="flex items-center space-x-2">
+                          <span
+                            className={`px-2 py-0.5 text-[11px] font-bold rounded ${
+                              dayItem.dateLabel === 'Hari Ini'
+                                ? 'bg-fluent-blue text-white'
+                                : 'bg-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {dayItem.dateLabel}
                           </span>
-
-                          {/* Tombol Reminder WhatsApp */}
-                          {(() => {
-                            const waPhone = getCleanWhatsAppPhone(sess.student)
-                            const hasPhone = Boolean(waPhone)
-
-                            return (
-                              <button
-                                type="button"
-                                disabled={!hasPhone}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  if (!hasPhone) return
-                                  const text = createSessionReminderMessage(sess.student, dayItem, sess)
-                                  const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`
-                                  window.open(url, '_blank', 'noopener,noreferrer')
-                                }}
-                                className={`p-1 rounded transition-colors flex items-center justify-center ${
-                                  hasPhone
-                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 hover:border-emerald-300'
-                                    : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-50'
-                                }`}
-                                title={
-                                  hasPhone
-                                    ? `Kirim reminder WhatsApp ke +${waPhone}`
-                                    : 'Nomor WhatsApp siswa/orang tua tidak tersedia'
-                                }
-                              >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                              </button>
-                            )
-                          })()}
+                          <span className="text-xs font-semibold text-fluent-text">
+                            {dayItem.dateFormatted}
+                          </span>
                         </div>
+                        <span className="px-2 py-0.5 bg-white text-fluent-blue border border-fluent-border text-[11px] font-bold rounded-full shadow-2xs">
+                          {dayItem.sessions.length} Sesi
+                        </span>
                       </div>
 
-                      <div className="space-y-0.5">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-fluent-text group-hover:text-fluent-blue transition-colors">
-                            {sess.student.name}
-                          </p>
-                          <Eye className="w-3.5 h-3.5 text-fluent-textSecondary opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {/* Compact Sessions Preview / Summary */}
+                      {dayItem.sessions.length === 0 ? (
+                        <div className="py-2.5 px-2 text-center text-xs text-fluent-textSecondary bg-white/70 rounded border border-dashed border-fluent-border/80">
+                          Tidak ada sesi bimbingan
                         </div>
-                        <p className="text-[11px] text-fluent-textSecondary truncate">
-                          {sess.student.grade || 'Siswa'} • {sess.student.address || 'Alamat -'}
-                        </p>
-                      </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {dayItem.sessions.slice(0, 2).map((sess, sIdx) => (
+                            <div
+                              key={sIdx}
+                              className="flex items-center justify-between text-xs p-1.5 bg-white rounded border border-fluent-border/70 group-hover:border-fluent-blue/30 transition-colors"
+                            >
+                              <div className="flex items-center space-x-1.5 truncate max-w-[170px]">
+                                <span className="text-[10px] font-bold text-fluent-blue bg-fluent-blue/10 px-1.5 py-0.5 rounded flex-shrink-0">
+                                  {sess.timeLabel.split(' ')[0]}
+                                </span>
+                                <span className="font-semibold text-fluent-text truncate">
+                                  {sess.student.name}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1 py-0.5 rounded flex-shrink-0">
+                                {sess.student.packageType || 'GROW'}
+                              </span>
+                            </div>
+                          ))}
 
-                      {sess.student.learningTarget && (
-                        <p className="text-[10px] text-slate-500 bg-slate-50 p-1.5 rounded border border-slate-100 truncate">
-                          Target: {sess.student.learningTarget}
-                        </p>
+                          {dayItem.sessions.length > 2 && (
+                            <div className="text-[11px] text-center font-medium text-fluent-blue pt-0.5 group-hover:underline flex items-center justify-center gap-1">
+                              <span>+{dayItem.sessions.length - 2} sesi lainnya</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
-      {/* VIEW 1: TABLE VIEW */}
-      {viewMode === 'table' && (
-        <div className="bg-white rounded-fluent border border-fluent-border shadow-fluent overflow-hidden">
+      {/* View Mode Toggle Bar (DAFTAR SISWA / MATRIKS JADWAL) */}
+      <motion.div
+        layout
+        transition={smoothTransition}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1"
+      >
+        <div className="flex items-center space-x-2">
+          <div className="bg-slate-200/70 p-1 border border-fluent-border rounded-fluent flex items-center space-x-1 relative shadow-2xs">
+            <button
+              type="button"
+              onClick={() => handleSetViewMode('table')}
+              className={`relative w-36 sm:w-40 py-1.5 rounded-fluent text-xs font-bold transition-colors flex items-center justify-center space-x-2 z-10 select-none ${
+                viewMode === 'table'
+                  ? 'text-fluent-blue'
+                  : 'text-fluent-textSecondary hover:text-fluent-text'
+              }`}
+            >
+              {viewMode === 'table' && (
+                <motion.div
+                  layoutId="viewModeActivePill"
+                  className="absolute inset-0 bg-white rounded-fluent shadow-xs border border-fluent-border/60"
+                  transition={smoothTransition}
+                />
+              )}
+              <List className="w-4 h-4 relative z-10 flex-shrink-0" />
+              <span className="relative z-10 truncate">Daftar Siswa</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSetViewMode('matrix')}
+              className={`relative w-36 sm:w-40 py-1.5 rounded-fluent text-xs font-bold transition-colors flex items-center justify-center space-x-2 z-10 select-none ${
+                viewMode === 'matrix'
+                  ? 'text-fluent-blue'
+                  : 'text-fluent-textSecondary hover:text-fluent-text'
+              }`}
+            >
+              {viewMode === 'matrix' && (
+                <motion.div
+                  layoutId="viewModeActivePill"
+                  className="absolute inset-0 bg-white rounded-fluent shadow-xs border border-fluent-border/60"
+                  transition={smoothTransition}
+                />
+              )}
+              <Grid className="w-4 h-4 relative z-10 flex-shrink-0" />
+              <span className="relative z-10 truncate">Matriks Jadwal</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Fixed-width Status Container (Opened / Focused View) */}
+        <div className="w-64 flex-shrink-0 text-right text-xs text-fluent-textSecondary font-medium hidden sm:flex items-center justify-end space-x-2">
+          <span className="text-slate-400">Tampilan Aktif:</span>
+          <span className="inline-flex items-center justify-center w-36 px-2.5 py-1 bg-white rounded border border-slate-200 text-fluent-text font-bold text-[11px] shadow-2xs truncate">
+            {viewMode === 'table' ? 'Tabel Data Siswa' : 'Matriks Jadwal'}
+          </span>
+        </div>
+      </motion.div>
+
+      {/* Switchable View Containers with Directional Slide Transition */}
+      <AnimatePresence mode="wait" custom={slideDirection} initial={false}>
+        {viewMode === 'table' ? (
+          <motion.div
+            key="view-table"
+            custom={slideDirection}
+            variants={viewSlideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            layout="position"
+            transition={smoothTransition}
+            className="bg-white rounded-fluent border border-fluent-border shadow-fluent overflow-hidden"
+          >
 
           {/* Advanced Filters Bar */}
           <div className="p-4 border-b border-fluent-border bg-fluent-subtle/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -965,6 +1259,15 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                             >
                               <FileText className="w-4 h-4" />
                             </button>
+                            {onOpenRoadmap && (
+                              <button
+                                onClick={() => onOpenRoadmap(student)}
+                                className="p-1.5 text-fluent-textSecondary hover:text-fluent-blue rounded hover:bg-fluent-subtle"
+                                title="Buka Roadmap Pembelajaran"
+                              >
+                                <BookOpen className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
                               onClick={() => openModal(student)}
                               className="p-1.5 text-fluent-textSecondary hover:text-fluent-blue rounded hover:bg-fluent-subtle"
@@ -995,30 +1298,47 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
             </table>
           </div>
 
-        </div>
-      )}
-
-      {/* VIEW 2: WEEKLY SCHEDULE MATRIX BOARD (4 WEEKS AHEAD) */}
-      {viewMode === 'matrix' && (
-        <div className="bg-white rounded-fluent border border-fluent-border shadow-fluent p-6 space-y-6">
+        </motion.div>
+      ) : (
+        <motion.div
+          key="view-matrix"
+          custom={slideDirection}
+          variants={viewSlideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          layout="position"
+          transition={smoothTransition}
+          className="bg-white rounded-fluent border border-fluent-border shadow-fluent p-6 space-y-6"
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-fluent-border pb-4 gap-4">
             <div>
               <h2 className="text-base font-bold text-fluent-text">
-                Matriks Ketersediaan Slot Sesi (Proyeksi 4 Pekan Ke Depan)
+                Matriks Ketersediaan Slot (4 Pekan)
               </h2>
-              <p className="text-xs text-fluent-textSecondary mt-0.5">
-                Proyeksi 4 pekan jadwalles Kavio Edu. Setiap pekan memiliki 7 hari x 3 slot harian.
-              </p>
             </div>
-            <div className="flex items-center space-x-4 text-xs font-semibold">
-              <span className="flex items-center space-x-1.5 text-emerald-700">
-                <Check className="w-4 h-4 text-emerald-600 font-bold" />
-                <span>Slot Tersedia</span>
-              </span>
-              <span className="flex items-center space-x-1.5 text-rose-700">
-                <Lock className="w-4 h-4 text-rose-600" />
-                <span>Slot Terkunci (FULL)</span>
-              </span>
+            <div className="flex items-center space-x-3 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setIsSlotCalendarOpen(true)}
+                className="px-3 py-1.5 bg-fluent-subtle hover:bg-blue-50 text-fluent-blue border border-fluent-border hover:border-blue-200 rounded-fluent transition-colors flex items-center space-x-1.5 text-xs font-semibold shadow-2xs"
+                title="Buka Kalender Ringkas Sesi Belajar"
+                aria-label="Buka Kalender Ringkas Sesi Belajar"
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Kalender Sesi</span>
+              </button>
+
+              <div className="flex items-center space-x-3 pl-2 border-l border-fluent-border">
+                <span className="flex items-center space-x-1 text-emerald-700">
+                  <Check className="w-4 h-4 text-emerald-600 font-bold" />
+                  <span>Tersedia</span>
+                </span>
+                <span className="flex items-center space-x-1 text-rose-700">
+                  <Lock className="w-4 h-4 text-rose-600" />
+                  <span>Terkunci</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -1029,7 +1349,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                 key={wk.weekIndex}
                 onClick={() => setMatrixWeekTab(idx)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center space-x-1.5 ${matrixWeekTab === idx
-                  ? 'bg-fluent-blue text-white shadow-sm'
+                  ? 'bg-fluent-blue text-white shadow-xs'
                   : 'bg-white border border-fluent-border text-fluent-text hover:bg-fluent-subtle'
                   }`}
               >
@@ -1040,11 +1360,11 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
             <button
               onClick={() => setMatrixWeekTab('ALL')}
               className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center space-x-1.5 ${matrixWeekTab === 'ALL'
-                ? 'bg-fluent-blue text-white shadow-sm'
+                ? 'bg-fluent-blue text-white shadow-xs'
                 : 'bg-white border border-fluent-border text-fluent-text hover:bg-fluent-subtle'
                 }`}
             >
-              <span>Tampilkan Semua 4 Pekan</span>
+              <span>Semua Pekan</span>
             </button>
           </div>
 
@@ -1077,15 +1397,24 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                       <div className="space-y-2">
                         {TIME_SLOTS_LIST.map(slotObj => {
                           const slotKey = `${dayItem.dayName} ${slotObj.label}`
-                          const occupied = occupiedSlotsMap[slotKey]
+                          const dateKey = formatDateKey(dayItem.dateObj)
+                          const daySessions = aggregatedSessionsMap[dateKey] || []
+                          const sessionOnSlot = daySessions.find(s => s.timeLabel === slotObj.label)
+                          const occupied = Boolean(sessionOnSlot)
 
                           return (
                             <div
                               key={slotKey}
+                              onClick={() => {
+                                if (sessionOnSlot?.student) {
+                                  setViewingStudent(sessionOnSlot.student)
+                                }
+                              }}
                               className={`p-2 rounded border text-xs flex flex-col justify-between space-y-1 transition-all ${occupied
-                                ? 'bg-rose-50 border-rose-200 text-rose-800'
+                                ? 'bg-rose-50 border-rose-200 text-rose-800 cursor-pointer hover:bg-rose-100/80 hover:border-rose-300'
                                 : 'bg-emerald-50/60 border-emerald-200 text-emerald-800'
                                 }`}
+                              title={occupied ? `Klik untuk melihat profil ${sessionOnSlot.studentName}` : 'Slot Waktu Tersedia'}
                             >
                               <div className="flex items-center justify-between font-bold text-[11px]">
                                 <span>{slotObj.label}</span>
@@ -1096,11 +1425,18 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                                 )}
                               </div>
 
-                              {occupied && (
+                              {occupied && sessionOnSlot && (
                                 <div className="pt-1 border-t border-rose-200/60 text-[11px]">
-                                  <span className="font-bold block truncate">{occupied.studentName}</span>
-                                  <span className="text-[10px] text-rose-600 block">
-                                    Paket {occupied.packageType} ({occupied.durationMonths} Bln)
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-bold block truncate max-w-[90px]">
+                                      {sessionOnSlot.studentName}
+                                    </span>
+                                    <span className="text-[9px] font-bold bg-rose-200/60 text-rose-900 px-1 py-0.2 rounded">
+                                      Sesi {sessionOnSlot.sessionNumber}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-rose-600 block truncate mt-0.5">
+                                    Paket {sessionOnSlot.packageType}
                                   </span>
                                 </div>
                               )}
@@ -1114,8 +1450,9 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Slide-Over Profile Drawer */}
       {viewingStudent && (
@@ -1130,37 +1467,67 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
             setViewingStudent(null)
             onGenerateInvoice(st)
           }}
+          onOpenRoadmap={(st) => {
+            setViewingStudent(null)
+            if (onOpenRoadmap) onOpenRoadmap(st)
+          }}
         />
       )}
 
-      {/* Add / Edit Student Modal Form (3 Tabs) */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeModal}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
-          >
+      {/* Modal Popup: Detail Sesi Mendatang */}
+      <UpcomingSessionsModal
+        isOpen={isUpcomingModalOpen}
+        onClose={() => setIsUpcomingModalOpen(false)}
+        upcoming3DaysData={upcoming3DaysData}
+        totalUpcoming3DaysCount={totalUpcoming3DaysCount}
+        onSelectStudent={(st) => setViewingStudent(st)}
+        getCleanWhatsAppPhone={getCleanWhatsAppPhone}
+        createSessionReminderMessage={createSessionReminderMessage}
+      />
+
+      {/* Modal Popup: Kalender Ringkas Sesi Belajar (Matriks Ketersediaan Slot) */}
+      <SlotCalendarModal
+        isOpen={isSlotCalendarOpen}
+        onClose={() => setIsSlotCalendarOpen(false)}
+        students={students}
+        onSelectStudent={(st) => setViewingStudent(st)}
+        onOpenRoadmap={onOpenRoadmap}
+      />
+
+      {/* Add / Edit Student Modal Form (3 Tabs) - Full Screen Portal & Smooth Slide Up/Down */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isModalOpen && (
             <motion.div
-              layout
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              transition={{
-                layout: { type: 'spring', stiffness: 350, damping: 32 },
-                opacity: { duration: 0.2 },
-                scale: { duration: 0.2 }
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-fluent border border-fluent-border shadow-fluent-modal w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto"
+              data-lenis-prevent="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              onClick={closeModal}
+              className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
             >
+              <motion.div
+                data-lenis-prevent="true"
+                initial={{ opacity: 0, scale: 0.82, scaleY: 0.72, scaleX: 0.90, y: 48 }}
+                animate={{ opacity: 1, scale: 1, scaleY: 1, scaleX: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.84, scaleY: 0.74, scaleX: 0.92, y: 38 }}
+                transition={{
+                  type: 'spring',
+                  damping: 25,
+                  stiffness: 280,
+                  mass: 0.85,
+                  opacity: { duration: 0.22, ease: 'easeOut' }
+                }}
+                style={{ transformOrigin: '50% 85%' }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white rounded-fluent border border-fluent-border shadow-fluent-modal w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto will-change-transform"
+              >
 
               {/* Modal Header */}
               <div className="p-4 border-b border-fluent-border bg-fluent-subtle flex justify-between items-center flex-shrink-0">
                 <h2 className="font-bold text-base text-fluent-text">
-                  {editingStudent ? 'Edit Data Siswa & Reservasi Slot' : 'Tambah Siswa Baru & Reservasi Slot'}
+                  {editingStudent ? 'Edit Siswa' : 'Tambah Siswa Baru'}
                 </h2>
                 <button onClick={closeModal} className="p-1 text-fluent-textSecondary hover:text-fluent-text rounded">
                   <X className="w-5 h-5" />
@@ -1177,7 +1544,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                     : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
                     }`}
                 >
-                  1. Profil & Demografi
+                  1. Profil
                 </button>
                 <button
                   type="button"
@@ -1197,7 +1564,7 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
                     : 'border-transparent text-fluent-textSecondary hover:text-fluent-text'
                     }`}
                 >
-                  3. Paket & Reservasi Slot
+                  3. Paket & Jadwal
                 </button>
               </div>
 
@@ -1585,96 +1952,106 @@ export default function Dashboard({ students, setStudents, onGenerateInvoice }) 
           </motion.div>
         </motion.div>
       )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
-      {/* Custom Confirmation Modal for Delete (Sensitive & Crucial) */}
-      <AnimatePresence>
-        {deleteId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setDeleteId(null)}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
-          >
+      {/* Custom Confirmation Modal for Delete (Sensitive & Crucial) - Portal & Smooth Slide Up/Down */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {deleteId && (
             <motion.div
-              layout
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              transition={{
-                layout: { type: 'spring', stiffness: 350, damping: 30 },
-                opacity: { duration: 0.2 },
-                scale: { duration: 0.2 }
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-fluent border border-rose-200 shadow-fluent-modal w-full max-w-md p-6 space-y-4 my-auto"
+              data-lenis-prevent="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              onClick={() => setDeleteId(null)}
+              className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
             >
-              
-              {/* Header with Red Warning Icon */}
-              <div className="flex items-center space-x-2 border-b border-fluent-border pb-3">
-                <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-                <h3 className="text-sm font-bold text-fluent-text">
-                  Konfirmasi Hapus Siswa (Tindakan Sensitif)
-                </h3>
-              </div>
+              <motion.div
+                data-lenis-prevent="true"
+                initial={{ opacity: 0, scale: 0.84, scaleY: 0.74, scaleX: 0.92, y: 40 }}
+                animate={{ opacity: 1, scale: 1, scaleY: 1, scaleX: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.86, scaleY: 0.76, scaleX: 0.94, y: 32 }}
+                transition={{
+                  type: 'spring',
+                  damping: 25,
+                  stiffness: 280,
+                  mass: 0.85,
+                  opacity: { duration: 0.2, ease: 'easeOut' }
+                }}
+                style={{ transformOrigin: '50% 85%' }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white rounded-fluent border border-rose-200 shadow-fluent-modal w-full max-w-md p-6 space-y-4 my-auto will-change-transform"
+              >
+                
+                {/* Header with Red Warning Icon */}
+                <div className="flex items-center space-x-2 border-b border-fluent-border pb-3">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                  <h3 className="text-sm font-bold text-fluent-text">
+                    Konfirmasi Hapus Siswa (Tindakan Sensitif)
+                  </h3>
+                </div>
 
-              {/* Crucial Blinking Warning Box (No Glow) */}
-              <div className="bg-rose-50 border border-rose-300 rounded p-3 text-xs space-y-1.5">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
-                  <p className="font-bold text-rose-700 leading-snug animate-pulse">
-                    PERINGATAN KRUSIAL: Tindakan ini tidak bisa diurungkan!
+                {/* Crucial Blinking Warning Box (No Glow) */}
+                <div className="bg-rose-50 border border-rose-300 rounded p-3 text-xs space-y-1.5">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                    <p className="font-bold text-rose-700 leading-snug animate-pulse">
+                      PERINGATAN KRUSIAL: Tindakan ini tidak bisa diurungkan!
+                    </p>
+                  </div>
+                  <p className="text-[11px] text-rose-700/90 pl-6 leading-relaxed">
+                    Apakah Anda yakin ingin menghapus data siswa ini? Seluruh data profil, reservasi slot, dan riwayat invoice terkait akan dihapus secara permanen dari sistem.
                   </p>
                 </div>
-                <p className="text-[11px] text-rose-700/90 pl-6 leading-relaxed">
-                  Apakah Anda yakin ingin menghapus data siswa ini? Seluruh data profil, reservasi slot, dan riwayat invoice terkait akan dihapus secara permanen dari sistem.
-                </p>
+
+              {/* Action Buttons & Countdown Footer */}
+              <div className="space-y-2 pt-2 border-t border-fluent-border">
+                <div className="flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteId(null)}
+                    className="px-3.5 py-1.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded text-xs font-medium"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleteCountdown > 0}
+                    onClick={confirmDelete}
+                    className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${
+                      deleteCountdown > 0
+                        ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'
+                        : 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm'
+                    }`}
+                  >
+                    {deleteCountdown > 0 ? `Ya, Hapus Data (${deleteCountdown}s)` : 'Ya, Hapus Data'}
+                  </button>
+                </div>
+
+                {/* Small Countdown Text Outside Button */}
+                <div className="text-right text-[11px]">
+                  {deleteCountdown > 0 ? (
+                    <span className="text-amber-700 font-semibold">
+                      Tombol Hapus akan aktif dalam {deleteCountdown} detik...
+                    </span>
+                  ) : (
+                    <span className="text-emerald-700 font-semibold">
+                      Tombol Hapus telah aktif. Silakan konfirmasi jika Anda yakin.
+                    </span>
+                  )}
+                </div>
               </div>
 
-            {/* Action Buttons & Countdown Footer */}
-            <div className="space-y-2 pt-2 border-t border-fluent-border">
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setDeleteId(null)}
-                  className="px-3.5 py-1.5 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded text-xs font-medium"
-                >
-                  Batal
-                </button>
-                <button
-                  type="button"
-                  disabled={deleteCountdown > 0}
-                  onClick={confirmDelete}
-                  className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${
-                    deleteCountdown > 0
-                      ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'
-                      : 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm'
-                  }`}
-                >
-                  {deleteCountdown > 0 ? `Ya, Hapus Data (${deleteCountdown}s)` : 'Ya, Hapus Data'}
-                </button>
-              </div>
-
-              {/* Small Countdown Text Outside Button */}
-              <div className="text-right text-[11px]">
-                {deleteCountdown > 0 ? (
-                  <span className="text-amber-700 font-semibold">
-                    Tombol Hapus akan aktif dalam {deleteCountdown} detik...
-                  </span>
-                ) : (
-                  <span className="text-emerald-700 font-semibold">
-                    Tombol Hapus telah aktif. Silakan konfirmasi jika Anda yakin.
-                  </span>
-                )}
-              </div>
-            </div>
-
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
-    </div>
+    </motion.div>
   )
 }

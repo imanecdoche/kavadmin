@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Download, Printer, Check, Copy, Award } from 'lucide-react'
 import html2canvas from 'html2canvas'
@@ -6,21 +7,28 @@ import jsPDF from 'jspdf'
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import { terbilangRupiah } from '../utils/terbilang'
 import { RECEIPT_CONFIG } from '../config/stampConfig'
+import { logoBaruPng, ttdFatihPng, stempelKavioEduPng, stempelLunasPng } from '../assets'
 
 export default function ReceiptModal({ isOpen, onClose, data }) {
   const receiptRef = useRef(null)
   const [isExporting, setIsExporting] = useState(false)
   const [copiedText, setCopiedText] = useState(false)
 
-  // ESC shortcut
+  // ESC shortcut and body scroll lock
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose()
     }
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'hidden'
+      document.documentElement.classList.add('lenis-stopped')
     }
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+      document.documentElement.classList.remove('lenis-stopped')
+    }
   }, [isOpen, onClose])
 
   if (!isOpen || !data) return null
@@ -61,12 +69,16 @@ export default function ReceiptModal({ isOpen, onClose, data }) {
   }
 
   const receivedFrom = formatReceivedFrom()
-  const amount = Number(data.paidAmount !== undefined ? data.paidAmount : (data.totalInvestment || 0))
-  const description = data.description || `Pembayaran ${data.packageType ? 'Paket Kursus ' + data.packageType : 'Bimbingan Private English Class'} Kavio Edu`
+  const amount = data.amountPaid || data.paid || data.totalAmount || 0
   const invoiceNo = data.invoiceNo || '-'
+  const description = data.description || `Pembayaran Biaya Bimbingan Belajar Paket ${data.packageType || 'GROW'}`
 
   const formatIDR = (val) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0)
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0
+    }).format(val || 0)
   }
 
   // Handle Download PDF
@@ -138,34 +150,39 @@ Uang Sebesar: ===== ${terbilangRupiah(amount)} =====
 Untuk Pembayaran: ${description}
 Jumlah Diterima: ${formatIDR(amount)}
 
-Kavio Edu Management System`
+_Keterangan: Dokumen ini merupakan bukti pembayaran resmi yang sah dari Kavio Edu._`
 
     navigator.clipboard.writeText(text)
     setCopiedText(true)
     setTimeout(() => setCopiedText(false), 2500)
   }
 
-  return (
+  return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
       <motion.div
+        data-lenis-prevent="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         onClick={onClose}
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto font-jetbrains"
+        className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto font-jetbrains"
       >
         <motion.div
-          layout
-          initial={{ scale: 0.95, opacity: 0, y: 10 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 10 }}
+          data-lenis-prevent="true"
+          initial={{ opacity: 0, scale: 0.82, scaleY: 0.72, scaleX: 0.90, y: 48 }}
+          animate={{ opacity: 1, scale: 1, scaleY: 1, scaleX: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.84, scaleY: 0.74, scaleX: 0.92, y: 38 }}
           transition={{
-            layout: { type: 'spring', stiffness: 350, damping: 32 },
-            opacity: { duration: 0.2 },
-            scale: { duration: 0.2 }
+            type: 'spring',
+            damping: 25,
+            stiffness: 280,
+            mass: 0.85,
+            opacity: { duration: 0.22, ease: 'easeOut' }
           }}
+          style={{ transformOrigin: '50% 85%' }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-none border border-slate-300 shadow-fluent-modal w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] my-auto font-jetbrains"
+          className="bg-white rounded-none border border-slate-300 shadow-fluent-modal w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] my-auto font-jetbrains will-change-transform"
         >
 
           {/* Modal Header */}
@@ -173,48 +190,52 @@ Kavio Edu Management System`
             <div className="flex items-center space-x-2">
               <Award className="w-5 h-5 text-slate-700" />
               <h2 className="font-bold text-base text-slate-900">
-                Kuitansi Pembayaran Resmi (Official Receipt)
+                Kuitansi Pembayaran Resmi
               </h2>
             </div>
-            <button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-900">
+            <button onClick={onClose} title="Tutup" aria-label="Tutup" className="p-1 text-slate-500 hover:text-slate-900">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Modal Toolbar Actions */}
           <div className="p-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs flex-shrink-0 font-jetbrains">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5">
               <button
                 onClick={handleDownloadPDF}
                 disabled={isExporting}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold flex items-center space-x-1.5 transition-colors rounded-none"
+                title="Download PDF"
+                aria-label="Download PDF"
+                className="p-2 bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-center transition-colors rounded disabled:opacity-50"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>{isExporting ? 'Proses PDF...' : 'Download PDF'}</span>
+                <Download className="w-4 h-4" />
               </button>
               <button
                 onClick={handleDownloadPNG}
                 disabled={isExporting}
-                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-semibold flex items-center space-x-1.5 transition-colors rounded-none"
+                title="Download PNG"
+                aria-label="Download PNG"
+                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 flex items-center justify-center transition-colors rounded disabled:opacity-50"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download PNG</span>
+                <Download className="w-4 h-4" />
               </button>
               <button
                 onClick={handlePrint}
-                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-semibold flex items-center space-x-1.5 transition-colors hidden sm:flex rounded-none"
+                title="Cetak Kuitansi"
+                aria-label="Cetak Kuitansi"
+                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 hidden sm:flex items-center justify-center transition-colors rounded"
               >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Cetak / Print</span>
+                <Printer className="w-4 h-4" />
               </button>
             </div>
 
             <button
               onClick={handleCopyText}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-semibold flex items-center space-x-1.5 transition-colors rounded-none"
+              title={copiedText ? 'Teks Kuitansi Tersalin!' : 'Salin Teks WhatsApp'}
+              aria-label="Salin Teks WhatsApp"
+              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 flex items-center justify-center transition-colors rounded"
             >
-              {copiedText ? <Check className="w-3.5 h-3.5 text-slate-700" /> : <Copy className="w-3.5 h-3.5 text-slate-700" />}
-              <span>{copiedText ? 'Teks Kuitansi Tersalin' : 'Salin Teks WA'}</span>
+              {copiedText ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-700" />}
             </button>
           </div>
 
@@ -231,7 +252,7 @@ Kavio Edu Management System`
               {/* Header: Institution Info (Left) & Fiscal Metadata (Right) */}
               <div className="flex justify-between items-start text-xs font-jetbrains border-b border-slate-300 pb-4">
                 <div className="flex items-center space-x-3">
-                  <img src="/logobaru.png" alt="Kavio Edu" className="h-12 w-auto object-contain flex-shrink-0" />
+                  <img src={logoBaruPng} alt="Kavio Edu" className="h-12 w-auto object-contain flex-shrink-0" />
                   <div>
                     <h1 className="font-bold text-sm text-slate-900 tracking-tight leading-snug uppercase">
                       KAVIO EDU MANAGEMENT
@@ -354,7 +375,7 @@ Kavio Edu Management System`
                     <div className="relative inline-block">
                       {/* TTD Founder Khusus Kuitansi */}
                       <img
-                        src="/ttd_fatih_founderkavio.png"
+                        src={ttdFatihPng}
                         alt="Tanda Tangan Fatih"
                         style={{
                           height: `${RECEIPT_CONFIG.signature.sizeHeightPx}px`,
@@ -365,7 +386,7 @@ Kavio Edu Management System`
                       />
                       {/* Stempel Kavio Edu Khusus Kuitansi */}
                       <img
-                        src="/stempel_kavioedu.png"
+                        src={stempelKavioEduPng}
                         alt="Stempel Resmi Kavio Edu"
                         style={{
                           height: `${RECEIPT_CONFIG.kavioStamp.sizeHeightPx}px`,
@@ -385,7 +406,7 @@ Kavio Edu Management System`
                   <div className="text-left relative">
                     <div className="relative inline-block">
                       <img
-                        src="/stempel_lunas.png"
+                        src={stempelLunasPng}
                         alt="Stempel Lunas"
                         style={{
                           height: `${RECEIPT_CONFIG.lunasStamp.sizeHeightPx}px`,
@@ -439,6 +460,7 @@ Kavio Edu Management System`
 
         </motion.div>
       </motion.div>
-    </AnimatePresence>
-  )
+    </AnimatePresence>,
+    document.body
+  ) : null
 }

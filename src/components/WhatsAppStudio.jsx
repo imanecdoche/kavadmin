@@ -95,11 +95,11 @@ Kavio Edu Team`
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <h1 className="text-2xl font-bold text-fluent-text tracking-tight">
-          WhatsApp Message Generator Studio
+        <h1 className="text-xl sm:text-2xl font-bold text-fluent-text tracking-tight">
+          Studio WhatsApp
         </h1>
-        <p className="text-sm text-fluent-textSecondary">
-          Generator template pesan resmi WhatsApp untuk komunikasi operasional Kavio Edu.
+        <p className="text-xs text-fluent-textSecondary mt-0.5">
+          Generator template pesan resmi WhatsApp Kavio Edu.
         </p>
       </div>
 
@@ -185,17 +185,18 @@ Kavio Edu Team`
                 </pre>
               </div>
 
-              <div className="pt-2 border-t border-fluent-border">
+              <div className="pt-2 border-t border-fluent-border flex justify-end">
                 <button
                   onClick={() => handleCopy(index)}
-                  className={`w-full py-2 px-3 rounded-fluent text-xs font-medium flex items-center justify-center space-x-2 transition-colors shadow-sm ${
+                  title={isCopied ? 'Tersalin ke Clipboard!' : 'Salin Pesan WhatsApp'}
+                  aria-label="Salin Pesan WhatsApp"
+                  className={`p-2.5 rounded-fluent flex items-center justify-center transition-colors shadow-xs ${
                     isCopied 
                       ? 'bg-emerald-600 text-white' 
                       : 'bg-fluent-blue hover:bg-fluent-blueHover text-white'
                   }`}
                 >
                   {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  <span>{isCopied ? 'Tersalin ke Clipboard!' : 'Salin Pesan WhatsApp'}</span>
                 </button>
               </div>
             </div>

@@ -1,26 +1,39 @@
 import React, { useState, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { CloudUpload, CheckCircle2, AlertCircle } from 'lucide-react'
 import Navigation from './components/Navigation'
 import Dashboard from './components/Dashboard'
 import InvoiceGenerator from './components/InvoiceGenerator'
 import WhatsAppStudio from './components/WhatsAppStudio'
 import StudentRoadmap from './components/StudentRoadmap'
+import ModulesManager from './components/modules/ModulesManager'
+import CursorTooltip from './components/CursorTooltip'
+import SplashScreen from './components/SplashScreen'
+import ExitConfirmModal from './components/ExitConfirmModal'
 import {
   subscribeStudents,
   syncStudentToFirebase,
   deleteStudentFromFirebase,
   seedAllStudentsToFirebase,
+  subscribeModules,
+  syncModuleToFirebase,
+  deleteModuleFromFirebase,
+  seedAllModulesToFirebase,
   saveCustomFirebaseConfig
 } from './firebase'
 import { INITIAL_STUDENTS_BACKUP } from './backupData'
+import { INITIAL_MODULES_BACKUP } from './utils/defaultModules'
 
 import { parseInvoiceShareLink } from './utils/invoiceShare'
 import PublicInvoiceView from './components/PublicInvoiceView'
 
 export default function App() {
+  const [isAppLoading, setIsAppLoading] = useState(true)
+  const [showExitModal, setShowExitModal] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [publicInvoiceData, setPublicInvoiceData] = useState(() => parseInvoiceShareLink())
 
+  // Browser navigation and popstate listener
   useEffect(() => {
     const handlePopState = () => {
       setPublicInvoiceData(parseInvoiceShareLink())
@@ -28,6 +41,39 @@ export default function App() {
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
+
+  // Browser beforeunload confirmation dialog
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault()
+      e.returnValue = ''
+      return ''
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
+  // Electron Standalone window close event listener
+  useEffect(() => {
+    if (window.electronAPI && typeof window.electronAPI.onCloseRequested === 'function') {
+      const unsubscribe = window.electronAPI.onCloseRequested(() => {
+        setShowExitModal(true)
+      })
+      return () => {
+        if (typeof unsubscribe === 'function') unsubscribe()
+      }
+    }
+  }, [])
+
+  // Confirm close application handler
+  const handleConfirmExit = () => {
+    setShowExitModal(false)
+    if (window.electronAPI && typeof window.electronAPI.confirmClose === 'function') {
+      window.electronAPI.confirmClose()
+    } else {
+      window.close()
+    }
+  }
 
   // Local & Firebase Sync State Initialization
   const [students, setStudents] = useState(() => {
@@ -43,11 +89,26 @@ export default function App() {
     return INITIAL_STUDENTS_BACKUP
   })
 
+  // Modules Library State (LocalStorage & Firebase Sync)
+  const [modules, setModules] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kavio_modules')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch (e) {
+      console.error('Failed to load modules from localStorage', e)
+    }
+    return INITIAL_MODULES_BACKUP
+  })
+
   const [selectedStudentForInvoice, setSelectedStudentForInvoice] = useState(null)
+  const [selectedStudentForRoadmap, setSelectedStudentForRoadmap] = useState(null)
   const [isFirebaseConnected, setIsFirebaseConnected] = useState(false)
   const [showConfigModal, setShowConfigModal] = useState(false)
 
-  // Firebase Real-time Subscription Listener
+  // Firebase Real-time Students Subscription Listener
   useEffect(() => {
     let isMounted = true
     const unsubscribe = subscribeStudents(
@@ -73,6 +134,37 @@ export default function App() {
     }
   }, [])
 
+  // Firebase Real-time Modules Subscription Listener
+  useEffect(() => {
+    let isMounted = true
+    const unsubscribe = subscribeModules(
+      (realtimeModules) => {
+        if (!isMounted) return
+        if (Array.isArray(realtimeModules) && realtimeModules.length > 0) {
+          setModules(realtimeModules)
+        }
+      },
+      (error) => {
+        if (!isMounted) return
+        console.warn('Using LocalStorage mode for modules library.')
+      }
+    )
+
+    return () => {
+      isMounted = false
+      unsubscribe()
+    }
+  }, [])
+
+  // Persist modules to LocalStorage whenever modules state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('kavio_modules', JSON.stringify(modules))
+    } catch (e) {
+      console.error('Failed to save modules to localStorage', e)
+    }
+  }, [modules])
+
   // Persist to LocalStorage whenever students state changes
   useEffect(() => {
     try {
@@ -81,6 +173,26 @@ export default function App() {
       console.error('Failed to save students to localStorage', e)
     }
   }, [students])
+
+  // Save / Update Module Handler
+  const handleSaveModule = (moduleRecord) => {
+    setModules(prev => {
+      const exists = prev.some(m => m.id === moduleRecord.id)
+      const next = exists
+        ? prev.map(m => m.id === moduleRecord.id ? moduleRecord : m)
+        : [moduleRecord, ...prev]
+      syncModuleToFirebase(moduleRecord)
+      return next
+    })
+    showToast('Modul pembelajaran berhasil disimpan!', 'success')
+  }
+
+  // Delete Module Handler
+  const handleDeleteModule = (moduleId) => {
+    setModules(prev => prev.filter(m => m.id !== moduleId))
+    deleteModuleFromFirebase(moduleId)
+    showToast('Modul pembelajaran berhasil dihapus.', 'success')
+  }
 
   // Custom setStudents handler with Firebase Sync
   const updateStudentsWithSync = (newStudentsOrUpdater) => {
@@ -110,6 +222,12 @@ export default function App() {
   const handleGenerateInvoiceFromDashboard = (student) => {
     setSelectedStudentForInvoice(student)
     setActiveTab('invoice')
+  }
+
+  // Handle navigating to student roadmap from dashboard
+  const handleOpenRoadmapFromDashboard = (student) => {
+    setSelectedStudentForRoadmap(student)
+    setActiveTab('roadmap')
   }
 
   // Handle saving generated invoice into student's history
@@ -207,6 +325,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-fluent-bg text-fluent-text font-sans flex flex-col antialiased selection:bg-fluent-blue selection:text-white">
 
+      {/* App Launch & Refresh Splash Screen */}
+      <AnimatePresence>
+        {isAppLoading && (
+          <SplashScreen onFinish={() => setIsAppLoading(false)} />
+        )}
+      </AnimatePresence>
+
       {/* Top Header & Navigation Bar */}
       <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -218,6 +343,7 @@ export default function App() {
             students={students}
             setStudents={updateStudentsWithSync}
             onGenerateInvoice={handleGenerateInvoiceFromDashboard}
+            onOpenRoadmap={handleOpenRoadmapFromDashboard}
           />
         </div>
 
@@ -237,7 +363,22 @@ export default function App() {
         </div>
 
         <div className={activeTab === 'roadmap' ? 'block' : 'hidden'}>
-          <StudentRoadmap />
+          <StudentRoadmap
+            students={students}
+            selectedStudentId={selectedStudentForRoadmap?.id}
+            onSelectStudent={setSelectedStudentForRoadmap}
+            onUpdateStudent={(updatedStudent) => {
+              updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
+            }}
+          />
+        </div>
+
+        <div className={activeTab === 'modules' ? 'block' : 'hidden'}>
+          <ModulesManager
+            modules={modules}
+            onSaveModule={handleSaveModule}
+            onDeleteModule={handleDeleteModule}
+          />
         </div>
       </main>
 
@@ -245,6 +386,13 @@ export default function App() {
       {showConfigModal && (
         <FirebaseConfigModal onClose={() => setShowConfigModal(false)} />
       )}
+
+      {/* Exit Application Confirmation Modal */}
+      <ExitConfirmModal
+        isOpen={showExitModal}
+        onClose={() => setShowExitModal(false)}
+        onConfirm={handleConfirmExit}
+      />
 
       {/* Footer */}
       <footer className="bg-white border-t border-fluent-border py-4 mt-auto text-center text-xs text-fluent-textSecondary no-print">
@@ -284,6 +432,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Global Real-Time Cursor Follow Tooltip */}
+      <CursorTooltip />
 
     </div>
   )
