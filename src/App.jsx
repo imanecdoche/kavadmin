@@ -5,10 +5,11 @@ import Navigation from './components/Navigation'
 import Dashboard from './components/Dashboard'
 import InvoiceGenerator from './components/InvoiceGenerator'
 import WhatsAppStudio from './components/WhatsAppStudio'
-import StudentRoadmap from './components/StudentRoadmap'
+import StudentRoadmapStudio from './components/roadmap/StudentRoadmapStudio'
 import ModulesManager from './components/modules/ModulesManager'
 import ReportCardStudio from './components/reports/ReportCardStudio'
 import PublicReportViewer from './components/reports/PublicReportViewer'
+import PublicRoadmapViewer from './components/roadmap/PublicRoadmapViewer'
 import CursorTooltip from './components/CursorTooltip'
 import SplashScreen from './components/SplashScreen'
 import ExitConfirmModal from './components/ExitConfirmModal'
@@ -24,6 +25,9 @@ import {
   subscribeReports,
   syncReportToFirebase,
   deleteReportFromFirebase,
+  subscribeRoadmaps,
+  syncRoadmapToFirebase,
+  deleteRoadmapFromFirebase,
   saveCustomFirebaseConfig
 } from './firebase'
 import { INITIAL_STUDENTS_BACKUP } from './backupData'
@@ -31,6 +35,7 @@ import { INITIAL_MODULES_BACKUP } from './utils/defaultModules'
 
 import { parseInvoiceShareLink } from './utils/invoiceShare'
 import { parseReportShareLink } from './utils/reportShare'
+import { parseRoadmapShareLink } from './utils/roadmapShare'
 import PublicInvoiceView from './components/PublicInvoiceView'
 
 export default function App() {
@@ -39,12 +44,14 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [publicInvoiceData, setPublicInvoiceData] = useState(() => parseInvoiceShareLink())
   const [publicReportData, setPublicReportData] = useState(() => parseReportShareLink())
+  const [publicRoadmapData, setPublicRoadmapData] = useState(() => parseRoadmapShareLink())
 
   // Browser navigation and popstate listener
   useEffect(() => {
     const handlePopState = () => {
       setPublicInvoiceData(parseInvoiceShareLink())
       setPublicReportData(parseReportShareLink())
+      setPublicRoadmapData(parseRoadmapShareLink())
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -248,6 +255,35 @@ export default function App() {
     showToast('Modul pembelajaran berhasil dihapus.', 'success')
   }
 
+  // Firebase Real-time Roadmaps Subscription Listener
+  useEffect(() => {
+    let isMounted = true
+    const unsubscribe = subscribeRoadmaps(
+      (realtimeRoadmaps) => {
+        if (!isMounted) return
+        if (Array.isArray(realtimeRoadmaps) && realtimeRoadmaps.length > 0) {
+          // Merge roadmaps into students if matched
+          setStudents(prev => prev.map(s => {
+            const matchedRoad = realtimeRoadmaps.find(r => r.studentId === s.id || r.id === s.id)
+            if (matchedRoad) {
+              return { ...s, roadmap: matchedRoad }
+            }
+            return s
+          }))
+        }
+      },
+      (error) => {
+        if (!isMounted) return
+        console.warn('Using LocalStorage mode for roadmaps.')
+      }
+    )
+
+    return () => {
+      isMounted = false
+      unsubscribe()
+    }
+  }, [])
+
   // Save / Update Report Handler
   const handleSaveReport = (reportRecord) => {
     if (!reportRecord || !reportRecord.id) return
@@ -260,6 +296,21 @@ export default function App() {
       return next
     })
     showToast('Laporan rapor akademik berhasil disimpan ke database!', 'success')
+  }
+
+  // Save / Update Roadmap Handler
+  const handleSaveRoadmap = (roadmapRecord) => {
+    if (!roadmapRecord) return
+    syncRoadmapToFirebase(roadmapRecord)
+    if (roadmapRecord.studentId) {
+      updateStudentsWithSync(prev => prev.map(s => {
+        if (s.id === roadmapRecord.studentId) {
+          return { ...s, roadmap: roadmapRecord }
+        }
+        return s
+      }))
+    }
+    showToast('Peta kurikulum & milestone roadmap berhasil disimpan!', 'success')
   }
 
   // Custom setStudents handler with Firebase Sync
@@ -408,6 +459,18 @@ export default function App() {
     )
   }
 
+  if (publicRoadmapData) {
+    return (
+      <PublicRoadmapViewer
+        roadmapData={publicRoadmapData}
+        onBack={() => {
+          window.history.pushState({}, '', window.location.pathname)
+          setPublicRoadmapData(null)
+        }}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-fluent-bg text-fluent-text font-sans flex flex-col antialiased selection:bg-fluent-blue selection:text-white">
 
@@ -459,13 +522,18 @@ export default function App() {
         </div>
 
         <div className={activeTab === 'roadmap' ? 'block' : 'hidden'}>
-          <StudentRoadmap
+          <StudentRoadmapStudio
             students={students}
             selectedStudentId={selectedStudentForRoadmap?.id}
             onSelectStudent={setSelectedStudentForRoadmap}
             onUpdateStudent={(updatedStudent) => {
               updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
             }}
+            modules={modules}
+            onOpenModule={(modId) => {
+              setActiveTab('modules')
+            }}
+            onSaveRoadmap={handleSaveRoadmap}
           />
         </div>
 

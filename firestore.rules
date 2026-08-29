@@ -18,5 +18,11 @@ service cloud.firestore {
     match /modules/{moduleId} {
       allow read, write: if true;
     }
+
+    // Koleksi Roadmap Kurikulum (Roadmaps)
+    match /roadmaps/{roadmapId} {
+      allow read: if true;
+      allow write: if true;
+    }
   }
 }

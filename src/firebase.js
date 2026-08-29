@@ -214,6 +214,50 @@ export const deleteReportFromFirebase = async (reportId) => {
   }
 }
 
+// Real-time Firestore Roadmaps Listener
+export const subscribeRoadmaps = (onDataUpdate, onError) => {
+  try {
+    const roadmapsCol = collection(db, 'roadmaps')
+    return onSnapshot(roadmapsCol, (snapshot) => {
+      const roadmapList = []
+      snapshot.forEach((docSnap) => {
+        roadmapList.push({ id: docSnap.id, ...docSnap.data() })
+      })
+      onDataUpdate(roadmapList)
+    }, (err) => {
+      console.warn('Firestore roadmaps subscription error (fallback to local):', err)
+      if (onError) onError(err)
+    })
+  } catch (e) {
+    console.warn('Firebase init error:', e)
+    if (onError) onError(e)
+    return () => {}
+  }
+}
+
+// Save or Update Single Roadmap to Firestore
+export const syncRoadmapToFirebase = async (roadmapItem) => {
+  if (!roadmapItem || (!roadmapItem.id && !roadmapItem.studentId)) return
+  try {
+    const docId = roadmapItem.id || roadmapItem.studentId
+    const roadmapDoc = doc(db, 'roadmaps', docId)
+    await setDoc(roadmapDoc, { ...roadmapItem, id: docId, updatedAt: new Date().toISOString() }, { merge: true })
+  } catch (e) {
+    console.error('Error syncing roadmap to Firebase:', e)
+  }
+}
+
+// Delete Roadmap from Firestore
+export const deleteRoadmapFromFirebase = async (docId) => {
+  if (!docId) return
+  try {
+    const roadmapDoc = doc(db, 'roadmaps', docId)
+    await deleteDoc(roadmapDoc)
+  } catch (e) {
+    console.error('Error deleting roadmap from Firebase:', e)
+  }
+}
+
 // Save Custom Firebase Credentials to LocalStorage
 export const saveCustomFirebaseConfig = (newConfig) => {
   try {

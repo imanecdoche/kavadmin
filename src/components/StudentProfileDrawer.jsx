@@ -18,6 +18,8 @@ import {
 } from 'lucide-react'
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
+import RoadmapMetroGraph from './roadmap/RoadmapMetroGraph'
+import { calculateOverallRoadmapProgress } from '../utils/roadmapCalculator'
 
 export default function StudentProfileDrawer({
   student,
@@ -334,6 +336,58 @@ export default function StudentProfileDrawer({
                 <p className="text-xs text-fluent-textSecondary italic bg-fluent-subtle p-3 rounded border border-fluent-border">
                   Belum ada riwayat invoice tersimpan untuk siswa ini.
                 </p>
+              )}
+            </div>
+
+            {/* Roadmap Kurikulum & Capaian Belajar */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-fluent-border pb-1">
+                <h3 className="text-xs font-bold text-fluent-textSecondary uppercase tracking-wider">
+                  Roadmap Kurikulum & Capaian
+                </h3>
+                {onOpenRoadmap && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenRoadmap(student)
+                      onClose()
+                    }}
+                    className="text-[10px] text-fluent-blue hover:underline font-semibold flex items-center gap-1"
+                  >
+                    Buka di Studio Roadmap →
+                  </button>
+                )}
+              </div>
+
+              {student.roadmap && Array.isArray(student.roadmap.milestones) && student.roadmap.milestones.length > 0 ? (
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-800">{student.roadmap.moduleTitle || 'Kurikulum Bahasa Inggris'}</span>
+                    <span className="font-mono text-xs font-bold text-fluent-blue">
+                      {calculateOverallRoadmapProgress(student.roadmap.milestones).percentage}% Selesai
+                    </span>
+                  </div>
+                  <RoadmapMetroGraph
+                    milestones={student.roadmap.milestones}
+                    readOnly={true}
+                  />
+                </div>
+              ) : (
+                <div className="p-3 bg-fluent-subtle rounded border border-fluent-border text-xs flex items-center justify-between">
+                  <span className="text-fluent-textSecondary italic">Kurikulum default aktif untuk paket {student.packageType}.</span>
+                  {onOpenRoadmap && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenRoadmap(student)
+                        onClose()
+                      }}
+                      className="px-2.5 py-1 bg-white border border-slate-200 text-fluent-blue hover:bg-blue-50 rounded font-semibold text-[10px]"
+                    >
+                      Kustomisasi
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 

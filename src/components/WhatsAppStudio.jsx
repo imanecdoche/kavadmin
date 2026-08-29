@@ -105,6 +105,30 @@ Terima kasih atas kepercayaan dan kerja sama Bapak/Ibu dalam mendukung proses be
 Salam hangat,
 *Fatih Farhat Asshidiq*
 Founder & Academic Director, Kavio Edu`
+    },
+    {
+      title: 'Pembaruan Progres Roadmap Kurikulum Siswa',
+      category: 'Roadmap Belajar',
+      generate: () => `*PROGRES ROADMAP KURIKULUM BELAJAR SISWA*
+*KAVIO EDU — Private English Class & Academic Mentoring*
+━━━━━━━━━━━━━━━━━━━━━
+
+Yth. Bpk/Ibu ${parentName || studentName},
+
+Berikut kami sampaikan pembaruan capaian tahapan roadmap kurikulum bahasa Inggris untuk ananda *${studentName}*:
+
+🎯 *STATUS PEMBELAJARAN:*
+• Siswa: *${studentName}*
+• Jadwal Belajar: *${scheduleText}*
+• Status: *Milestone kurikulum berhasil diperbarui*
+
+📍 Bagan jalur metro-line interaktif dan rincian checklist target kompetensi ananda dapat dipantau secara langsung melalui tautan resmi roadmap Kavio Edu.
+
+Terima kasih banyak atas kerja sama dan dukungan Bapak/Ibu dalam proses belajar ${studentName}.
+
+Salam hangat,
+*Fatih Farhat Asshidiq*
+Founder & Academic Director, Kavio Edu`
     }
   ]
 
