@@ -81,7 +81,7 @@ export default function ReportCardPreview({ reportData, previewRef }) {
               <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-none uppercase">
                 Kavio Edu
               </h1>
-              <p className="text-[11px] font-semibold text-fluent-blue mt-0.5">
+              <p className="text-[11px] font-semibold text-fluent-blue mt-0.5 leading-tight">
                 Private English Class & Academic Mentoring
               </p>
               <p className="text-[10px] text-slate-500 leading-tight">
@@ -90,14 +90,14 @@ export default function ReportCardPreview({ reportData, previewRef }) {
             </div>
           </div>
 
-          <div className="text-left sm:text-right">
-            <div className="inline-block bg-slate-900 text-white text-[10px] font-mono font-bold px-2.5 py-0.5 rounded tracking-wider uppercase">
+          <div className="text-left sm:text-right flex flex-col items-start sm:items-end">
+            <div className="inline-flex items-center justify-center px-3 py-1 bg-slate-900 text-white text-xs font-mono font-semibold rounded-md leading-none tracking-wider">
               {id}
             </div>
-            <div className="text-xs font-semibold text-slate-700 mt-1">
+            <div className="text-xs font-semibold text-slate-700 mt-1.5 leading-tight">
               Tanggal Terbit: <span className="font-bold text-slate-900">{formatDateIndonesian(issueDate)}</span>
             </div>
-            <div className="text-[11px] text-slate-500 font-medium">
+            <div className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">
               Program: <span className="font-bold text-fluent-blue">Paket {programTier}</span> | {periodName}
             </div>
           </div>
@@ -108,30 +108,30 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs items-center">
           <div className="sm:col-span-6 space-y-1">
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
               Profil Siswa Terdaftar
             </div>
-            <div className="text-sm sm:text-base font-bold text-slate-900">
+            <div className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
               {studentName || 'Nama Siswa Belum Diisi'}
             </div>
-            <div className="text-[11px] text-slate-600">
+            <div className="text-[11px] text-slate-600 leading-tight">
               Orang Tua / Wali: <span className="font-semibold text-slate-800">{guardianName || '-'}</span>
             </div>
           </div>
 
           <div className="sm:col-span-6 flex items-center justify-start sm:justify-end sm:border-l sm:border-slate-200 sm:pl-4 space-x-4">
             <div className="text-left sm:text-right">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap leading-none">
                 PRESENSI & KEHADIRAN
               </div>
-              <div className="text-xs font-bold text-slate-800 mt-0.5 whitespace-nowrap font-mono">
+              <div className="text-xs font-bold text-slate-800 mt-1 whitespace-nowrap font-mono leading-none">
                 {attendance.attendedSessions} / {attendance.totalSessions} Sesi
               </div>
-              <div className="text-[10px] text-slate-500 whitespace-nowrap">
+              <div className="text-[10px] text-slate-500 whitespace-nowrap leading-none mt-0.5">
                 Ketepatan: {attendance.punctualityRate || 100}%
               </div>
             </div>
-            <div className="text-emerald-700 font-extrabold font-mono text-sm sm:text-base whitespace-nowrap pl-1">
+            <div className="text-emerald-700 font-extrabold font-mono text-sm sm:text-base whitespace-nowrap leading-none pl-1">
               {attendance.attendanceRate}% Hadir
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           {/* Left: Radar Chart Component */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center bg-white p-3 rounded-lg border border-slate-200/80 shadow-2xs">
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 leading-none">
               DIAGRAM RADAR KOMPETENSI
             </div>
             <ReportRadarChart
@@ -155,7 +155,7 @@ export default function ReportCardPreview({ reportData, previewRef }) {
 
           {/* Right: Detailed Competency Score Table */}
           <div className="lg:col-span-7 space-y-2">
-            <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between pb-1 border-b border-slate-200">
+            <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between pb-1 border-b border-slate-200 leading-none">
               <span>Rubrik & Indikator Capaian</span>
               <span className="text-[10px] font-semibold text-slate-500">Skor / 100</span>
             </div>
@@ -166,11 +166,11 @@ export default function ReportCardPreview({ reportData, previewRef }) {
                 return (
                   <div key={comp.key} className="bg-slate-50/70 p-2.5 rounded border border-slate-100 space-y-1.5">
                     <div className="flex justify-between items-center text-xs">
-                      <div className="font-semibold text-slate-800 flex items-center gap-1.5">
+                      <div className="font-semibold text-slate-800 flex items-center gap-1.5 leading-none">
                         <span>{(comp.key && INDONESIAN_LABEL_MAP[comp.key]) || comp.label}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">({comp.weight}%)</span>
+                        <span className="text-[10px] text-slate-400 font-mono font-normal leading-none">({comp.weight}%)</span>
                       </div>
-                      <span className="font-bold font-mono text-xs text-slate-900 min-w-[28px] text-right">
+                      <span className="font-bold font-mono text-xs text-slate-900 min-w-[28px] text-right leading-none">
                         {s}
                       </span>
                     </div>
@@ -194,29 +194,29 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-gradient-to-r from-blue-900 to-slate-900 text-white p-4 rounded-xl shadow-sm items-center">
           <div className="sm:col-span-4 flex items-center space-x-3 border-b sm:border-b-0 sm:border-r border-blue-700/50 pb-3 sm:pb-0 sm:pr-4">
             <Award className="w-8 h-8 text-amber-300 shrink-0" />
-            <div>
-              <div className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider">
+            <div className="space-y-1">
+              <div className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider leading-none">
                 Skor Komposit Akhir
               </div>
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight leading-none text-white">
+              <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight leading-none text-white flex items-baseline">
                 {Number(compositeScore).toFixed(1)}
-                <span className="text-xs font-normal text-blue-300 ml-1">/ 100</span>
+                <span className="text-xs font-normal text-blue-300 ml-1 leading-none">/ 100</span>
               </div>
             </div>
           </div>
 
-          <div className="sm:col-span-3 flex flex-col justify-center items-start sm:items-center border-b sm:border-b-0 sm:border-r border-blue-700/50 pb-3 sm:pb-0 sm:pr-4">
-            <div className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider">
+          <div className="sm:col-span-3 flex flex-col justify-center items-start sm:items-center border-b sm:border-b-0 sm:border-r border-blue-700/50 pb-3 sm:pb-0 sm:pr-4 space-y-1">
+            <div className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider leading-none">
               Predikat
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight leading-none mt-0.5 font-mono">
+            <div className="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight leading-none font-mono">
               {letterGrade}
             </div>
           </div>
 
-          <div className="sm:col-span-5 space-y-1">
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-bold uppercase bg-amber-400 text-slate-950 px-2 py-0.5 rounded tracking-wide font-mono">
+          <div className="sm:col-span-5 space-y-1.5">
+            <div className="flex items-center">
+              <span className="inline-flex items-center justify-center text-[10px] font-bold uppercase bg-amber-400 text-slate-950 px-2.5 py-1 rounded tracking-wide font-mono leading-none">
                 {performanceCategory.label || 'PROFICIENT'}
               </span>
             </div>
@@ -230,14 +230,14 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         {/* 5. EVALUATOR'S QUALITATIVE FEEDBACK & NEXT TARGETS */}
         {/* ========================================================================= */}
         <div className="space-y-3">
-          <div className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+          <div className="text-xs font-bold text-slate-800 uppercase tracking-wider leading-none">
             Evaluasi Kualitatif & Rekomendasi Mentor
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             {/* Key Strengths */}
-            <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-200/80 space-y-1">
-              <div className="font-bold text-emerald-900 text-[11px] uppercase tracking-wide">
+            <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-200/80 space-y-1.5">
+              <div className="font-bold text-emerald-900 text-[11px] uppercase tracking-wide leading-none">
                 Kekuatan & Capaian Unggulan
               </div>
               <p className="text-[11px] text-emerald-950 leading-relaxed">
@@ -246,8 +246,8 @@ export default function ReportCardPreview({ reportData, previewRef }) {
             </div>
 
             {/* Areas for Growth */}
-            <div className="bg-amber-50/50 p-3 rounded-lg border border-amber-200/80 space-y-1">
-              <div className="font-bold text-amber-900 text-[11px] uppercase tracking-wide">
+            <div className="bg-amber-50/50 p-3 rounded-lg border border-amber-200/80 space-y-1.5">
+              <div className="font-bold text-amber-900 text-[11px] uppercase tracking-wide leading-none">
                 Fokus Peningkatan Selanjutnya
               </div>
               <p className="text-[11px] text-amber-950 leading-relaxed">
@@ -258,7 +258,7 @@ export default function ReportCardPreview({ reportData, previewRef }) {
 
           {/* Next Roadmap Target Banner */}
           <div className="bg-blue-50/60 p-3 rounded-lg border border-blue-200 text-xs space-y-1">
-            <div className="font-bold text-slate-900 text-[11px] uppercase tracking-wider">
+            <div className="font-bold text-slate-900 text-[11px] uppercase tracking-wider leading-none">
               Target Kurikulum & Sesi Berikutnya
             </div>
             <p className="text-[11px] text-slate-700 leading-relaxed">
@@ -273,21 +273,21 @@ export default function ReportCardPreview({ reportData, previewRef }) {
         <div className="border-t border-slate-200 pt-5 flex justify-between items-end text-xs">
           {/* Verification Badge Left */}
           <div className="space-y-1.5 max-w-[260px]">
-            <div className="flex items-center space-x-1.5 text-emerald-700 font-bold text-[11px]">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <div className="flex items-center space-x-1.5 text-emerald-700 font-bold text-[11px] leading-none">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>Dokumen Resmi Terverifikasi</span>
             </div>
             <p className="text-[10px] text-slate-500 leading-tight">
               Laporan diterbitkan secara sah oleh Kavio Edu Management. Keaslian dokumen dapat diverifikasi secara daring.
             </p>
-            <div className="font-mono text-[9px] text-slate-400">
+            <div className="font-mono text-[9px] text-slate-400 leading-none">
               Security Hash: {id.replace(/[^a-zA-Z0-9]/g, '')}-KEEN
             </div>
           </div>
 
           {/* Signature & Seal Block Right */}
           <div className="text-right space-y-1 pr-2">
-            <p className="text-[10px] text-slate-500 pb-16 font-medium">
+            <p className="text-[10px] text-slate-500 pb-16 font-medium leading-none">
               Pandeglang, {formatDateIndonesian(issueDate)}
             </p>
 
@@ -320,12 +320,12 @@ export default function ReportCardPreview({ reportData, previewRef }) {
                 />
               )}
 
-              <p className="text-xs font-bold text-slate-900 border-b border-slate-400 pb-0.5 relative z-30 tracking-tight">
+              <p className="text-xs font-bold text-slate-900 border-b border-slate-400 pb-0.5 relative z-30 tracking-tight leading-tight">
                 {evaluatorName}
               </p>
             </div>
 
-            <p className="text-[10px] text-slate-500 block relative z-30 font-semibold">
+            <p className="text-[10px] text-slate-500 block relative z-30 font-semibold leading-tight">
               {evaluatorTitle}
             </p>
           </div>
