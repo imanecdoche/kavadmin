@@ -2,159 +2,149 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 
 /**
- * High-definition PDF export for Roadmap Document (with multi-page support and font rendering fixes)
- * @param {string|HTMLElement} elementIdOrEl
- * @param {string} studentName
- * @param {string} batch
+ * Helper untuk membuat clone elemen yang bersih di luar layar (Off-Screen)
+ * bebas dari efek transform scale, zoom, dan font subpixel glitch.
  */
-export const exportRoadmapToPdf = async (
-  elementIdOrEl = 'roadmap-export-canvas',
-  studentName = 'Student',
-  batch = 'Batch'
-) => {
-  const element = typeof elementIdOrEl === 'string'
-    ? document.getElementById(elementIdOrEl) || document.getElementById('roadmap-export-canvas')
-    : elementIdOrEl
+const createCleanOffscreenClone = (element) => {
+  const clone = element.cloneNode(true)
+  
+  // Container isolasi di luar layar
+  const container = document.createElement('div')
+  container.style.position = 'fixed'
+  container.style.top = '0'
+  container.style.left = '-10000px'
+  container.style.width = '794px'
+  container.style.zIndex = '-9999'
+  container.style.opacity = '1'
+  container.style.pointerEvents = 'none'
 
-  if (!element) {
+  // Paksa gaya standar bebas distorsi pada clone
+  clone.style.transform = 'none'
+  clone.style.webkitTransform = 'none'
+  clone.style.margin = '0'
+  clone.style.padding = '32px'
+  clone.style.width = '794px'
+  clone.style.maxWidth = '794px'
+  clone.style.minHeight = 'auto'
+  clone.style.height = 'auto'
+  clone.style.boxSizing = 'border-box'
+  clone.style.backgroundColor = '#ffffff'
+  clone.style.fontFamily = 'Arial, Helvetica, sans-serif'
+
+  // Normalisasi seluruh elemen teks di dalam clone
+  const allElements = clone.querySelectorAll('*')
+  allElements.forEach((el) => {
+    el.style.letterSpacing = '0px'
+    el.style.wordSpacing = 'normal'
+    el.style.fontFamily = 'Arial, Helvetica, sans-serif'
+    
+    // Cegah pemotongan baris/huruf
+    const computedStyle = window.getComputedStyle(el)
+    if (computedStyle.display === 'inline') {
+      el.style.display = 'inline-block'
+    }
+  })
+
+  container.appendChild(clone)
+  document.body.appendChild(container)
+
+  return { container, targetElement: clone }
+}
+
+export const exportRoadmapToPdf = async (elementId = 'roadmap-export-canvas', studentName = 'Student', batch = 'Batch') => {
+  const sourceElement = typeof elementId === 'string'
+    ? document.getElementById(elementId) || document.getElementById('roadmap-export-canvas')
+    : elementId
+
+  if (!sourceElement) {
     alert('Elemen roadmap tidak ditemukan.')
     return
   }
 
+  let offscreen = null
   try {
-    // 1. Pastikan seluruh font sistem & web font telah selesai dimuat 100%
     if (document.fonts) {
       await document.fonts.ready
     }
 
-    // 2. Capture canvas dengan resolusi terkunci (tanpa distorsi)
-    const canvas = await html2canvas(element, {
-      scale: 2, // Kualitas HD
+    // 1. Buat clone bersih di luar viewport
+    offscreen = createCleanOffscreenClone(sourceElement)
+
+    // 2. Capture dari elemen clone murni
+    const canvas = await html2canvas(offscreen.targetElement, {
+      scale: 2, // Kualitas HD tajam
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 794,
-      onclone: (clonedDoc) => {
-        const target = (typeof elementIdOrEl === 'string' ? clonedDoc.getElementById(elementIdOrEl) : null) ||
-                       clonedDoc.getElementById('roadmap-export-canvas') ||
-                       clonedDoc.querySelector('[id*="roadmap"]')
-        if (target) {
-          // Matikan semua transform scale & kunci dimensi murni
-          target.style.transform = 'none'
-          target.style.webkitTransform = 'none'
-          target.style.margin = '0'
-          target.style.width = '794px'
-          target.style.maxWidth = '794px'
-          target.style.boxSizing = 'border-box'
-
-          // Perbaiki masalah font spacing pada semua teks
-          const allTexts = target.querySelectorAll('*')
-          allTexts.forEach((el) => {
-            el.style.letterSpacing = 'normal'
-            el.style.wordSpacing = 'normal'
-          })
-        }
-      }
+      windowWidth: 794
     })
 
     const imgData = canvas.toDataURL('image/png', 1.0)
 
-    // 3. Setup PDF dengan Aspect Ratio Murni (KUNCI AGAR TIDAK GEPENG)
+    // 3. Setup Custom Continuous Single Page PDF (1 Halaman Utuh)
+    const pdfWidth = 210 // mm
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width // mm proporsional
+
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: 'a4'
+      format: [pdfWidth, pdfHeight] // Kunci 1 halaman panjang tanpa page break
     })
 
-    const pdfPageWidth = 210
-    const pdfPageHeight = 297
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST')
 
-    // Hitung tinggi proporsional berdasarkan rasio asli canvas
-    const renderedImgHeight = (canvas.height * pdfPageWidth) / canvas.width
-
-    // Jika konten lebih panjang dari 1 lembar A4 (12 sesi), buat halaman baru otomatis
-    let heightLeft = renderedImgHeight
-    let position = 0
-
-    pdf.addImage(imgData, 'PNG', 0, position, pdfPageWidth, renderedImgHeight, undefined, 'FAST')
-    heightLeft -= pdfPageHeight
-
-    while (heightLeft > 5) { // Toleransi 5mm
-      position -= pdfPageHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'PNG', 0, position, pdfPageWidth, renderedImgHeight, undefined, 'FAST')
-      heightLeft -= pdfPageHeight
-    }
-
-    const sanitizedName = String(studentName || 'Siswa').replace(/[^a-zA-Z0-9]/g, '_')
+    const sanitizedName = String(studentName || 'Student').replace(/[^a-zA-Z0-9]/g, '_')
     const sanitizedBatch = String(batch || 'Batch').replace(/[^a-zA-Z0-9]/g, '_')
     pdf.save(`Roadmap_KavioEdu_${sanitizedName}_${sanitizedBatch}.pdf`)
   } catch (error) {
-    console.error('[PDF Export Error]:', error)
-    alert('Terjadi kesalahan teknis saat membuat file PDF.')
+    console.error('[PDF Export Fatal Error]:', error)
+    alert('Terjadi kesalahan saat memproses file PDF.')
+  } finally {
+    // Bersihkan elemen clone dari DOM
+    if (offscreen && offscreen.container) {
+      document.body.removeChild(offscreen.container)
+    }
   }
 }
 
-/**
- * High-definition PNG export for Roadmap Document
- * @param {string|HTMLElement} elementIdOrEl
- * @param {string} studentName
- * @param {string} batch
- */
-export const exportRoadmapToPng = async (
-  elementIdOrEl = 'roadmap-export-canvas',
-  studentName = 'Student',
-  batch = 'Batch'
-) => {
-  const element = typeof elementIdOrEl === 'string'
-    ? document.getElementById(elementIdOrEl) || document.getElementById('roadmap-export-canvas')
-    : elementIdOrEl
+export const exportRoadmapToPng = async (elementId = 'roadmap-export-canvas', studentName = 'Student', batch = 'Batch') => {
+  const sourceElement = typeof elementId === 'string'
+    ? document.getElementById(elementId) || document.getElementById('roadmap-export-canvas')
+    : elementId
 
-  if (!element) return
+  if (!sourceElement) return
 
+  let offscreen = null
   try {
     if (document.fonts) {
       await document.fonts.ready
     }
 
-    const canvas = await html2canvas(element, {
+    offscreen = createCleanOffscreenClone(sourceElement)
+
+    const canvas = await html2canvas(offscreen.targetElement, {
       scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 794,
-      onclone: (clonedDoc) => {
-        const target = (typeof elementIdOrEl === 'string' ? clonedDoc.getElementById(elementIdOrEl) : null) ||
-                       clonedDoc.getElementById('roadmap-export-canvas') ||
-                       clonedDoc.querySelector('[id*="roadmap"]')
-        if (target) {
-          target.style.transform = 'none'
-          target.style.webkitTransform = 'none'
-          target.style.margin = '0'
-          target.style.width = '794px'
-          target.style.maxWidth = '794px'
-          target.style.boxSizing = 'border-box'
-
-          const allTexts = target.querySelectorAll('*')
-          allTexts.forEach((el) => {
-            el.style.letterSpacing = 'normal'
-            el.style.wordSpacing = 'normal'
-          })
-        }
-      }
+      windowWidth: 794
     })
 
     const link = document.createElement('a')
-    const sanitizedName = String(studentName || 'Siswa').replace(/[^a-zA-Z0-9]/g, '_')
+    const sanitizedName = String(studentName || 'Student').replace(/[^a-zA-Z0-9]/g, '_')
     const sanitizedBatch = String(batch || 'Batch').replace(/[^a-zA-Z0-9]/g, '_')
     link.download = `Roadmap_KavioEdu_${sanitizedName}_${sanitizedBatch}.png`
     link.href = canvas.toDataURL('image/png', 1.0)
     link.click()
   } catch (error) {
     console.error('[PNG Export Error]:', error)
+  } finally {
+    if (offscreen && offscreen.container) {
+      document.body.removeChild(offscreen.container)
+    }
   }
 }
