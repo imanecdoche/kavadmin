@@ -40,8 +40,11 @@ import { parseReportShareLink } from './utils/reportShare'
 import { parseRoadmapShareLink } from './utils/roadmapShare'
 import { parseCertificateShareLink } from './utils/certificateShare'
 import PublicInvoiceView from './components/PublicInvoiceView'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import PasscodeGate from './components/auth/PasscodeGate'
 
-export default function App() {
+function AppContent() {
+  const { isAuthenticated, isLoading, logout } = useAuth()
   const [isAppLoading, setIsAppLoading] = useState(true)
   const [showExitModal, setShowExitModal] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -497,6 +500,20 @@ export default function App() {
     )
   }
 
+  // 5. Auth gate check
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center text-slate-400">
+        <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs font-mono">Memverifikasi Sesi...</p>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <PasscodeGate />
+  }
+
   return (
     <div className="min-h-screen bg-fluent-bg text-fluent-text font-sans flex flex-col antialiased selection:bg-fluent-blue selection:text-white">
 
@@ -508,7 +525,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Top Header & Navigation Bar */}
-      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />
 
 
       {/* Main Container - Keeps all tabs mounted */}
@@ -736,5 +753,13 @@ function FirebaseConfigModal({ onClose }) {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }

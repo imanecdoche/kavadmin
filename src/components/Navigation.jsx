@@ -1,8 +1,8 @@
 import React from 'react'
-import { LayoutDashboard, FileText, MessageSquare, BookOpen, Library, Award, GraduationCap } from 'lucide-react'
+import { LayoutDashboard, FileText, MessageSquare, BookOpen, Library, Award, GraduationCap, LogOut } from 'lucide-react'
 import { logoSvg } from '../assets'
 
-export default function Navigation({ activeTab, setActiveTab }) {
+export default function Navigation({ activeTab, setActiveTab, onLogout = null }) {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'invoice', label: 'Invoice', icon: FileText },
@@ -16,8 +16,17 @@ export default function Navigation({ activeTab, setActiveTab }) {
   return (
     <>
       {/* MOBILE ONLY: Top Header with Logo */}
-      <div className="sm:hidden bg-white border-b border-fluent-border py-2.5 px-4 flex items-center justify-center no-print">
+      <div className="sm:hidden bg-white border-b border-fluent-border py-2.5 px-4 flex items-center justify-between no-print">
         <img src={logoSvg} alt="Kavio Edu Logo" className="h-7 w-auto object-contain" />
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            title="Keluar Sesi (Logout)"
+            className="p-1.5 text-slate-400 hover:text-rose-600 rounded"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* MOBILE ONLY: Sticky Navbar Header */}
@@ -56,27 +65,42 @@ export default function Navigation({ activeTab, setActiveTab }) {
             </div>
 
             {/* Desktop Navigation Tabs - Icon Only with Tooltips */}
-            <nav className="flex items-center space-x-1.5">
-              {tabs.map((tab) => {
-                const Icon = tab.icon
-                const isActive = activeTab === tab.id
-                return (
+            <div className="flex items-center space-x-3">
+              <nav className="flex items-center space-x-1.5">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon
+                  const isActive = activeTab === tab.id
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      title={tab.label}
+                      aria-label={tab.label}
+                      className={`p-2.5 rounded-fluent transition-all duration-150 flex items-center justify-center ${
+                        isActive
+                          ? 'bg-fluent-blue text-white shadow-xs'
+                          : 'text-fluent-textSecondary hover:bg-fluent-subtle hover:text-fluent-blue'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </button>
+                  )
+                })}
+              </nav>
+
+              {onLogout && (
+                <div className="pl-2 border-l border-fluent-border">
                   <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    title={tab.label}
-                    aria-label={tab.label}
-                    className={`p-2.5 rounded-fluent transition-all duration-150 flex items-center justify-center ${
-                      isActive
-                        ? 'bg-fluent-blue text-white shadow-xs'
-                        : 'text-fluent-textSecondary hover:bg-fluent-subtle hover:text-fluent-blue'
-                    }`}
+                    onClick={onLogout}
+                    title="Keluar Sesi (Logout)"
+                    aria-label="Keluar Sesi"
+                    className="p-2 rounded-fluent text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center"
                   >
-                    <Icon className="w-5 h-5" />
+                    <LogOut className="w-4 h-4" />
                   </button>
-                )
-              })}
-            </nav>
+                </div>
+              )}
+            </div>
 
           </div>
         </div>
