@@ -1,0 +1,8 @@
+# Kavio Edu Security Contact Policy
+# RFC 9116 - A File Format to Aid in Security Vulnerability Disclosure
+
+Contact: mailto:academic@kavioedu.com
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: id, en
+Canonical: https://kavadmin.vercel.app/.well-known/security.txt
+Policy: https://kavadmin.vercel.app/
