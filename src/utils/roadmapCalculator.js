@@ -51,6 +51,7 @@ export const calculateOverallRoadmapProgress = (sessions = []) => {
   if (!Array.isArray(sessions) || sessions.length === 0) {
     return {
       percentage: 0,
+      averageMastery: 0,
       totalSessions: 0,
       completedCount: 0,
       inProgressCount: 0,
@@ -62,10 +63,18 @@ export const calculateOverallRoadmapProgress = (sessions = []) => {
   let completedCount = 0
   let inProgressCount = 0
   let lockedCount = 0
+  let totalMastery = 0
 
   sessions.forEach((s) => {
     const status = String(s.status || '').toUpperCase()
-    if (status === 'COMPLETED' || status === 'SELESAI') {
+    const isCompleted = status === 'COMPLETED' || status === 'SELESAI'
+    const masteryVal = typeof s.mastery === 'number'
+      ? Math.min(100, Math.max(0, s.mastery))
+      : (isCompleted ? 100 : 0)
+
+    totalMastery += masteryVal
+
+    if (isCompleted) {
       completedCount++
     } else if (status === 'IN_PROGRESS' || status === 'SEDANG BERJALAN') {
       inProgressCount++
@@ -75,9 +84,11 @@ export const calculateOverallRoadmapProgress = (sessions = []) => {
   })
 
   const percentage = total > 0 ? Math.round((completedCount / total) * 100) : 0
+  const averageMastery = total > 0 ? Math.round(totalMastery / total) : 0
 
   return {
     percentage,
+    averageMastery,
     totalSessions: total,
     completedCount,
     inProgressCount,

@@ -18,6 +18,10 @@ export default function SessionCard({
   const isCompleted = rawStatus === 'COMPLETED' || rawStatus === 'SELESAI'
   const isInProgress = rawStatus === 'IN_PROGRESS' || rawStatus === 'SEDANG BERJALAN'
 
+  const mastery = typeof session.mastery === 'number'
+    ? Math.min(100, Math.max(0, session.mastery))
+    : (isCompleted ? 100 : 0)
+
   const statusText = isCompleted
     ? 'SELESAI'
     : isInProgress
@@ -31,6 +35,14 @@ export default function SessionCard({
     : 'text-slate-400 font-normal'
 
   const formattedDate = formatDateShortIndonesian(session.date)
+
+  const getMasteryColor = (val) => {
+    if (val >= 85) return 'bg-emerald-500'
+    if (val >= 70) return 'bg-fluent-blue'
+    if (val >= 50) return 'bg-teal-500'
+    if (val > 0) return 'bg-amber-500'
+    return 'bg-slate-300'
+  }
 
   return (
     <div
@@ -77,13 +89,12 @@ export default function SessionCard({
       <div className="flex items-center gap-3">
         <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
           <div
-            className={`h-full transition-all duration-300 ${
-              isCompleted ? 'bg-emerald-500 w-full' : 'w-0'
-            }`}
+            className={`h-full transition-all duration-300 ${getMasteryColor(mastery)}`}
+            style={{ width: `${mastery}%` }}
           />
         </div>
-        <span className="text-[11px] font-mono font-bold text-slate-700 shrink-0 min-w-[32px] text-right">
-          {isCompleted ? '100%' : '0%'}
+        <span className="text-[11px] font-mono font-bold text-slate-700 shrink-0 min-w-[36px] text-right">
+          {mastery}%
         </span>
       </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Check, BookOpen, Layers } from 'lucide-react'
+import { X, Plus, Check, BookOpen, Layers, Activity } from 'lucide-react'
 
 export default function CustomSessionModal({
   isOpen = false,
@@ -15,6 +15,7 @@ export default function CustomSessionModal({
   const [level, setLevel] = useState('A2')
   const [description, setDescription] = useState('')
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [mastery, setMastery] = useState(0)
   const [linkedModuleId, setLinkedModuleId] = useState('')
 
   useEffect(() => {
@@ -23,21 +24,37 @@ export default function CustomSessionModal({
       setLevel(session.level || 'A2')
       setDescription(session.description || '')
       setDate(session.date || new Date().toISOString().split('T')[0])
+      const isCompleted = session.status === 'COMPLETED' || session.status === 'SELESAI'
+      setMastery(typeof session.mastery === 'number' ? session.mastery : (isCompleted ? 100 : 0))
       setLinkedModuleId(session.linkedModuleId || '')
     } else {
       setTitle('')
       setLevel('A2')
       setDescription('')
       setDate(new Date().toISOString().split('T')[0])
+      setMastery(0)
       setLinkedModuleId('')
     }
   }, [session, isOpen])
 
   if (!isOpen) return null
 
+  const getMasteryBadgeClass = (val) => {
+    if (val >= 85) return 'bg-emerald-100 text-emerald-800 border-emerald-300'
+    if (val >= 70) return 'bg-blue-100 text-blue-800 border-blue-300'
+    if (val >= 50) return 'bg-teal-100 text-teal-800 border-teal-300'
+    if (val > 0) return 'bg-amber-100 text-amber-800 border-amber-300'
+    return 'bg-slate-100 text-slate-600 border-slate-200'
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!title.trim()) return
+
+    const numMastery = Math.min(100, Math.max(0, Number(mastery) || 0))
+    let nextStatus = session?.status || 'LOCKED'
+    if (numMastery === 100) nextStatus = 'COMPLETED'
+    else if (numMastery > 0 && (nextStatus === 'LOCKED' || nextStatus === 'BELUM MULAI')) nextStatus = 'IN_PROGRESS'
 
     const payload = {
       id: session?.id || `session-${Date.now()}`,
@@ -46,7 +63,9 @@ export default function CustomSessionModal({
       title: title.trim(),
       description: description.trim(),
       date,
-      status: session?.status || 'LOCKED',
+      mastery: numMastery,
+      status: nextStatus,
+      isCompleted: nextStatus === 'COMPLETED' || nextStatus === 'SELESAI',
       linkedModuleId: linkedModuleId || null
     }
 
@@ -131,6 +150,46 @@ export default function CustomSessionModal({
                   onChange={(e) => setDate(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-fluent-blue font-mono"
                 />
+              </div>
+            </div>
+
+            {/* Slider Penguasaan Materi (Mastery Rate) */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-fluent-blue" />
+                  Tingkat Penguasaan Materi
+                </label>
+                <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded border ${getMasteryBadgeClass(mastery)}`}>
+                  {mastery}%
+                </span>
+              </div>
+
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={mastery}
+                onChange={(e) => setMastery(Number(e.target.value) || 0)}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-fluent-blue"
+              />
+
+              <div className="flex items-center justify-between pt-1">
+                {[0, 50, 75, 85, 100].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setMastery(val)}
+                    className={`px-2 py-0.5 text-[10px] font-mono font-semibold rounded border transition-colors ${
+                      mastery === val
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {val}%
+                  </button>
+                ))}
               </div>
             </div>
 
