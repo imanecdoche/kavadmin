@@ -70,28 +70,21 @@ export default function PublicVerificationPage({ initialId = '', onBack = null }
           </div>
 
           <div className="flex items-center gap-2">
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded border border-slate-300 transition-colors inline-flex items-center gap-1.5"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Dashboard</span>
-              </button>
-            )}
             <button
               onClick={handlePrint}
+              title="Cetak Halaman Verifikasi"
               className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded border border-slate-300 transition-colors inline-flex items-center gap-1.5"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Cetak</span>
+              <span>Cetak</span>
             </button>
             <button
               onClick={handleCopyLink}
-              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded transition-colors inline-flex items-center gap-1.5 shadow-sm"
+              title={copied ? "Tautan berhasil disalin" : "Salin Tautan"}
+              aria-label="Salin Tautan"
+              className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors inline-flex items-center justify-center"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Tautan Disalin' : 'Salin Tautan'}</span>
+              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-700" />}
             </button>
           </div>
         </div>
@@ -248,22 +241,32 @@ export default function PublicVerificationPage({ initialId = '', onBack = null }
             </div>
 
             {/* Section 4: Validation Seal & Signature */}
-            <div className="p-5 sm:p-6 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-200">
-              <div className="flex items-center gap-4 text-center sm:text-left">
-                <img src={stempelKavioEduPng} alt="Cap Stempel Resmi" className="h-16 w-16 object-contain shrink-0" />
+            <div className="p-6 bg-slate-50 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-8 border-t border-slate-200">
+              {/* Stempel di atas label */}
+              <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+                <img
+                  src={stempelKavioEduPng}
+                  alt="Cap Stempel Resmi"
+                  className="h-20 w-20 object-contain mb-2"
+                />
                 <div className="text-xs text-slate-600">
                   <span className="font-bold text-slate-900 block">Stempel Pengesahan Resmi</span>
-                  <span className="block text-[11px]">Kavio Academy • PT Kavio Investama Global</span>
-                  <span className="block text-[11px] font-mono">Tersertifikasi NIB 2311260068864</span>
+                  <span className="block text-[11px] text-slate-600">Kavio Academy • PT Kavio Investama Global</span>
+                  <span className="block text-[11px] font-mono text-slate-500">Tersertifikasi NIB 2311260068864</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 text-center sm:text-right">
+              {/* TTD di atas nama Fatih */}
+              <div className="flex flex-col items-center sm:items-end text-center sm:text-right">
+                <img
+                  src={ttdFatihPng}
+                  alt="Tanda Tangan Formulator"
+                  className="h-20 w-auto object-contain mb-1"
+                />
                 <div className="text-xs text-slate-600">
-                  <span className="font-bold text-slate-900 block">{certData.directorName}</span>
+                  <span className="font-bold text-slate-900 text-sm block">{certData.directorName}</span>
                   <span className="block text-[11px] text-slate-500">{certData.directorTitle}</span>
                 </div>
-                <img src={ttdFatihPng} alt="Tanda Tangan Formulator" className="h-14 w-auto object-contain shrink-0" />
               </div>
             </div>
           </div>
