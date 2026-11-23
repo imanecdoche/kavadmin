@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, LogOut } from 'lucide-react';
+import { Menu, X, LogOut, Globe } from 'lucide-react';
 import { logoSvg } from '@/assets';
 
 export const Sidebar = ({
@@ -7,6 +7,7 @@ export const Sidebar = ({
   setActiveTab,
   onTabChange,
   onLogout,
+  onBackToHome,
 }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -121,22 +122,35 @@ export const Sidebar = ({
               })}
             </nav>
 
-            {/* Logout Mobile */}
-            {onLogout && (
-              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 mt-auto">
+            {/* Navigation links Mobile */}
+            <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 mt-auto space-y-1">
+              {onBackToHome && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileOpen(false);
+                    onBackToHome();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-md text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
+                >
+                  <Globe className="w-4 h-4 shrink-0 text-neutral-500" />
+                  <span>Website Utama</span>
+                </button>
+              )}
+              {onLogout && (
                 <button
                   type="button"
                   onClick={() => {
                     setIsMobileOpen(false);
                     onLogout();
                   }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer transition-colors"
                 >
                   <LogOut className="w-4 h-4 shrink-0" />
                   <span>Keluar</span>
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -187,9 +201,19 @@ export const Sidebar = ({
           })}
         </nav>
 
-        {/* Bottom Logout Button */}
-        {onLogout && (
-          <div className="p-3 border-t border-neutral-100 dark:border-neutral-800 mt-auto shrink-0">
+        {/* Bottom Navigation & Logout */}
+        <div className="p-3 border-t border-neutral-100 dark:border-neutral-800 mt-auto shrink-0 space-y-1">
+          {onBackToHome && (
+            <button
+              type="button"
+              onClick={onBackToHome}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-md text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
+            >
+              <Globe className="w-4 h-4 shrink-0 text-neutral-500" />
+              <span>Website Utama</span>
+            </button>
+          )}
+          {onLogout && (
             <button
               type="button"
               onClick={onLogout}
@@ -198,8 +222,8 @@ export const Sidebar = ({
               <LogOut className="w-4 h-4 shrink-0" />
               <span>Keluar</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
     </>
   );

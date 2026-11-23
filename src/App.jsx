@@ -15,6 +15,7 @@ import PublicRoadmapViewer from './components/roadmap/PublicRoadmapViewer'
 import CertificateStudio from './components/certificate/CertificateStudio'
 import PublicCertificateViewer from './components/certificate/PublicCertificateViewer'
 import PublicVerificationPage from './components/certificate/PublicVerificationPage'
+import LandingPage from './pages/LandingPage'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import CursorTooltip from './components/CursorTooltip'
 import SplashScreen from './components/SplashScreen'
@@ -57,6 +58,28 @@ function AppContent() {
   const [publicRoadmapData, setPublicRoadmapData] = useState(() => parseRoadmapShareLink())
   const [publicCertificateData, setPublicCertificateData] = useState(() => parseCertificateShareLink())
   const [verificationReq, setVerificationReq] = useState(() => parseVerificationUrl())
+  const [isAdminRoute, setIsAdminRoute] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const pathname = window.location.pathname.toLowerCase()
+    return pathname.startsWith('/admin') || pathname.startsWith('/dashboard')
+  })
+
+  // Navigation helpers for SPA routing
+  const navigateToAdmin = () => {
+    window.history.pushState({}, '', '/admin')
+    setIsAdminRoute(true)
+  }
+
+  const navigateToLanding = () => {
+    window.history.pushState({}, '', '/')
+    setIsAdminRoute(false)
+  }
+
+  const navigateToVerify = (id) => {
+    const url = id ? `/verify?id=${encodeURIComponent(id)}` : '/verify'
+    window.history.pushState({ id }, '', url)
+    setVerificationReq({ isVerifyRequest: true, queryId: id || '' })
+  }
 
   // Browser navigation and popstate listener
   useEffect(() => {
@@ -66,6 +89,8 @@ function AppContent() {
       setPublicRoadmapData(parseRoadmapShareLink())
       setPublicCertificateData(parseCertificateShareLink())
       setVerificationReq(parseVerificationUrl())
+      const pathname = window.location.pathname.toLowerCase()
+      setIsAdminRoute(pathname.startsWith('/admin') || pathname.startsWith('/dashboard'))
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -538,12 +563,23 @@ function AppContent() {
         onBack={() => {
           window.history.pushState({}, '', '/')
           setVerificationReq(null)
+          setIsAdminRoute(false)
         }}
       />
     )
   }
 
-  // 5. Auth gate check
+  // 5. Landing Page for Root Domain (PT Kavio Investama Global)
+  if (!isAdminRoute) {
+    return (
+      <LandingPage
+        onNavigateAdmin={navigateToAdmin}
+        onNavigateVerify={navigateToVerify}
+      />
+    )
+  }
+
+  // 6. Auth gate check for Admin Route (/admin)
   if (isLoading) {
     return (
       <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center text-slate-400">
@@ -554,7 +590,7 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <PasscodeGate />
+    return <PasscodeGate onBackToHome={navigateToLanding} />
   }
 
   return (
@@ -568,7 +604,12 @@ function AppContent() {
       </AnimatePresence>
 
       {/* Vertical Sidepanel Navigation Bar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onLogout={logout}
+        onBackToHome={navigateToLanding}
+      />
 
       {/* Main Content Area Offset on Desktop (md:pl-56 lg:pl-60) */}
       <div className="flex-1 min-w-0 md:pl-56 lg:pl-60 flex flex-col min-h-screen">

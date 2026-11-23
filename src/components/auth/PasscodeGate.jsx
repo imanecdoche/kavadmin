@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { HiKey, HiEye, HiEyeSlash, HiShieldExclamation, HiExclamationCircle } from 'react-icons/hi2'
+import { HiKey, HiEye, HiEyeSlash, HiShieldExclamation, HiExclamationCircle, HiArrowLeft } from 'react-icons/hi2'
 import { RiLoader4Line, RiTimeFill } from 'react-icons/ri'
 import { logoSvg } from '../../assets'
 import { useAuth } from '../../context/AuthContext'
@@ -9,7 +9,7 @@ const MAX_ATTEMPTS = 5
 const LOCKOUT_STORAGE_KEY = 'kavadmin_lockout_until'
 const ATTEMPTS_STORAGE_KEY = 'kavadmin_failed_attempts'
 
-export default function PasscodeGate() {
+export default function PasscodeGate({ onBackToHome }) {
   const { loginWithPasscode, sessionConflictMessage, clearConflictMessage } = useAuth()
   const [passcode, setPasscode] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -280,6 +280,17 @@ export default function PasscodeGate() {
               <span>Masuk</span>
             )}
           </button>
+
+          {onBackToHome && (
+            <button
+              type="button"
+              onClick={onBackToHome}
+              className="w-full py-2.5 px-3 text-slate-400 hover:text-white text-xs font-medium transition-colors flex items-center justify-center gap-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-950/40"
+            >
+              <HiArrowLeft className="w-3.5 h-3.5" />
+              <span>Kembali ke Website Utama</span>
+            </button>
+          )}
         </form>
       </motion.div>
 
