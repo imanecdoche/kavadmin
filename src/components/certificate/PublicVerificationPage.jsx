@@ -2,20 +2,15 @@ import React, { useState, useEffect } from 'react'
 import {
   ShieldCheck,
   Award,
-  CheckCircle2,
   Building2,
   Calendar,
-  MapPin,
-  User,
   FileText,
   Copy,
   Check,
   Search,
   ArrowLeft,
   AlertCircle,
-  GraduationCap,
-  Sparkles,
-  ExternalLink
+  Printer
 } from 'lucide-react'
 import { logoSvg, stempelKavioEduPng, ttdFatihPng } from '../../assets'
 import { lookupCertificate } from '../../utils/verificationRegistry'
@@ -26,7 +21,6 @@ export default function PublicVerificationPage({ initialId = '', onBack = null }
   const [hasSearched, setHasSearched] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Load certificate data on initial mount or when initialId changes
   useEffect(() => {
     const idToLookup = initialId || new URLSearchParams(window.location.search).get('id') || 'REG-KAV-2026-081'
     if (idToLookup) {
@@ -44,7 +38,6 @@ export default function PublicVerificationPage({ initialId = '', onBack = null }
     setCertData(found)
     setHasSearched(true)
 
-    // Update URL query string without reloading page
     const newUrl = `${window.location.origin}/verify?id=${encodeURIComponent(searchQuery.trim())}`
     window.history.pushState({ id: searchQuery.trim() }, '', newUrl)
   }
@@ -52,23 +45,27 @@ export default function PublicVerificationPage({ initialId = '', onBack = null }
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2200)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handlePrint = () => {
+    window.print()
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
-      {/* Top Header / Nav */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30">
-        <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans antialiased">
+      {/* Top Header */}
+      <header className="bg-white border-b border-slate-300 py-3 px-4 sm:px-8">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logoSvg} alt="Kavio Academy Logo" className="h-8 md:h-9 w-auto object-contain" />
-            <div className="hidden sm:block border-l border-slate-700 pl-3">
-              <span className="text-xs font-semibold text-slate-300 tracking-wide uppercase">
-                Official Credential Verification
+            <img src={logoSvg} alt="Kavio Academy" className="h-9 w-auto object-contain" />
+            <div className="hidden sm:block border-l border-slate-300 pl-3">
+              <span className="text-xs font-bold text-slate-900 tracking-wider uppercase block">
+                Portal Verifikasi Kredensial Resmi
               </span>
-              <p className="text-[10px] text-slate-500">
-                PT Kavio Investama Global • NIB 2311260068864
-              </p>
+              <span className="text-[11px] text-slate-600 block">
+                PT Kavio Investama Global • NIB: 2311260068864
+              </span>
             </div>
           </div>
 
@@ -76,236 +73,223 @@ export default function PublicVerificationPage({ initialId = '', onBack = null }
             {onBack && (
               <button
                 onClick={onBack}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1.5 border border-slate-700"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded border border-slate-300 transition-colors inline-flex items-center gap-1.5"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Dashboard</span>
               </button>
             )}
             <button
-              onClick={handleCopyLink}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-all shadow-sm hover:shadow inline-flex items-center gap-1.5"
+              onClick={handlePrint}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded border border-slate-300 transition-colors inline-flex items-center gap-1.5"
             >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Tautan Disalin!' : 'Salin Tautan'}</span>
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Cetak</span>
+            </button>
+            <button
+              onClick={handleCopyLink}
+              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded transition-colors inline-flex items-center gap-1.5 shadow-sm"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Tautan Disalin' : 'Salin Tautan'}</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8">
-        {/* Search Bar for Other Certificates */}
-        <div className="mb-6">
+      {/* Main Container */}
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8">
+        {/* Search Bar */}
+        <div className="mb-6 bg-white p-3 rounded border border-slate-300 shadow-sm print:hidden">
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Masukkan Verification ID (misal: REG-KAV-2026-081)..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs md:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="Masukkan Nomor Verifikasi (Contoh: REG-KAV-2026-081)..."
+                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-600 focus:bg-white"
               />
             </div>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs md:text-sm font-semibold rounded-lg transition-colors"
+              className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold rounded transition-colors"
             >
-              Cari Dokumen
+              Cari
             </button>
           </form>
         </div>
 
-        {/* Verification Result Card */}
+        {/* Verification Result */}
         {certData ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
-            {/* Status Banner */}
-            <div className="bg-emerald-950/70 border-b border-emerald-800/40 p-4 sm:p-6 flex items-start sm:items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-emerald-400 shadow-inner">
-                <ShieldCheck className="w-7 h-7" />
+          <div className="bg-white border border-slate-300 rounded shadow-sm divide-y divide-slate-200">
+            {/* Status Header */}
+            <div className="p-4 sm:p-5 bg-emerald-50/70 border-b border-emerald-200 flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                <ShieldCheck className="w-6 h-6" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500 text-slate-950">
-                    Resmi Terverifikasi
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">
+                    Status: Valid dan Sah Terverifikasi
                   </span>
-                  <span className="text-xs text-emerald-400 font-mono">
+                  <span className="text-[11px] font-mono bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-300">
                     ID: {certData.verificationId}
                   </span>
                 </div>
-                <h1 className="text-base sm:text-xl font-bold text-white mt-1">
-                  Kredensial Sah Terdaftar
-                </h1>
-                <p className="text-xs text-emerald-300/80 mt-0.5 leading-relaxed">
-                  Dokumen ini telah diverifikasi secara sah melalui basis data kurikulum dan akreditasi resmi Kavio Academy di bawah naungan PT Kavio Investama Global.
+                <p className="text-xs text-slate-700 mt-1 leading-relaxed">
+                  Dokumen kredensial ini telah divalidasi secara resmi melalui pangkalan data akademik Kavio Academy dan terdaftar di bawah naungan badan hukum PT Kavio Investama Global.
                 </p>
               </div>
             </div>
 
-            {/* Certificate Core Details */}
-            <div className="p-6 sm:p-8 space-y-6">
-              {/* Recipient Highlight */}
-              <div className="text-center py-4 bg-slate-950/50 rounded-xl border border-slate-800/80">
-                <p className="text-[11px] uppercase tracking-widest text-slate-400 font-mono">
-                  Nama Siswa / Penerima Sertifikat
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1 tracking-tight">
-                  {certData.studentName}
-                </h2>
-                <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 bg-blue-950/60 border border-blue-800/50 rounded-full text-blue-300 text-xs font-semibold">
-                  <GraduationCap className="w-4 h-4 text-blue-400" />
-                  <span>{certData.programName} ({certData.batchName})</span>
+            {/* Section 1: Recipient Identity */}
+            <div className="p-5 sm:p-6">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                1. Identitas Penerima Kredensial
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded border border-slate-200">
+                <div>
+                  <span className="block text-[11px] font-medium text-slate-500 uppercase">Nama Lengkap Siswa</span>
+                  <span className="text-base sm:text-lg font-bold text-slate-900">{certData.studentName}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-medium text-slate-500 uppercase">Program Pembelajaran</span>
+                  <span className="text-sm font-bold text-slate-800">{certData.programName} ({certData.batchName})</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-medium text-slate-500 uppercase">Jenjang Kualifikasi CEFR</span>
+                  <span className="text-sm font-bold text-slate-900">{certData.cefrLevel}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-medium text-slate-500 uppercase">Hasil Evaluasi / Predikat</span>
+                  <span className="text-sm font-bold text-emerald-700">{certData.predicate} ({certData.score})</span>
+                </div>
+                {certData.coreDistinction && (
+                  <div className="sm:col-span-2 pt-2 border-t border-slate-200">
+                    <span className="block text-[11px] font-medium text-slate-500 uppercase">Distingsi Penguasaan Inti</span>
+                    <span className="text-xs font-semibold text-slate-800">{certData.coreDistinction}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Section 2: Document Credential Details */}
+            <div className="p-5 sm:p-6">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                2. Detail Administrasi Sertifikat
+              </h2>
+              <table className="w-full text-xs text-left border-collapse border border-slate-200">
+                <tbody>
+                  <tr className="border-b border-slate-200">
+                    <td className="w-1/3 p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Nomor Seri Sertifikat</td>
+                    <td className="p-2.5 font-mono font-bold text-slate-900">{certData.documentId}</td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Verification ID</td>
+                    <td className="p-2.5 font-mono font-bold text-slate-900">{certData.verificationId}</td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Tanggal Penerbitan</td>
+                    <td className="p-2.5 text-slate-800">{certData.completionDate}</td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Tempat Penerbitan</td>
+                    <td className="p-2.5 text-slate-800">{certData.signLocation}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Total Durasi Pembelajaran</td>
+                    <td className="p-2.5 text-slate-800">{certData.totalSessions} Sesi Terstruktur (Evaluasi Tuntas)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Section 3: Legal Authority */}
+            <div className="p-5 sm:p-6">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                3. Legalitas Lembaga Penyelenggara
+              </h2>
+              <table className="w-full text-xs text-left border-collapse border border-slate-200">
+                <tbody>
+                  <tr className="border-b border-slate-200">
+                    <td className="w-1/3 p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Badan Hukum Induk</td>
+                    <td className="p-2.5 font-bold text-slate-900">{certData.holdingCompany}</td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Unit Pendidikan & Bimbingan</td>
+                    <td className="p-2.5 font-semibold text-slate-800">{certData.institutionName}</td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Nomor Induk Berusaha (NIB)</td>
+                    <td className="p-2.5 font-mono font-bold text-slate-900">{certData.nib}</td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Klasifikasi Bidang Usaha (KBLI)</td>
+                    <td className="p-2.5 text-slate-800">{certData.kbli}</td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Otoritas Perizinan Resmi</td>
+                    <td className="p-2.5 text-slate-800">{certData.licensingAuthority}</td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Penanggung Jawab / Formulator</td>
+                    <td className="p-2.5 text-slate-900">
+                      <span className="font-bold">{certData.directorName}</span> ({certData.directorTitle})
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Alamat Kantor Resmi</td>
+                    <td className="p-2.5 text-slate-800">{certData.officeAddress}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Section 4: Validation Seal & Signature */}
+            <div className="p-5 sm:p-6 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-200">
+              <div className="flex items-center gap-4 text-center sm:text-left">
+                <img src={stempelKavioEduPng} alt="Cap Stempel Resmi" className="h-16 w-16 object-contain shrink-0" />
+                <div className="text-xs text-slate-600">
+                  <span className="font-bold text-slate-900 block">Stempel Pengesahan Resmi</span>
+                  <span className="block text-[11px]">Kavio Academy • PT Kavio Investama Global</span>
+                  <span className="block text-[11px] font-mono">Tersertifikasi NIB 2311260068864</span>
                 </div>
               </div>
 
-              {/* Matrix of Qualification */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-950/40 rounded-xl border border-slate-800">
-                  <div className="flex items-center gap-2 text-slate-400 text-xs mb-1">
-                    <Award className="w-4 h-4 text-amber-400" />
-                    <span>Kualifikasi Standar CEFR</span>
-                  </div>
-                  <p className="text-sm sm:text-base font-bold text-white">
-                    {certData.cefrLevel}
-                  </p>
+              <div className="flex items-center gap-3 text-center sm:text-right">
+                <div className="text-xs text-slate-600">
+                  <span className="font-bold text-slate-900 block">{certData.directorName}</span>
+                  <span className="block text-[11px] text-slate-500">{certData.directorTitle}</span>
                 </div>
-
-                <div className="p-4 bg-slate-950/40 rounded-xl border border-slate-800">
-                  <div className="flex items-center gap-2 text-slate-400 text-xs mb-1">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
-                    <span>Hasil Evaluasi & Nilai Akhir</span>
-                  </div>
-                  <p className="text-sm sm:text-base font-bold text-emerald-400">
-                    {certData.predicate} ({certData.score})
-                  </p>
-                  {certData.coreDistinction && (
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Distinction: {certData.coreDistinction}
-                    </p>
-                  )}
-                </div>
-
-                <div className="p-4 bg-slate-950/40 rounded-xl border border-slate-800">
-                  <div className="flex items-center gap-2 text-slate-400 text-xs mb-1">
-                    <FileText className="w-4 h-4 text-blue-400" />
-                    <span>Nomor Seri Sertifikat</span>
-                  </div>
-                  <p className="text-xs sm:text-sm font-mono font-bold text-slate-200">
-                    {certData.documentId}
-                  </p>
-                </div>
-
-                <div className="p-4 bg-slate-950/40 rounded-xl border border-slate-800">
-                  <div className="flex items-center gap-2 text-slate-400 text-xs mb-1">
-                    <Calendar className="w-4 h-4 text-sky-400" />
-                    <span>Tanggal & Tempat Penerbitan</span>
-                  </div>
-                  <p className="text-xs sm:text-sm font-semibold text-slate-200">
-                    {certData.completionDate}
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    {certData.signLocation}
-                  </p>
-                </div>
-              </div>
-
-              {/* Key Distinctions Breakdown if available */}
-              {certData.keyDistinctions && (
-                <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/30">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono mb-3">
-                    Kompetensi Akademik yang Diverifikasi
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {certData.keyDistinctions.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
-                        <span className="text-slate-300 font-medium">{item.subject}</span>
-                        <span className="text-emerald-400 font-mono font-bold ml-2 shrink-0">{item.score}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Institutional & Legal Authority */}
-              <div className="border-t border-slate-800 pt-6">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono mb-4 flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-blue-400" />
-                  <span>Legalitas & Lembaga Penyelenggara</span>
-                </h3>
-
-                <div className="bg-slate-950/60 p-4 sm:p-5 rounded-xl border border-slate-800 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-slate-800/80">
-                    <span className="text-xs text-slate-400">Entitas Badan Hukum:</span>
-                    <span className="text-xs font-bold text-white">{certData.holdingCompany}</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-slate-800/80">
-                    <span className="text-xs text-slate-400">Lembaga Pendidikan:</span>
-                    <span className="text-xs font-bold text-white">{certData.institutionName}</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-slate-800/80">
-                    <span className="text-xs text-slate-400">Nomor Induk Berusaha (NIB):</span>
-                    <span className="text-xs font-mono font-bold text-emerald-400">{certData.nib}</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-slate-800/80">
-                    <span className="text-xs text-slate-400">Klasifikasi Bidang Usaha (KBLI):</span>
-                    <span className="text-xs font-semibold text-slate-200">{certData.kbli}</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-slate-800/80">
-                    <span className="text-xs text-slate-400">Otoritas Perizinan:</span>
-                    <span className="text-xs text-slate-300">{certData.licensingAuthority}</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <span className="text-xs text-slate-400">Penanggung Jawab / Formulator:</span>
-                    <span className="text-xs font-bold text-white">
-                      {certData.directorName} <span className="font-normal text-slate-400">({certData.directorTitle})</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Security Seal Note */}
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 flex items-center justify-between gap-4">
-                <div className="text-xs text-slate-400">
-                  <p className="font-semibold text-slate-300">Autentikasi Integritas Dokumen</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Dokumen ini terlindungi secara digital dan dijamin oleh register resmi Kavio Academy.
-                  </p>
-                </div>
-                <div className="shrink-0 flex items-center gap-2">
-                  <img src={stempelKavioEduPng} alt="Seal" className="h-10 w-10 object-contain opacity-80" />
-                </div>
+                <img src={ttdFatihPng} alt="Tanda Tangan Formulator" className="h-14 w-auto object-contain shrink-0" />
               </div>
             </div>
           </div>
         ) : hasSearched ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center max-w-md mx-auto space-y-4">
-            <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
-              <AlertCircle className="w-6 h-6" />
+          <div className="bg-white border border-slate-300 rounded p-8 text-center max-w-md mx-auto space-y-3">
+            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-5 h-5" />
             </div>
-            <h2 className="text-lg font-bold text-white">Dokumen Tidak Ditemukan</h2>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Nomor identifikasi <span className="font-mono font-bold text-slate-200">"{searchQuery}"</span> tidak terdaftar dalam basis data kredensial resmi Kavio Academy. Pastikan penulisan ID sudah benar.
+            <h2 className="text-sm font-bold text-slate-900 uppercase">Dokumen Tidak Ditemukan</h2>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Nomor identifikasi <span className="font-mono font-bold text-slate-900">"{searchQuery}"</span> tidak terdaftar dalam pangkalan data resmi Kavio Academy.
             </p>
           </div>
         ) : null}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800 py-6 px-4 bg-slate-950 text-center text-xs text-slate-500 mt-auto">
-        <p className="font-medium text-slate-400">
+      {/* Formal Footer */}
+      <footer className="border-t border-slate-300 py-4 px-4 bg-white text-center text-xs text-slate-500">
+        <p className="font-semibold text-slate-700">
           Kavio Academy • Kavio English Education • PT Kavio Investama Global
         </p>
-        <p className="text-[11px] text-slate-600 mt-1">
+        <p className="text-[11px] text-slate-500 mt-0.5">
           Kantor Pusat: Jl. Raya Labuan, Kp. Bojong Canar, Ds. Dahu, Kec. Cikedal, Kab. Pandeglang, Banten 42266
         </p>
-        <p className="text-[10px] text-slate-600 mt-2 font-mono">
-          NIB: 2311260068864 • KBLI 85595 • All Rights Reserved © 2026
+        <p className="text-[10px] text-slate-400 mt-1 font-mono">
+          NIB: 2311260068864 • KBLI: 85595 • Hak Cipta Dilindungi Undang-Undang © 2026
         </p>
       </footer>
     </div>
