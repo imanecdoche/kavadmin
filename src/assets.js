@@ -7,6 +7,8 @@ import stempelKavioEduPng from './stempel_kavioedu.png'
 import stempelLunasPng from './stempel_lunas.png'
 import ttdFatihPng from './ttd_fatih_founderkavio.png'
 import qrisPng from './qris.png'
+import kavioInvestamaLogoSvg from './kavio-investama-logo.svg'
+import kavioInvestamaLogoWhiteSvg from './kavio-investama-logo-white.svg'
 
 export {
   logoSvg,
@@ -17,5 +19,7 @@ export {
   stempelKavioEduPng,
   stempelLunasPng,
   ttdFatihPng,
-  qrisPng
+  qrisPng,
+  kavioInvestamaLogoSvg,
+  kavioInvestamaLogoWhiteSvg
 }

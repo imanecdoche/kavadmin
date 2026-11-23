@@ -14,7 +14,8 @@ import {
   Award,
   ChevronRight
 } from 'lucide-react'
-import { logoSvg, stempelKavioEduPng } from '../assets'
+import { stempelKavioEduPng } from '../assets'
+import KavioInvestamaLogo from '../components/common/KavioInvestamaLogo'
 
 export default function LandingPage({ onNavigateAdmin, onNavigateVerify }) {
   const [certQuery, setCertQuery] = useState('')
@@ -44,12 +45,9 @@ export default function LandingPage({ onNavigateAdmin, onNavigateVerify }) {
       <header className="sticky top-0 z-40 bg-white border-b border-slate-300">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logoSvg} alt="Kavio Academy Logo" className="h-9 w-auto object-contain" />
+            <KavioInvestamaLogo className="h-8 sm:h-9 w-auto text-slate-900" />
             <div className="hidden sm:block border-l border-slate-300 pl-3">
-              <span className="text-xs font-bold text-slate-900 tracking-wider uppercase block">
-                PT Kavio Investama Global
-              </span>
-              <span className="text-[11px] text-slate-600 block">
+              <span className="text-[11px] font-semibold text-slate-600 block">
                 Pendidikan Bimbingan Belajar • NIB 2311260068864
               </span>
             </div>
@@ -80,13 +78,16 @@ export default function LandingPage({ onNavigateAdmin, onNavigateVerify }) {
         <section id="profil" className="bg-white border-b border-slate-300 py-12 sm:py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="max-w-3xl">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">
                 <Building2 className="w-4 h-4 text-slate-700" />
                 <span>Profil Korporasi & Entitas Hukum Resmi</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-4">
-                PT KAVIO INVESTAMA GLOBAL
-              </h1>
+              
+              {/* Official Corporate Logo */}
+              <div className="mb-6">
+                <KavioInvestamaLogo className="h-14 sm:h-16 lg:h-20 w-auto text-slate-900" />
+              </div>
+
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
                 Lembaga induk berbadan hukum resmi yang menaungi penyelenggaraan pendidikan bimbingan belajar swasta, riset linguistik terapan, perumusan kurikulum berbasis kerangka kompetensi internasional, dan penerbitan sertifikasi kredensial akademik terverifikasi.
               </p>
@@ -372,10 +373,8 @@ export default function LandingPage({ onNavigateAdmin, onNavigateVerify }) {
       <footer className="border-t border-slate-300 py-6 px-4 sm:px-6 bg-white text-center text-xs text-slate-500">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-left">
-            <p className="font-semibold text-slate-800">
-              PT Kavio Investama Global • Kavio Academy • Kavio English Education
-            </p>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <KavioInvestamaLogo className="h-6 w-auto text-slate-800 mb-2" />
+            <p className="text-[11px] text-slate-500">
               NIB: 2311260068864 • KBLI: 85595 • Lembaga Pendidikan Bimbingan Belajar Swasta
             </p>
           </div>
