@@ -20,12 +20,19 @@ import { syncStudentToFirebase } from '../firebase'
 
 const TOTAL_STEPS = 9
 
+// Capitalize first letter of each word (Title Case)
+const toTitleCase = (str) => {
+  if (!str) return ''
+  return str.replace(/(^|[\s\-\.'])\S/g, (char) => char.toUpperCase())
+}
+
 export default function PublicRegistrationPage({ onBackToHome }) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [registrationResult, setRegistrationResult] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
 
   // Form State
   const [formData, setFormData] = useState({
@@ -53,6 +60,33 @@ export default function PublicRegistrationPage({ onBackToHome }) {
 
   const inputRef = useRef(null)
 
+  // Track visualViewport to ensure navigation buttons are never covered by mobile virtual keypad
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const vv = window.visualViewport
+
+    const updateOffset = () => {
+      if (window.visualViewport) {
+        const offset = Math.max(0, window.innerHeight - (window.visualViewport.offsetTop + window.visualViewport.height))
+        setKeyboardOffset(offset)
+      }
+    }
+
+    if (vv) {
+      vv.addEventListener('resize', updateOffset)
+      vv.addEventListener('scroll', updateOffset)
+    }
+    window.addEventListener('resize', updateOffset)
+
+    return () => {
+      if (vv) {
+        vv.removeEventListener('resize', updateOffset)
+        vv.removeEventListener('scroll', updateOffset)
+      }
+      window.removeEventListener('resize', updateOffset)
+    }
+  }, [])
+
   useEffect(() => {
     // Auto focus current step input on step change
     if (inputRef.current) {
@@ -62,7 +96,12 @@ export default function PublicRegistrationPage({ onBackToHome }) {
   }, [currentStep])
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    let formattedValue = value
+    // Automatically uppercase first letter of each word for name fields
+    if (field === 'fullName' || field === 'nickname' || field === 'parentName') {
+      formattedValue = toTitleCase(value)
+    }
+    setFormData(prev => ({ ...prev, [field]: formattedValue }))
     if (errorMsg) setErrorMsg('')
   }
 
@@ -377,7 +416,7 @@ export default function PublicRegistrationPage({ onBackToHome }) {
       </header>
 
       {/* Main Form Body: Single Field Focused (Typeform Concept) */}
-      <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-16 flex flex-col justify-center">
+      <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 pt-6 pb-28 sm:pb-36 flex flex-col justify-center">
         {errorMsg && (
           <div className="mb-6 p-3 bg-rose-50 border border-rose-300 rounded text-rose-800 text-xs font-semibold animate-in fade-in">
             {errorMsg}
@@ -400,6 +439,7 @@ export default function PublicRegistrationPage({ onBackToHome }) {
               <input
                 ref={inputRef}
                 type="text"
+                autoCapitalize="words"
                 value={formData.fullName}
                 onChange={(e) => handleChange('fullName', e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -427,6 +467,7 @@ export default function PublicRegistrationPage({ onBackToHome }) {
                 <input
                   ref={inputRef}
                   type="text"
+                  autoCapitalize="words"
                   value={formData.nickname}
                   onChange={(e) => handleChange('nickname', e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -604,6 +645,7 @@ export default function PublicRegistrationPage({ onBackToHome }) {
                   </label>
                   <input
                     type="text"
+                    autoCapitalize="words"
                     value={formData.parentName}
                     onChange={(e) => handleChange('parentName', e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -835,17 +877,23 @@ export default function PublicRegistrationPage({ onBackToHome }) {
         )}
       </main>
 
-      {/* Floating Bottom Navigation Controls (Optimized for Mobile) */}
-      <footer className="sticky bottom-0 z-30 bg-white border-t border-slate-200 p-4 sm:py-4 sm:px-6">
+      {/* Floating Bottom Navigation Controls (Keyboard-Safe & Viewport-Adaptive) */}
+      <footer
+        style={{
+          bottom: `${keyboardOffset}px`,
+          paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))'
+        }}
+        className="fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 sm:px-6 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] transition-[bottom] duration-150 ease-out"
+      >
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           {currentStep > 1 ? (
             <button
               type="button"
               onClick={handlePrev}
               disabled={isSubmitting}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded border border-slate-300 transition-colors inline-flex items-center gap-1.5"
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-xs sm:text-sm font-semibold rounded border border-slate-300 transition-colors inline-flex items-center gap-1.5 shadow-sm"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
+              <ArrowLeft className="w-4 h-4" />
               <span>Sebelumnya</span>
             </button>
           ) : (
@@ -860,10 +908,10 @@ export default function PublicRegistrationPage({ onBackToHome }) {
               type="button"
               onClick={handleNext}
               disabled={isSubmitting}
-              className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded transition-colors inline-flex items-center gap-2 shadow-sm"
+              className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-black disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded transition-colors inline-flex items-center gap-2 shadow-sm"
             >
               <span>{currentStep === TOTAL_STEPS ? (isSubmitting ? 'Mengirim Data...' : 'Kirim Pendaftaran') : 'Lanjut'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
