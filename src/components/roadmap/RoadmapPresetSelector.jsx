@@ -10,26 +10,20 @@ export default function RoadmapPresetSelector({
   onSelectPreset = null,
   currentTier = 'GROW'
 }) {
-  if (!isOpen) return null
-
   const presetList = Object.values(CURRICULUM_PRESETS)
 
   return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
-      >
-        <motion.div
-          initial={{ scale: 0.94, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.94, opacity: 0, y: 20 }}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]"
+      {isOpen && (
+        <div
+          key="roadmap-preset-modal"
+          onClick={onClose}
+          className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/50 flex overflow-hidden"
         >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 w-screen h-screen max-w-none max-h-none rounded-none border-none bg-white overflow-hidden flex flex-col z-10"
+          >
           {/* Modal Header */}
           <div className="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <div>
@@ -44,7 +38,7 @@ export default function RoadmapPresetSelector({
 
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg transition-colors"
+              className="reanimated-icon-btn p-1.5 text-slate-400 hover:text-slate-700 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -59,7 +53,7 @@ export default function RoadmapPresetSelector({
               return (
                 <div
                   key={preset.tier}
-                  className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
+                  className={`hover-item-slot p-4 rounded-xl border transition-all flex flex-col justify-between ${
                     isMatchCurrent
                       ? 'bg-blue-50/30 border-fluent-blue ring-2 ring-blue-100'
                       : 'bg-white border-slate-200 hover:border-slate-300'
@@ -101,7 +95,7 @@ export default function RoadmapPresetSelector({
                       if (onSelectPreset) onSelectPreset(preset)
                       onClose()
                     }}
-                    className={`mt-4 w-full py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs ${
+                    className={`reanimated-widget mt-4 w-full py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs ${
                       isMatchCurrent
                         ? 'bg-fluent-blue text-white hover:bg-fluent-blueHover'
                         : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
@@ -119,13 +113,14 @@ export default function RoadmapPresetSelector({
           <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-slate-300 hover:bg-white text-slate-700 rounded-lg text-xs font-semibold transition-colors"
+              className="reanimated-widget px-4 py-2 border border-slate-300 hover:bg-white text-slate-700 rounded-lg text-xs font-semibold transition-colors"
             >
               Tutup
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+          </div>
+        </div>
+      )}
     </AnimatePresence>,
     document.body
   ) : null

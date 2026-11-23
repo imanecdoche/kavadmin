@@ -1,13 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { Download, Printer, Share2, Check, ArrowLeft, BookOpen, ShieldCheck } from 'lucide-react'
+import { Download, Printer, Share2, Check, ArrowLeft, BookOpen, ShieldCheck, FileText } from 'lucide-react'
 import RoadmapBatchDocument from './RoadmapBatchDocument'
 import ResponsiveDocumentWrapper from '../common/ResponsiveDocumentWrapper'
 import { parseRoadmapShareLink } from '../../utils/roadmapShare'
 import { exportRoadmapToPng, exportRoadmapToPdf } from '../../utils/roadmapExport'
+import { PAPER_SIZES, getPaperSizeConfig, DEFAULT_PAPER_SIZE } from '../../utils/paperDimensions'
 
 export default function PublicRoadmapViewer({ roadmapData: propData, onBack = null }) {
   const containerRef = useRef(null)
   const [data, setData] = useState(propData || null)
+  const [paperSize, setPaperSize] = useState(() => propData?.paperSize || DEFAULT_PAPER_SIZE)
   const [copied, setCopied] = useState(false)
   const [isExportingPng, setIsExportingPng] = useState(false)
   const [isExportingPdf, setIsExportingPdf] = useState(false)
@@ -17,9 +19,16 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
       const parsed = parseRoadmapShareLink()
       if (parsed) {
         setData(parsed)
+        if (parsed.paperSize) {
+          setPaperSize(parsed.paperSize)
+        }
       }
+    } else if (propData.paperSize) {
+      setPaperSize(propData.paperSize)
     }
   }, [propData])
+
+  const activePaperConfig = getPaperSizeConfig(paperSize)
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -31,7 +40,7 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
     if (containerRef.current && data) {
       setIsExportingPng(true)
       try {
-        await exportRoadmapToPng(containerRef.current, data)
+        await exportRoadmapToPng(containerRef.current, data.studentName, data.batchName, paperSize)
       } catch (err) {
         console.error('Export PNG error:', err)
       } finally {
@@ -44,7 +53,7 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
     if (containerRef.current && data) {
       setIsExportingPdf(true)
       try {
-        await exportRoadmapToPdf(containerRef.current, data)
+        await exportRoadmapToPdf(containerRef.current, data.studentName, data.batchName, paperSize)
       } catch (err) {
         console.error('Export PDF error:', err)
       } finally {
@@ -78,7 +87,7 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
   return (
     <div className="min-h-screen bg-slate-100 py-6 px-3 sm:px-6 flex flex-col items-center">
       {/* Top Navbar Toolbar */}
-      <div className="w-full max-w-[820px] bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 no-print">
+      <div className="w-full max-w-[840px] bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 no-print">
         <div className="flex items-center space-x-2">
           {onBack && (
             <button
@@ -95,13 +104,27 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
               Peta Kurikulum & Capaian Belajar Siswa (1-Batch)
             </div>
             <div className="text-[10px] text-slate-500 font-medium font-mono">
-              ID: {data.id || 'ROA/KEEN'}
+              ID: {data.id || 'ROA/KEEN'} • Format: {activePaperConfig.name}
             </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-2">
+        {/* Action Buttons & Paper Size Selector */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* Paper Size Quick Selector */}
+          <select
+            value={paperSize}
+            onChange={(e) => setPaperSize(e.target.value)}
+            className="px-2 py-1.5 text-xs font-bold bg-slate-50 border border-slate-300 rounded-fluent text-slate-700 focus:outline-none focus:border-fluent-blue"
+            title="Pilih Ukuran Kertas Cetak"
+          >
+            {Object.entries(PAPER_SIZES).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v.name} ({v.widthMm}×{v.heightMm}mm)
+              </option>
+            ))}
+          </select>
+
           <button
             type="button"
             onClick={handleCopyLink}
@@ -138,21 +161,22 @@ export default function PublicRoadmapViewer({ roadmapData: propData, onBack = nu
             onClick={handleDownloadPdf}
             disabled={isExportingPdf}
             className="px-3.5 py-1.5 text-xs font-bold bg-fluent-blue hover:bg-fluent-blueHover text-white rounded-fluent transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50"
-            title="Download PDF Resmi"
+            title={`Download PDF Resmi (${activePaperConfig.name})`}
           >
             <Download className="w-3.5 h-3.5" />
-            <span>{isExportingPdf ? 'Membuat PDF...' : 'Download PDF'}</span>
+            <span>{isExportingPdf ? 'Membuat...' : `PDF (${activePaperConfig.name})`}</span>
           </button>
         </div>
       </div>
 
-      {/* Main A4 Printable Roadmap Document */}
+      {/* Main Printable Roadmap Document */}
       <div className="w-full flex justify-center pb-12 overflow-hidden">
-        <ResponsiveDocumentWrapper>
+        <ResponsiveDocumentWrapper baseWidth={activePaperConfig.widthPx}>
           <RoadmapBatchDocument
             roadmapData={data}
             previewRef={containerRef}
             readOnly={true}
+            paperSize={paperSize}
           />
         </ResponsiveDocumentWrapper>
       </div>

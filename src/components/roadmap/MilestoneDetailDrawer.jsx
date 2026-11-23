@@ -26,7 +26,7 @@ export default function MilestoneDetailDrawer({
   onOpenModule = null,
   readOnly = false
 }) {
-  const [formData, setFormData] = useState(null)
+  const [formDataState, setFormData] = useState(null)
   const [newChecklistText, setNewChecklistText] = useState('')
 
   useEffect(() => {
@@ -35,15 +35,15 @@ export default function MilestoneDetailDrawer({
     }
   }, [milestone])
 
-  if (!isOpen || !formData) return null
-
-  const progress = calculateMilestoneProgress(formData)
-  const levelBadge = getAcademicLevelBadge(formData.level)
+  const formData = formDataState || milestone
+  const activeData = formData
+  const progress = activeData ? calculateMilestoneProgress(activeData) : 0
+  const levelBadge = getAcademicLevelBadge(activeData?.level)
 
   // Status Change Handler
   const handleStatusChange = (status) => {
-    if (readOnly) return
-    const updated = { ...formData, status }
+    if (readOnly || !activeData) return
+    const updated = { ...activeData, status }
     if (status === 'COMPLETED') {
       // Mark all checklists as completed
       updated.checklists = (updated.checklists || []).map(c => ({ ...c, completed: true }))
@@ -54,16 +54,16 @@ export default function MilestoneDetailDrawer({
 
   // Checklist Toggle Handler
   const handleToggleChecklist = (cId) => {
-    if (readOnly) return
-    const updatedChecklists = (formData.checklists || []).map(c => {
+    if (readOnly || !activeData) return
+    const updatedChecklists = (activeData.checklists || []).map(c => {
       if (c.id === cId) return { ...c, completed: !c.completed }
       return c
     })
     const allDone = updatedChecklists.length > 0 && updatedChecklists.every(c => c.completed)
     const updated = {
-      ...formData,
+      ...activeData,
       checklists: updatedChecklists,
-      status: allDone ? 'COMPLETED' : formData.status === 'COMPLETED' ? 'IN_PROGRESS' : formData.status
+      status: allDone ? 'COMPLETED' : activeData.status === 'COMPLETED' ? 'IN_PROGRESS' : activeData.status
     }
     setFormData(updated)
     if (onUpdateMilestone) onUpdateMilestone(updated)
@@ -72,15 +72,15 @@ export default function MilestoneDetailDrawer({
   // Add new checklist
   const handleAddChecklist = (e) => {
     e.preventDefault()
-    if (!newChecklistText.trim() || readOnly) return
+    if (!newChecklistText.trim() || readOnly || !activeData) return
     const newItem = {
       id: `c-${Date.now()}`,
       text: newChecklistText.trim(),
       completed: false
     }
     const updated = {
-      ...formData,
-      checklists: [...(formData.checklists || []), newItem]
+      ...activeData,
+      checklists: [...(activeData.checklists || []), newItem]
     }
     setFormData(updated)
     setNewChecklistText('')
@@ -89,10 +89,10 @@ export default function MilestoneDetailDrawer({
 
   // Remove checklist
   const handleRemoveChecklist = (cId) => {
-    if (readOnly) return
+    if (readOnly || !activeData) return
     const updated = {
-      ...formData,
-      checklists: (formData.checklists || []).filter(c => c.id !== cId)
+      ...activeData,
+      checklists: (activeData.checklists || []).filter(c => c.id !== cId)
     }
     setFormData(updated)
     if (onUpdateMilestone) onUpdateMilestone(updated)
@@ -100,35 +100,32 @@ export default function MilestoneDetailDrawer({
 
   // Evaluation Notes change
   const handleNotesChange = (val) => {
-    const updated = { ...formData, evaluationNotes: val }
+    if (!activeData) return
+    const updated = { ...activeData, evaluationNotes: val }
     setFormData(updated)
     if (onUpdateMilestone) onUpdateMilestone(updated)
   }
 
   // Linked Module change
   const handleLinkedModuleChange = (modId) => {
-    const updated = { ...formData, linkedModuleId: modId || null }
+    if (!activeData) return
+    const updated = { ...activeData, linkedModuleId: modId || null }
     setFormData(updated)
     if (onUpdateMilestone) onUpdateMilestone(updated)
   }
 
   return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/50 backdrop-blur-xs flex justify-end"
-      >
-        <motion.div
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 260 }}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-hidden border-l border-slate-200 text-slate-900"
+      {isOpen && activeData && (
+        <div
+          key="milestone-detail-sheet"
+          onClick={onClose}
+          className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/50 flex overflow-hidden"
         >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 w-screen h-screen max-w-none max-h-none rounded-none border-none bg-white flex flex-col overflow-hidden z-10 text-slate-900"
+          >
           {/* Header */}
           <div className="p-5 border-b border-slate-200 bg-slate-50/80 flex items-start justify-between">
             <div className="space-y-1">
@@ -369,13 +366,14 @@ export default function MilestoneDetailDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold transition-colors"
+              className="reanimated-widget px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold transition-colors"
             >
               Selesai & Simpan
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
+      )}
     </AnimatePresence>,
     document.body
   ) : null

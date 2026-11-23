@@ -42,8 +42,6 @@ export default function CustomMilestoneModal({
     }
   }, [milestone, isOpen])
 
-  if (!isOpen) return null
-
   const handleAddChecklist = (e) => {
     e.preventDefault()
     if (!newChecklistText.trim()) return
@@ -82,20 +80,16 @@ export default function CustomMilestoneModal({
 
   return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
-      >
-        <motion.div
-          initial={{ scale: 0.94, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.94, opacity: 0, y: 20 }}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+      {isOpen && (
+        <div
+          key="custom-milestone-modal"
+          onClick={onClose}
+          className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/50 flex overflow-hidden"
         >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 w-screen h-screen max-w-none max-h-none rounded-none border-none bg-white overflow-hidden flex flex-col z-10"
+          >
           {/* Header */}
           <div className="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
@@ -268,8 +262,9 @@ export default function CustomMilestoneModal({
               </button>
             </div>
           </form>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
+      )}
     </AnimatePresence>,
     document.body
   ) : null

@@ -31,10 +31,16 @@ export default function StudentProfileDrawer({
   reports = []
 }) {
   const [activeReceiptData, setActiveReceiptData] = useState(null)
+  const lastStudentRef = React.useRef(student)
+  if (student) {
+    lastStudentRef.current = student
+  }
+  const displayStudent = student || lastStudentRef.current
+  const isOpen = Boolean(student)
 
   // Lock body scroll while drawer/modal is open
   React.useEffect(() => {
-    if (student) {
+    if (isOpen) {
       document.body.style.overflow = 'hidden'
       document.documentElement.classList.add('lenis-stopped')
     }
@@ -42,26 +48,27 @@ export default function StudentProfileDrawer({
       document.body.style.overflow = ''
       document.documentElement.classList.remove('lenis-stopped')
     }
-  }, [student])
-
-  if (!student) return null
+  }, [isOpen])
 
   // Keyboard shortcut listener for ESC key to close modal window
   React.useEffect(() => {
+    if (!isOpen) return
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [isOpen, onClose])
+
+  const safeStudent = displayStudent || {}
 
   // Calculation parameters
-  const totalInvestment = (student.valPerMonth || 0) * (student.durationMonths || 1)
-  const paid = student.paid || 0
+  const totalInvestment = (safeStudent.valPerMonth || 0) * (safeStudent.durationMonths || 1)
+  const paid = safeStudent.paid || 0
   const outstanding = Math.max(0, totalInvestment - paid)
 
-  const totalSessions = (student.sessionsPerMonth || 0) * (student.durationMonths || 1)
-  const minutesPerSession = student.minutesPerSession || 60
+  const totalSessions = (safeStudent.sessionsPerMonth || 0) * (safeStudent.durationMonths || 1)
+  const minutesPerSession = safeStudent.minutesPerSession || 60
   const totalStudyMinutes = totalSessions * minutesPerSession
   const totalHours = (totalStudyMinutes / 60).toFixed(1)
 
@@ -96,49 +103,37 @@ export default function StudentProfileDrawer({
 
   return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
-      <motion.div
-        data-lenis-prevent="true"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        onClick={onClose}
-        className="fixed inset-0 top-0 left-0 w-screen h-screen z-[60] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
-      >
-        <motion.div
+      {isOpen && displayStudent && (
+        <div
+          key="student-profile-drawer-backdrop"
           data-lenis-prevent="true"
-          initial={{ opacity: 0, scale: 0.82, scaleY: 0.72, scaleX: 0.90, y: 48 }}
-          animate={{ opacity: 1, scale: 1, scaleY: 1, scaleX: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.84, scaleY: 0.74, scaleX: 0.92, y: 38 }}
-          transition={{
-            type: 'spring',
-            damping: 25,
-            stiffness: 280,
-            mass: 0.85,
-            opacity: { duration: 0.22, ease: 'easeOut' }
-          }}
-          style={{ transformOrigin: '50% 85%' }}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-2xl bg-white rounded-fluent shadow-fluent-modal border border-fluent-border flex flex-col max-h-[90vh] overflow-hidden my-auto will-change-transform"
+          onClick={onClose}
+          className="fixed inset-0 top-0 left-0 w-screen h-screen z-[60] bg-black/50 flex overflow-hidden"
         >
+          <div
+            key="student-profile-drawer-window"
+            data-lenis-prevent="true"
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 w-screen h-screen max-w-none max-h-none rounded-none border-none bg-white flex flex-col overflow-hidden z-10"
+          >
 
         {/* Header */}
         <div className="p-5 sm:p-6 border-b border-fluent-border bg-fluent-subtle flex items-start justify-between flex-shrink-0">
           <div>
             <div className="flex items-center space-x-2">
               <span className="px-2.5 py-0.5 text-xs font-bold bg-fluent-blue text-white rounded-fluent">
-                Paket {student.packageType}
+                Paket {safeStudent.packageType}
               </span>
               <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${statusBadge.bg}`}>
                 {statusBadge.label}
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-fluent-text mt-2">
-              {student.name}
+              {safeStudent.name}
             </h2>
-            {student.parentName && (
+            {safeStudent.parentName && (
               <p className="text-xs text-fluent-textSecondary mt-0.5">
-                Wali / Orang Tua: {student.parentName}
+                Wali / Orang Tua: {safeStudent.parentName}
               </p>
             )}
           </div>
@@ -201,15 +196,15 @@ export default function StudentProfileDrawer({
                 Kontak Langsung WhatsApp
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {student.parentPhone ? (
+                {safeStudent.parentPhone ? (
                   <button
-                    onClick={() => openWhatsApp(student.parentPhone, `Halo Bpk/Ibu ${student.parentName || ''}, ini dari Kavio Edu mengenai bimbingan ${student.name}.`)}
+                    onClick={() => openWhatsApp(safeStudent.parentPhone, `Halo Bpk/Ibu ${safeStudent.parentName || ''}, ini dari Kavio Edu mengenai bimbingan ${safeStudent.name}.`)}
                     className="flex items-center space-x-2 p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded border border-emerald-200 text-xs font-medium transition-colors"
                   >
                     <MessageSquare className="w-4 h-4 text-emerald-600" />
                     <div className="text-left">
-                      <div className="font-semibold">WhatsApp Wali ({student.parentName || 'Orang Tua'})</div>
-                      <div className="text-[10px] text-emerald-700">{student.parentPhone}</div>
+                      <div className="font-semibold">WhatsApp Wali ({safeStudent.parentName || 'Orang Tua'})</div>
+                      <div className="text-[10px] text-emerald-700">{safeStudent.parentPhone}</div>
                     </div>
                   </button>
                 ) : (
@@ -218,15 +213,15 @@ export default function StudentProfileDrawer({
                   </div>
                 )}
 
-                {student.studentPhone ? (
+                {safeStudent.studentPhone ? (
                   <button
-                    onClick={() => openWhatsApp(student.studentPhone, `Halo ${student.name}, ini dari Kak Fatih Kavio Edu.`)}
+                    onClick={() => openWhatsApp(safeStudent.studentPhone, `Halo ${safeStudent.name}, ini dari Kak Fatih Kavio Edu.`)}
                     className="flex items-center space-x-2 p-2.5 bg-blue-50 hover:bg-blue-100 text-fluent-blue rounded border border-blue-200 text-xs font-medium transition-colors"
                   >
                     <MessageSquare className="w-4 h-4 text-fluent-blue" />
                     <div className="text-left">
-                      <div className="font-semibold">WhatsApp Siswa ({student.name})</div>
-                      <div className="text-[10px] text-blue-700">{student.studentPhone}</div>
+                      <div className="font-semibold">WhatsApp Siswa ({safeStudent.name})</div>
+                      <div className="text-[10px] text-blue-700">{safeStudent.studentPhone}</div>
                     </div>
                   </button>
                 ) : (
@@ -245,25 +240,25 @@ export default function StudentProfileDrawer({
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <span className="text-fluent-textSecondary block">Jenis Kelamin:</span>
-                  <span className="font-semibold text-fluent-text">{student.gender || '-'}</span>
+                  <span className="font-semibold text-fluent-text">{safeStudent.gender || '-'}</span>
                 </div>
                 <div>
                   <span className="text-fluent-textSecondary block">Usia:</span>
-                  <span className="font-semibold text-fluent-text">{student.age ? `${student.age} Tahun` : '-'}</span>
+                  <span className="font-semibold text-fluent-text">{safeStudent.age ? `${safeStudent.age} Tahun` : '-'}</span>
                 </div>
                 <div>
                   <span className="text-fluent-textSecondary block">Jenjang / Kelas:</span>
-                  <span className="font-semibold text-fluent-text">{student.grade || '-'}</span>
+                  <span className="font-semibold text-fluent-text">{safeStudent.grade || '-'}</span>
                 </div>
                 <div>
                   <span className="text-fluent-textSecondary block">Domisili / Alamat:</span>
-                  <span className="font-semibold text-fluent-text">{student.address || '-'}</span>
+                  <span className="font-semibold text-fluent-text">{safeStudent.address || '-'}</span>
                 </div>
               </div>
               <div>
                 <span className="text-xs text-fluent-textSecondary block">Target Belajar Siswa:</span>
                 <p className="text-xs font-medium text-fluent-text mt-0.5 bg-fluent-subtle p-2 rounded border border-fluent-border">
-                  {student.learningTarget || 'Belum ditentukan'}
+                  {safeStudent.learningTarget || 'Belum ditentukan'}
                 </p>
               </div>
             </div>
@@ -276,21 +271,21 @@ export default function StudentProfileDrawer({
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <span className="text-fluent-textSecondary block">Paket Kursus:</span>
-                  <span className="font-semibold text-fluent-text">{student.packageType}</span>
+                  <span className="font-semibold text-fluent-text">{safeStudent.packageType}</span>
                 </div>
                 <div>
                   <span className="text-fluent-textSecondary block">Durasi Kursus:</span>
-                  <span className="font-semibold text-fluent-text">{student.durationMonths || 1} Bulan</span>
+                  <span className="font-semibold text-fluent-text">{safeStudent.durationMonths || 1} Bulan</span>
                 </div>
                 <div>
                   <span className="text-fluent-textSecondary block">Sesi & Menit Belajar:</span>
                   <span className="font-semibold text-fluent-text">
-                    {student.sessionsPerMonth || 4} Sesi/Bln ({student.minutesPerSession || 60} Menit/Sesi)
+                    {safeStudent.sessionsPerMonth || 4} Sesi/Bln ({safeStudent.minutesPerSession || 60} Menit/Sesi)
                   </span>
                 </div>
                 <div>
                   <span className="text-fluent-textSecondary block">Jadwal Kelas:</span>
-                  <span className="font-semibold text-fluent-blue">{student.schedule || '-'}</span>
+                  <span className="font-semibold text-fluent-blue">{safeStudent.schedule || '-'}</span>
                 </div>
               </div>
             </div>
@@ -300,9 +295,9 @@ export default function StudentProfileDrawer({
               <h3 className="text-xs font-bold text-fluent-textSecondary uppercase tracking-wider border-b border-fluent-border pb-1">
                 Riwayat Invoice Terkait
               </h3>
-              {student.invoices && student.invoices.length > 0 ? (
+              {safeStudent.invoices && safeStudent.invoices.length > 0 ? (
                 <div className="space-y-2">
-                  {student.invoices.map((inv, idx) => (
+                  {safeStudent.invoices.map((inv, idx) => (
                     <div key={idx} className="p-3 bg-fluent-subtle rounded border border-fluent-border flex items-center justify-between text-xs">
                       <div>
                         <div className="font-mono font-bold text-fluent-text">{inv.invoiceNo}</div>
@@ -318,9 +313,9 @@ export default function StudentProfileDrawer({
                           type="button"
                           onClick={() => setActiveReceiptData({
                             ...inv,
-                            studentName: student.name,
-                            parentName: student.parentName,
-                            packageType: student.packageType,
+                            studentName: safeStudent.name,
+                            parentName: safeStudent.parentName,
+                            packageType: safeStudent.packageType,
                             paidAmount: inv.totalInvestment
                           })}
                           title="Cetak Kwitansi"
@@ -350,7 +345,7 @@ export default function StudentProfileDrawer({
                   <button
                     type="button"
                     onClick={() => {
-                      onOpenRoadmap(student)
+                      onOpenRoadmap(safeStudent)
                       onClose()
                     }}
                     className="text-[10px] text-fluent-blue hover:underline font-semibold flex items-center gap-1"
@@ -361,7 +356,7 @@ export default function StudentProfileDrawer({
               </div>
 
               {(() => {
-                const sessions = student.roadmap && Array.isArray(student.roadmap.sessions) ? student.roadmap.sessions : []
+                const sessions = safeStudent.roadmap && Array.isArray(safeStudent.roadmap.sessions) ? safeStudent.roadmap.sessions : []
                 const stats = calculateOverallRoadmapProgress(sessions)
 
                 if (sessions.length > 0) {
@@ -369,7 +364,7 @@ export default function StudentProfileDrawer({
                     <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-800">
-                          {student.roadmap.batchName || 'BATCH 1'} — Level {student.roadmap.level || 'A2'}
+                          {safeStudent.roadmap.batchName || 'BATCH 1'} — Level {safeStudent.roadmap.level || 'A2'}
                         </span>
                         <span className="font-mono text-xs font-bold text-emerald-700">
                           {stats.completedCount}/{stats.totalSessions} Sesi ({stats.percentage}%)
@@ -393,12 +388,12 @@ export default function StudentProfileDrawer({
 
                 return (
                   <div className="p-3 bg-fluent-subtle rounded border border-fluent-border text-xs flex items-center justify-between">
-                    <span className="text-fluent-textSecondary italic">Kurikulum 1-Batch aktif untuk paket {student.packageType}.</span>
+                    <span className="text-fluent-textSecondary italic">Kurikulum 1-Batch aktif untuk paket {safeStudent.packageType}.</span>
                     {onOpenRoadmap && (
                       <button
                         type="button"
                         onClick={() => {
-                          onOpenRoadmap(student)
+                          onOpenRoadmap(safeStudent)
                           onClose()
                         }}
                         className="px-2.5 py-1 bg-white border border-slate-200 text-fluent-blue hover:bg-blue-50 rounded font-semibold text-[10px]"
@@ -421,7 +416,7 @@ export default function StudentProfileDrawer({
                   <button
                     type="button"
                     onClick={() => {
-                      onOpenReportCard(student)
+                      onOpenReportCard(safeStudent)
                       onClose()
                     }}
                     className="text-[10px] text-fluent-blue hover:underline font-semibold flex items-center gap-1"
@@ -433,7 +428,7 @@ export default function StudentProfileDrawer({
 
               {(() => {
                 const studentReports = Array.isArray(reports)
-                  ? reports.filter(r => (r.studentId && r.studentId === student.id) || (r.studentName && r.studentName.toLowerCase() === student.name.toLowerCase()))
+                  ? reports.filter(r => (r.studentId && r.studentId === safeStudent.id) || (r.studentName && safeStudent.name && r.studentName.toLowerCase() === safeStudent.name.toLowerCase()))
                   : []
 
                 if (studentReports.length > 0) {
@@ -458,7 +453,7 @@ export default function StudentProfileDrawer({
                             <button
                               type="button"
                               onClick={() => {
-                                if (onOpenReportCard) onOpenReportCard(student, rep)
+                                if (onOpenReportCard) onOpenReportCard(safeStudent, rep)
                                 onClose()
                               }}
                               className="text-[10px] text-fluent-blue hover:underline font-semibold"
@@ -488,7 +483,7 @@ export default function StudentProfileDrawer({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => {
-                onGenerateInvoice(student)
+                onGenerateInvoice(safeStudent)
                 onClose()
               }}
               title="Generate Invoice Siswa"
@@ -500,7 +495,7 @@ export default function StudentProfileDrawer({
             {onOpenReportCard && (
               <button
                 onClick={() => {
-                  onOpenReportCard(student)
+                  onOpenReportCard(safeStudent)
                   onClose()
                 }}
                 title="Buka / Buat Rapor Akademik Siswa"
@@ -513,7 +508,7 @@ export default function StudentProfileDrawer({
             {onOpenRoadmap && (
               <button
                 onClick={() => {
-                  onOpenRoadmap(student)
+                  onOpenRoadmap(safeStudent)
                   onClose()
                 }}
                 title="Buka Roadmap Pembelajaran Siswa"
@@ -526,7 +521,7 @@ export default function StudentProfileDrawer({
             {onOpenCertificate && (
               <button
                 onClick={() => {
-                  onOpenCertificate(student)
+                  onOpenCertificate(safeStudent)
                   onClose()
                 }}
                 title="Buka / Buat Sertifikat Kelulusan Siswa"
@@ -544,7 +539,7 @@ export default function StudentProfileDrawer({
             Tutup
           </button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Kwitansi Modal */}
         <ReceiptModal
@@ -552,7 +547,8 @@ export default function StudentProfileDrawer({
           onClose={() => setActiveReceiptData(null)}
           data={activeReceiptData}
         />
-      </motion.div>
+      </div>
+      )}
     </AnimatePresence>,
     document.body
   ) : null

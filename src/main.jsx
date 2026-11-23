@@ -54,12 +54,25 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+const prefersReducedMotion =
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ReactLenis root options={{ lerp: 0.08, duration: 1.1, smoothWheel: true }}>
+      <ReactLenis
+        root
+        options={{
+          lerp: prefersReducedMotion ? 1 : 0.08,
+          duration: prefersReducedMotion ? 0 : 1.1,
+          smoothWheel: !prefersReducedMotion,
+        }}
+      >
         <App />
       </ReactLenis>
     </ErrorBoundary>
   </React.StrictMode>,
 )
+

@@ -311,17 +311,19 @@ export default function InvoiceGenerator({ students = [], selectedStudent, onSav
   // Format WhatsApp Message with Shareable Link
   const generateWhatsAppMessage = () => {
     const sName = studentName || '-'
-    const studentText = parentName ? `${sName} (Anak dari ${parentName})` : sName
+    const pName = (parentName || '').trim()
+    const recipientGreeting = pName ? `Bpk/Ibu ${pName}` : sName
+    const studentLine = pName ? `Ditujukan Kepada: ${pName}\nNama Siswa: ${sName}` : `Nama Siswa: ${sName}`
     const shareUrl = generateInvoiceShareLink(getInvoiceDataPayload())
     const dueDateLine = isLunas ? '' : `Jatuh Tempo: ${formatDateIndonesian(dueDate)}\n`
 
-    return `Yth. Bpk/Ibu ${parentName || sName},
+    return `Yth. ${recipientGreeting},
 
 Berikut kami sampaikan rincian INVOICE Kursus Private English Class Kavio Edu:
 
 Nomor Invoice: ${invoiceNo}
 Tanggal Terbit: ${formatDateIndonesian(invoiceDate)}
-${dueDateLine}Nama Siswa: ${studentText}
+${dueDateLine}${studentLine}
 Paket Belajar: ${packageType} (${durationMonths} Bulan / Total ${totalSessions} Sesi)
 Total Investasi: ${formatIDR(totalInvestment)}
 Jumlah Terbayar: ${formatIDR(paidAmount)}
@@ -873,10 +875,10 @@ Kavio Edu Management`
                   Ditujukan Kepada:
                 </span>
                 <p className="font-bold text-sm text-fluent-text">
-                  {studentName || '-'}
+                  {parentName || studentName || '-'}
                 </p>
-                {parentName && (
-                  <p className="text-fluent-textSecondary">Orang Tua: {parentName}</p>
+                {parentName && studentName && (
+                  <p className="text-fluent-textSecondary mt-0.5">Siswa: {studentName}</p>
                 )}
               </div>
 

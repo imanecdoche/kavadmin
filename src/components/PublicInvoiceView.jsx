@@ -4,6 +4,7 @@ import { exportElementToPdf, exportElementToPng } from '../utils/documentExportE
 import { formatDateIndonesian } from '../utils/dateFormatter'
 import ReceiptModal from './ReceiptModal'
 import { INVOICE_CONFIG } from '../config/stampConfig'
+import { SimpleTooltip, TooltipProvider } from '@/components/ui/tooltip'
 import CursorTooltip from './CursorTooltip'
 import { ttdFatihPng, stempelKavioEduPng } from '../assets'
 
@@ -98,48 +99,57 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
         </div>
 
         <div className="flex items-center space-x-1.5">
-          <button
-            onClick={handleCopyCurrentLink}
-            title={copiedLink ? 'Link Disalin!' : 'Salin Link'}
-            aria-label="Salin Link"
-            className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded flex items-center justify-center transition-colors"
-          >
-            {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-          </button>
-          <button
-            onClick={() => window.print()}
-            title="Cetak Invoice"
-            aria-label="Cetak Invoice"
-            className="hidden sm:flex p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded items-center justify-center transition-colors"
-          >
-            <Printer className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleDownloadPNG}
-            disabled={isExporting}
-            title="Download PNG"
-            aria-label="Download PNG"
-            className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded flex items-center justify-center transition-colors disabled:opacity-50"
-          >
-            <Download className="w-4 h-4 text-fluent-blue" />
-          </button>
-          <button
-            onClick={handleDownloadPDF}
-            disabled={isExporting}
-            title="Download PDF"
-            aria-label="Download PDF"
-            className="p-2 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded flex items-center justify-center transition-colors shadow-xs disabled:opacity-50"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setIsReceiptOpen(true)}
-            className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded flex items-center justify-center transition-colors shadow-2xs"
-            title="Lihat / Cetak Kwitansi Pembayaran"
-            aria-label="Lihat / Cetak Kwitansi Pembayaran"
-          >
-            <Receipt className="w-4 h-4 text-emerald-600" />
-          </button>
+          <SimpleTooltip content={copiedLink ? 'Link Disalin!' : 'Salin Link'}>
+            <button
+              onClick={handleCopyCurrentLink}
+              aria-label="Salin Link"
+              className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded flex items-center justify-center transition-colors"
+            >
+              {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </SimpleTooltip>
+
+          <SimpleTooltip content="Cetak Invoice">
+            <button
+              onClick={() => window.print()}
+              aria-label="Cetak Invoice"
+              className="hidden sm:flex p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded items-center justify-center transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+            </button>
+          </SimpleTooltip>
+
+          <SimpleTooltip content="Download PNG">
+            <button
+              onClick={handleDownloadPNG}
+              disabled={isExporting}
+              aria-label="Download PNG"
+              className="p-2 border border-fluent-border hover:bg-fluent-subtle text-fluent-text rounded flex items-center justify-center transition-colors disabled:opacity-50"
+            >
+              <Download className="w-4 h-4 text-fluent-blue" />
+            </button>
+          </SimpleTooltip>
+
+          <SimpleTooltip content="Download PDF">
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isExporting}
+              aria-label="Download PDF"
+              className="p-2 bg-fluent-blue hover:bg-fluent-blueHover text-white rounded flex items-center justify-center transition-colors shadow-xs disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          </SimpleTooltip>
+
+          <SimpleTooltip content="Lihat / Cetak Kwitansi Pembayaran">
+            <button
+              onClick={() => setIsReceiptOpen(true)}
+              className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded flex items-center justify-center transition-colors shadow-2xs"
+              aria-label="Lihat / Cetak Kwitansi Pembayaran"
+            >
+              <Receipt className="w-4 h-4 text-emerald-600" />
+            </button>
+          </SimpleTooltip>
         </div>
       </header>
 
@@ -187,11 +197,13 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
           <div className="grid grid-cols-2 gap-6 bg-fluent-subtle/50 p-4 rounded-fluent border border-fluent-border text-xs">
             <div className="space-y-1">
               <span className="font-semibold text-fluent-textSecondary uppercase block mb-1">
-                Ditujukan Kepada Siswa:
+                Ditujukan Kepada:
               </span>
-              <div className="font-bold text-sm text-fluent-text">{invoiceData.studentName || '-'}</div>
-              {invoiceData.parentName && (
-                <div className="text-fluent-textSecondary">Wali: {invoiceData.parentName}</div>
+              <div className="font-bold text-sm text-fluent-text">
+                {invoiceData.parentName || invoiceData.studentName || '-'}
+              </div>
+              {invoiceData.parentName && invoiceData.studentName && (
+                <div className="text-fluent-textSecondary">Siswa: {invoiceData.studentName}</div>
               )}
             </div>
 
@@ -356,7 +368,7 @@ export default function PublicInvoiceView({ invoiceData, onBackToApp }) {
         data={invoiceData}
       />
 
-      {/* Global Real-Time Cursor Follow Tooltip */}
+      {/* Global Shadcn-Themed Hover Tooltip */}
       <CursorTooltip />
     </div>
   )

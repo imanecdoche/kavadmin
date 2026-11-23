@@ -187,14 +187,33 @@ export default function PasscodeGate() {
 
         {/* Error Alert */}
         {!isLocked && error && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="p-3 bg-rose-950/40 border border-rose-800/60 rounded-xl flex items-center gap-2.5 text-xs text-rose-300"
-          >
-            <HiExclamationCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{error}</span>
-          </motion.div>
+          <div className="space-y-1.5">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-3 bg-rose-950/40 border border-rose-800/60 rounded-xl flex items-center gap-2.5 text-xs text-rose-300"
+            >
+              <HiExclamationCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{error}</span>
+            </motion.div>
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem('kavio_firebase_config')
+                    localStorage.removeItem('kavadmin_session_token')
+                    localStorage.removeItem(ATTEMPTS_STORAGE_KEY)
+                    localStorage.removeItem(LOCKOUT_STORAGE_KEY)
+                  } catch (_) {}
+                  window.location.reload()
+                }}
+                className="text-[11px] text-slate-400 hover:text-white underline underline-offset-2 transition-colors"
+              >
+                Reset Cache & Muat Ulang Halaman
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Passcode Input Form */}

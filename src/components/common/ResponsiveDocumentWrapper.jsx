@@ -79,16 +79,19 @@ export default function ResponsiveDocumentWrapper({
           height: `${docHeight * scale}px`,
           position: 'relative'
         }}
-        className="shrink-0 transition-all duration-150 origin-top flex justify-center print:!w-auto print:!h-auto print:!transform-none"
+        className="shrink-0 transition-all duration-150 print:!w-auto print:!h-auto print:!transform-none"
       >
         <div
           ref={contentWrapperRef}
           style={{
             width: `${baseWidth}px`,
             transform: `scale(${scale})`,
-            transformOrigin: 'top left'
+            transformOrigin: 'top left',
+            position: 'absolute',
+            top: 0,
+            left: 0
           }}
-          className="print:!transform-none print:!w-auto"
+          className="print:!transform-none print:!w-auto print:!static"
         >
           {children}
         </div>

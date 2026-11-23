@@ -13,7 +13,7 @@ export default function SessionDetailDrawer({
   onOpenModule = null,
   readOnly = false
 }) {
-  const [formData, setFormData] = useState(null)
+  const [formDataState, setFormData] = useState(null)
 
   useEffect(() => {
     if (session) {
@@ -26,11 +26,15 @@ export default function SessionDetailDrawer({
     }
   }, [session])
 
-  if (!isOpen || !formData) return null
+  const formData = formDataState || (session ? {
+    ...session,
+    mastery: typeof session.mastery === 'number' ? session.mastery : ((session.status === 'COMPLETED' || session.status === 'SELESAI') ? 100 : 0)
+  } : null)
+  const activeData = formData
 
   const handleStatusChange = (status) => {
-    if (readOnly) return
-    let nextMastery = formData.mastery
+    if (readOnly || !activeData) return
+    let nextMastery = activeData.mastery
     if (status === 'COMPLETED' && (!nextMastery || nextMastery === 0)) {
       nextMastery = 100
     } else if (status === 'LOCKED' && nextMastery === 100) {
@@ -38,7 +42,7 @@ export default function SessionDetailDrawer({
     }
 
     const updated = {
-      ...formData,
+      ...activeData,
       status,
       mastery: nextMastery,
       isCompleted: status === 'COMPLETED' || status === 'SELESAI'
@@ -48,9 +52,9 @@ export default function SessionDetailDrawer({
   }
 
   const handleMasteryChange = (val) => {
-    if (readOnly) return
+    if (readOnly || !activeData) return
     const numeric = Math.min(100, Math.max(0, Number(val) || 0))
-    let nextStatus = formData.status
+    let nextStatus = activeData.status
     if (numeric === 100) {
       nextStatus = 'COMPLETED'
     } else if (numeric > 0 && nextStatus === 'LOCKED') {
@@ -60,7 +64,7 @@ export default function SessionDetailDrawer({
     }
 
     const updated = {
-      ...formData,
+      ...activeData,
       mastery: numeric,
       status: nextStatus,
       isCompleted: nextStatus === 'COMPLETED' || nextStatus === 'SELESAI'
@@ -70,16 +74,16 @@ export default function SessionDetailDrawer({
   }
 
   const handleChangeField = (field, val) => {
-    if (readOnly) return
-    let updated = { ...formData, [field]: val }
+    if (readOnly || !activeData) return
+    let updated = { ...activeData, [field]: val }
     if (field === 'date' || field === 'time' || field === 'duration') {
-      const targetDate = field === 'date' ? val : formData.date
-      const targetTime = field === 'time' ? val : (formData.time || '16:00')
-      const targetDuration = field === 'duration' ? Number(val) : Number(formData.duration || 90)
+      const targetDate = field === 'date' ? val : activeData.date
+      const targetTime = field === 'time' ? val : (activeData.time || '16:00')
+      const targetDuration = field === 'duration' ? Number(val) : Number(activeData.duration || 90)
 
       if (targetDate) {
         const autoStatus = resolveSessionStatusByDateTime(targetDate, targetTime, targetDuration)
-        const currentMastery = typeof formData.mastery === 'number' ? formData.mastery : 0
+        const currentMastery = typeof activeData.mastery === 'number' ? activeData.mastery : 0
         const masteryVal = autoStatus.status === 'SELESAI'
           ? (currentMastery > 0 ? currentMastery : 100)
           : currentMastery
@@ -104,25 +108,21 @@ export default function SessionDetailDrawer({
     return 'bg-slate-100 text-slate-600 border-slate-200'
   }
 
-  const currentMastery = typeof formData.mastery === 'number' ? formData.mastery : 0
+  const currentMastery = typeof activeData?.mastery === 'number' ? activeData.mastery : 0
+  const safeForm = activeData || {}
 
   return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/50 backdrop-blur-xs flex justify-end"
-      >
-        <motion.div
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 260 }}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-hidden border-l border-slate-200 text-slate-900"
+      {isOpen && activeData && (
+        <div
+          key="session-detail-sheet"
+          onClick={onClose}
+          className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/50 flex overflow-hidden"
         >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 w-screen h-screen max-w-none max-h-none rounded-none border-none bg-white flex flex-col overflow-hidden z-10 text-slate-900"
+          >
           {/* Drawer Header */}
           <div className="p-5 border-b border-slate-200 bg-slate-50 flex items-start justify-between">
             <div>
@@ -378,13 +378,14 @@ export default function SessionDetailDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold transition-colors"
+              className="reanimated-widget px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold transition-colors"
             >
               Simpan & Tutup
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
+      )}
     </AnimatePresence>,
     document.body
   ) : null

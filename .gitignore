@@ -1,3 +1,9 @@
+# Environment
+.env
+.env*.local
+.dart_tool
+build/
+
 # Logs
 logs
 *.log

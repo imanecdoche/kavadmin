@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Badge } from '@/components/ui/badge'
 
 export default function UpcomingSessionsModal({
   isOpen,
@@ -50,8 +51,6 @@ export default function UpcomingSessionsModal({
       document.documentElement.classList.remove('lenis-stopped')
     }
   }, [isOpen])
-
-  if (!isOpen) return null
 
   // Filter data based on search and selected day filter
   const filteredDaysData = upcoming3DaysData.map(dayItem => {
@@ -90,31 +89,19 @@ export default function UpcomingSessionsModal({
 
   return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
-      <motion.div
-        data-lenis-prevent="true"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        onClick={onClose}
-        className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
-      >
-        <motion.div
+      {isOpen && (
+        <div
+          key="upcoming-sessions-backdrop"
           data-lenis-prevent="true"
-          initial={{ opacity: 0, scale: 0.82, scaleY: 0.72, scaleX: 0.90, y: 48 }}
-          animate={{ opacity: 1, scale: 1, scaleY: 1, scaleX: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.84, scaleY: 0.74, scaleX: 0.92, y: 38 }}
-          transition={{
-            type: 'spring',
-            damping: 25,
-            stiffness: 280,
-            mass: 0.85,
-            opacity: { duration: 0.22, ease: 'easeOut' }
-          }}
-          style={{ transformOrigin: '50% 85%' }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-fluent border border-fluent-border shadow-fluent-modal w-full max-w-5xl flex flex-col max-h-[92vh] overflow-hidden my-auto will-change-transform"
+          onClick={onClose}
+          className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/50 flex overflow-hidden"
         >
+          <div
+            key="upcoming-sessions-window"
+            data-lenis-prevent="true"
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 w-screen h-screen max-w-none max-h-none rounded-none border-none bg-white flex flex-col overflow-hidden z-10"
+          >
           {/* Modal Header */}
           <div className="p-4 sm:p-5 border-b border-fluent-border bg-gradient-to-r from-fluent-subtle via-white to-fluent-subtle/50 flex items-center justify-between gap-3 flex-shrink-0">
             <div className="flex items-center space-x-3">
@@ -126,9 +113,9 @@ export default function UpcomingSessionsModal({
                   <h3 className="text-base sm:text-lg font-bold text-fluent-text">
                     Detail Sesi Bimbingan Mendatang
                   </h3>
-                  <span className="px-2.5 py-0.5 bg-fluent-blue text-white text-xs font-bold rounded-full">
+                  <Badge variant="default" className="text-xs font-bold">
                     3 Hari Ke Depan
-                  </span>
+                  </Badge>
                 </div>
                 <p className="text-xs text-fluent-textSecondary mt-0.5">
                   Rincian jadwal bimbingan, materi/target belajar, dan pengingat WhatsApp langsung.
@@ -137,9 +124,9 @@ export default function UpcomingSessionsModal({
             </div>
 
             <div className="flex items-center space-x-2">
-              <span className="hidden sm:inline-flex px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-full border border-slate-200">
+              <Badge variant="secondary" className="hidden sm:inline-flex px-3 py-1 text-xs font-semibold">
                 {totalUpcoming3DaysCount} Sesi Terjadwal
-              </span>
+              </Badge>
               <button
                 type="button"
                 onClick={onClose}
@@ -360,8 +347,9 @@ export default function UpcomingSessionsModal({
               Tutup Jendela
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
+      )}
     </AnimatePresence>,
     document.body
   ) : null

@@ -543,18 +543,11 @@ export default function ModulesManager({
             className="fixed inset-0 z-[999999] flex items-center justify-center p-4"
             data-lenis-prevent="true"
           >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div
               onClick={() => setDeleteConfirmId(null)}
-              className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
+              className="fixed inset-0 bg-black/50"
             />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.85, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 280, mass: 0.85 }}
+            <div
               className="relative bg-white rounded-2xl border border-fluent-border shadow-2xl max-w-sm w-full p-6 text-center overflow-hidden z-10"
             >
               <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100">
@@ -578,7 +571,7 @@ export default function ModulesManager({
                   Hapus
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
       </AnimatePresence>

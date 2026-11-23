@@ -1,3 +1,5 @@
+import { CEFR_STUDENT_MODULES } from '../data/cefrStudentModules'
+
 export const DEFAULT_MODULE_CATEGORIES = [
   'Semua',
   'Grammar & Structure',
@@ -16,6 +18,7 @@ export const MODULE_LEVELS = [
 ]
 
 export const INITIAL_MODULES_BACKUP = [
+  ...CEFR_STUDENT_MODULES,
   {
     id: 'mod-cefr-a1-s01-introductions-greetings',
     title: 'CEFR A1 (Sesi 1): Greetings, Personal Introductions & Verb "To Be"',

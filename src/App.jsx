@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { CloudUpload, CheckCircle2, AlertCircle } from 'lucide-react'
-import Navigation from './components/Navigation'
+import Sidebar from './components/layout/Sidebar'
+
 import Dashboard from './components/Dashboard'
+import DocumentStudio from './pages/DocumentStudio'
 import InvoiceGenerator from './components/InvoiceGenerator'
 import WhatsAppStudio from './components/WhatsAppStudio'
 import StudentRoadmapStudio from './components/roadmap/StudentRoadmapStudio'
@@ -12,9 +14,10 @@ import PublicReportViewer from './components/reports/PublicReportViewer'
 import PublicRoadmapViewer from './components/roadmap/PublicRoadmapViewer'
 import CertificateStudio from './components/certificate/CertificateStudio'
 import PublicCertificateViewer from './components/certificate/PublicCertificateViewer'
+import PublicVerificationPage from './components/certificate/PublicVerificationPage'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import CursorTooltip from './components/CursorTooltip'
 import SplashScreen from './components/SplashScreen'
-import ExitConfirmModal from './components/ExitConfirmModal'
 import {
   subscribeStudents,
   syncStudentToFirebase,
@@ -34,11 +37,13 @@ import {
 } from './firebase'
 import { INITIAL_STUDENTS_BACKUP } from './backupData'
 import { INITIAL_MODULES_BACKUP } from './utils/defaultModules'
+import { applyDateBasedStatusToSessions } from './utils/roadmapCalculator'
 
 import { parseInvoiceShareLink } from './utils/invoiceShare'
 import { parseReportShareLink } from './utils/reportShare'
 import { parseRoadmapShareLink } from './utils/roadmapShare'
 import { parseCertificateShareLink } from './utils/certificateShare'
+import { parseVerificationUrl } from './utils/verificationRegistry'
 import PublicInvoiceView from './components/PublicInvoiceView'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import PasscodeGate from './components/auth/PasscodeGate'
@@ -46,12 +51,12 @@ import PasscodeGate from './components/auth/PasscodeGate'
 function AppContent() {
   const { isAuthenticated, isLoading, logout } = useAuth()
   const [isAppLoading, setIsAppLoading] = useState(true)
-  const [showExitModal, setShowExitModal] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [publicInvoiceData, setPublicInvoiceData] = useState(() => parseInvoiceShareLink())
   const [publicReportData, setPublicReportData] = useState(() => parseReportShareLink())
   const [publicRoadmapData, setPublicRoadmapData] = useState(() => parseRoadmapShareLink())
   const [publicCertificateData, setPublicCertificateData] = useState(() => parseCertificateShareLink())
+  const [verificationReq, setVerificationReq] = useState(() => parseVerificationUrl())
 
   // Browser navigation and popstate listener
   useEffect(() => {
@@ -60,29 +65,21 @@ function AppContent() {
       setPublicReportData(parseReportShareLink())
       setPublicRoadmapData(parseRoadmapShareLink())
       setPublicCertificateData(parseCertificateShareLink())
+      setVerificationReq(parseVerificationUrl())
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // Browser beforeunload confirmation dialog (skip in Electron to prevent uncloseable window)
-  useEffect(() => {
-    if (window.electronAPI && window.electronAPI.isElectron) return
-
-    const handleBeforeUnload = (e) => {
-      e.preventDefault()
-      e.returnValue = ''
-      return ''
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [])
-
-  // Electron Standalone window close event listener
+  // Electron Standalone window close event listener (close immediately without confirmation dialog)
   useEffect(() => {
     if (window.electronAPI && typeof window.electronAPI.onCloseRequested === 'function') {
       const unsubscribe = window.electronAPI.onCloseRequested(() => {
-        setShowExitModal(true)
+        if (typeof window.electronAPI.confirmClose === 'function') {
+          window.electronAPI.confirmClose()
+        } else {
+          window.close()
+        }
       })
       return () => {
         if (typeof unsubscribe === 'function') unsubscribe()
@@ -90,23 +87,28 @@ function AppContent() {
     }
   }, [])
 
-  // Confirm close application handler
-  const handleConfirmExit = () => {
-    setShowExitModal(false)
-    if (window.electronAPI && typeof window.electronAPI.confirmClose === 'function') {
-      window.electronAPI.confirmClose()
-    } else {
-      window.close()
-    }
-  }
-
   // Local & Firebase Sync State Initialization
   const [students, setStudents] = useState(() => {
     try {
       const saved = localStorage.getItem('kavio_students')
       if (saved) {
         const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((s) => {
+            if (s.roadmap?.sessions && Array.isArray(s.roadmap.sessions)) {
+              const defaultTime = s.roadmap.defaultStartTime || s.schedule?.match(/\d{2}\.\d{2}/)?.[0]?.replace('.', ':') || '16:00'
+              const defaultDur = s.minutesPerSession || s.roadmap.defaultDuration || 60
+              return {
+                ...s,
+                roadmap: {
+                  ...s.roadmap,
+                  sessions: applyDateBasedStatusToSessions(s.roadmap.sessions, defaultTime, defaultDur)
+                }
+              }
+            }
+            return s
+          })
+        }
       }
     } catch (e) {
       console.error('Failed to load students from localStorage', e)
@@ -163,7 +165,21 @@ function AppContent() {
       (realtimeStudents) => {
         if (!isMounted) return
         if (Array.isArray(realtimeStudents) && realtimeStudents.length > 0) {
-          setStudents(realtimeStudents)
+          const normalized = realtimeStudents.map((s) => {
+            if (s.roadmap?.sessions && Array.isArray(s.roadmap.sessions)) {
+              const defaultTime = s.roadmap.defaultStartTime || s.schedule?.match(/\d{2}\.\d{2}/)?.[0]?.replace('.', ':') || '16:00'
+              const defaultDur = s.minutesPerSession || s.roadmap.defaultDuration || 60
+              return {
+                ...s,
+                roadmap: {
+                  ...s.roadmap,
+                  sessions: applyDateBasedStatusToSessions(s.roadmap.sessions, defaultTime, defaultDur)
+                }
+              }
+            }
+            return s
+          })
+          setStudents(normalized)
           setIsFirebaseConnected(true)
         } else {
           setIsFirebaseConnected(true)
@@ -188,8 +204,16 @@ function AppContent() {
     const unsubscribe = subscribeModules(
       (realtimeModules) => {
         if (!isMounted) return
-        if (Array.isArray(realtimeModules) && realtimeModules.length > 0) {
-          setModules(realtimeModules)
+        if (Array.isArray(realtimeModules)) {
+          const cloudIds = new Set(realtimeModules.map(m => m.id))
+          const missingDefaults = INITIAL_MODULES_BACKUP.filter(m => !cloudIds.has(m.id))
+          if (missingDefaults.length > 0) {
+            const merged = [...realtimeModules, ...missingDefaults]
+            setModules(merged)
+            seedAllModulesToFirebase(missingDefaults).catch(console.error)
+          } else {
+            setModules(realtimeModules)
+          }
         }
       },
       (error) => {
@@ -507,6 +531,18 @@ function AppContent() {
     )
   }
 
+  if (verificationReq) {
+    return (
+      <PublicVerificationPage
+        initialId={verificationReq.queryId}
+        onBack={() => {
+          window.history.pushState({}, '', '/')
+          setVerificationReq(null)
+        }}
+      />
+    )
+  }
+
   // 5. Auth gate check
   if (isLoading) {
     return (
@@ -522,7 +558,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-fluent-bg text-fluent-text font-sans flex flex-col antialiased selection:bg-fluent-blue selection:text-white">
+    <div className="min-h-screen bg-fluent-bg text-fluent-text font-sans flex flex-col md:flex-row antialiased selection:bg-fluent-blue selection:text-white">
 
       {/* App Launch & Refresh Splash Screen */}
       <AnimatePresence>
@@ -531,113 +567,101 @@ function AppContent() {
         )}
       </AnimatePresence>
 
-      {/* Top Header & Navigation Bar */}
-      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />
+      {/* Vertical Sidepanel Navigation Bar */}
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />
 
-
-      {/* Main Container - Keeps all tabs mounted */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className={activeTab === 'dashboard' ? 'block' : 'hidden'}>
-          <Dashboard
-            students={students}
-            setStudents={updateStudentsWithSync}
-            onGenerateInvoice={handleGenerateInvoiceFromDashboard}
-            onOpenRoadmap={handleOpenRoadmapFromDashboard}
-            onOpenReportCard={handleOpenReportCardFromDashboard}
-            onOpenCertificate={handleOpenCertificateFromDashboard}
-            reports={reports}
-          />
-        </div>
-
-        <div className={activeTab === 'invoice' ? 'block' : 'hidden'}>
-          <InvoiceGenerator
-            students={students}
-            selectedStudent={selectedStudentForInvoice}
-            onSaveInvoiceToHistory={handleSaveInvoiceToHistory}
-            onSaveToDashboard={(updatedStudent) => {
-              updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
-            }}
-          />
-        </div>
-
-        <div className={activeTab === 'reports' ? 'block' : 'hidden'}>
-          <ReportCardStudio
-            students={students}
-            selectedStudent={selectedStudentForReport}
-            onSaveReport={handleSaveReport}
-          />
-        </div>
-
-        <div className={activeTab === 'certificates' ? 'block' : 'hidden'}>
-          <CertificateStudio
-            students={students}
-            selectedStudentId={selectedStudentForCertificate?.id}
-            onSelectStudent={setSelectedStudentForCertificate}
-            onUpdateStudent={(updatedStudent) => {
-              updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
-            }}
-          />
-        </div>
-
-        <div className={activeTab === 'whatsapp' ? 'block' : 'hidden'}>
-          <WhatsAppStudio />
-        </div>
-
-        <div className={activeTab === 'roadmap' ? 'block' : 'hidden'}>
-          <StudentRoadmapStudio
-            students={students}
-            selectedStudentId={selectedStudentForRoadmap?.id}
-            onSelectStudent={setSelectedStudentForRoadmap}
-            onUpdateStudent={(updatedStudent) => {
-              updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
-            }}
-            modules={modules}
-            onOpenModule={(modId) => {
-              setActiveTab('modules')
-            }}
-            onSaveRoadmap={handleSaveRoadmap}
-          />
-        </div>
-
-        <div className={activeTab === 'modules' ? 'block' : 'hidden'}>
-          <ModulesManager
-            modules={modules}
-            onSaveModule={handleSaveModule}
-            onDeleteModule={handleDeleteModule}
-          />
-        </div>
-      </main>
-
-      {/* Firebase Custom Config Modal */}
-      {showConfigModal && (
-        <FirebaseConfigModal onClose={() => setShowConfigModal(false)} />
-      )}
-
-      {/* Exit Application Confirmation Modal */}
-      <ExitConfirmModal
-        isOpen={showExitModal}
-        onClose={() => setShowExitModal(false)}
-        onConfirm={handleConfirmExit}
-      />
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-fluent-border py-4 mt-auto text-center text-xs text-fluent-textSecondary no-print">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <div>
-            Kavio Edu Management & Invoice Generator System
+      {/* Main Content Area Offset on Desktop (md:pl-56 lg:pl-60) */}
+      <div className="flex-1 min-w-0 md:pl-56 lg:pl-60 flex flex-col min-h-screen">
+        <main className="flex-1 w-full max-w-[98%] xl:max-w-[96%] mx-auto px-2 sm:px-4 py-4 sm:py-6">
+          <div className={(activeTab === 'dashboard' || activeTab === 'students' || activeTab === 'schedule') ? 'block animate-in fade-in-0 zoom-in-[0.99] slide-in-from-bottom-2 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]' : 'hidden'}>
+            <Dashboard
+              activeTab={activeTab}
+              students={students}
+              setStudents={updateStudentsWithSync}
+              onGenerateInvoice={handleGenerateInvoiceFromDashboard}
+              onOpenRoadmap={handleOpenRoadmapFromDashboard}
+              onOpenReportCard={handleOpenReportCardFromDashboard}
+              onOpenCertificate={handleOpenCertificateFromDashboard}
+              reports={reports}
+            />
           </div>
-          <div>
-            Design by Fatih Farhat Asshidiq © All Rights Reserved | @KavioEdu 2026
-          </div>
-          <div>
-            Firebase Realtime Cloud Database
-          </div>
-        </div>
-      </footer>
 
-      {/* Custom Toast Notification */}
+          <div className={(activeTab === 'invoice' || activeTab === 'invoices') ? 'block animate-in fade-in-0 zoom-in-[0.99] slide-in-from-bottom-2 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]' : 'hidden'}>
+            <DocumentStudio />
+          </div>
+
+          <div className={activeTab === 'reports' ? 'block animate-in fade-in-0 zoom-in-[0.99] slide-in-from-bottom-2 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]' : 'hidden'}>
+            <ReportCardStudio
+              students={students}
+              selectedStudent={selectedStudentForReport}
+              onSaveReport={handleSaveReport}
+            />
+          </div>
+
+          <div className={activeTab === 'certificates' ? 'block animate-in fade-in-0 zoom-in-[0.99] slide-in-from-bottom-2 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]' : 'hidden'}>
+            <CertificateStudio
+              students={students}
+              selectedStudentId={selectedStudentForCertificate?.id}
+              onSelectStudent={setSelectedStudentForCertificate}
+              onUpdateStudent={(updatedStudent) => {
+                updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
+              }}
+            />
+          </div>
+
+          <div className={activeTab === 'whatsapp' ? 'block animate-in fade-in-0 zoom-in-[0.99] slide-in-from-bottom-2 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]' : 'hidden'}>
+            <WhatsAppStudio />
+          </div>
+
+          <div className={activeTab === 'roadmap' ? 'block animate-in fade-in-0 zoom-in-[0.99] slide-in-from-bottom-2 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]' : 'hidden'}>
+            <StudentRoadmapStudio
+              students={students}
+              selectedStudentId={selectedStudentForRoadmap?.id}
+              onSelectStudent={setSelectedStudentForRoadmap}
+              onUpdateStudent={(updatedStudent) => {
+                updateStudentsWithSync(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s))
+              }}
+              modules={modules}
+              onOpenModule={(modId) => {
+                setActiveTab('modules')
+              }}
+              onSaveRoadmap={handleSaveRoadmap}
+            />
+          </div>
+
+          <div className={activeTab === 'modules' ? 'block animate-in fade-in-0 zoom-in-[0.99] slide-in-from-bottom-2 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]' : 'hidden'}>
+            <ModulesManager
+              modules={modules}
+              onSaveModule={handleSaveModule}
+              onDeleteModule={handleDeleteModule}
+            />
+          </div>
+        </main>
+
+        {/* Firebase Custom Config Modal */}
+        {showConfigModal && (
+          <FirebaseConfigModal onClose={() => setShowConfigModal(false)} />
+        )}
+
+        {/* Footer */}
+        <footer className="bg-white dark:bg-card border-t border-fluent-border dark:border-border py-4 mt-auto text-center text-xs text-muted-foreground no-print">
+          <div className="w-full max-w-[98%] xl:max-w-[96%] mx-auto px-1.5 sm:px-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div>
+              Kavio Edu Management & Invoice Generator System
+            </div>
+            <div>
+              Design by Fatih Farhat Asshidiq © All Rights Reserved | @KavioEdu 2026
+            </div>
+            <div>
+              Firebase Realtime Cloud Database
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      {/* Custom Toast Notification (ReAnimated ToastAnim: 380ms OUT_BACK) */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 animate-fadeIn">
+        <div className="fixed bottom-5 right-5 z-50 animate-reanimated-toast">
           <div className={`px-4 py-3 rounded-fluent shadow-fluent-modal border flex items-center space-x-3 text-xs font-semibold ${toastMessage.type === 'error'
               ? 'bg-rose-50 border-rose-300 text-rose-800'
               : 'bg-emerald-50 border-emerald-300 text-emerald-800'
@@ -651,7 +675,7 @@ function AppContent() {
             <button
               type="button"
               onClick={() => setToastMessage(null)}
-              className="text-slate-400 hover:text-slate-600 font-bold ml-2 text-xs"
+              className="text-slate-400 hover:text-slate-600 font-bold ml-2 text-xs reanimated-icon-btn"
             >
               ✕
             </button>
@@ -659,7 +683,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* Global Real-Time Cursor Follow Tooltip */}
+      {/* Global Shadcn-Themed Hover Tooltip */}
       <CursorTooltip />
 
     </div>
@@ -765,8 +789,10 @@ function FirebaseConfigModal({ onClose }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <TooltipProvider delayDuration={150}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </TooltipProvider>
   )
 }

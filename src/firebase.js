@@ -14,20 +14,27 @@ const getFirebaseConfig = () => {
   try {
     const savedConfig = localStorage.getItem('kavio_firebase_config')
     if (savedConfig) {
-      return JSON.parse(savedConfig)
+      const parsed = JSON.parse(savedConfig)
+      // Automatically purge stale cache not matching official project kavio-edu-app
+      if (!parsed || parsed.projectId !== 'kavio-edu-app') {
+        localStorage.removeItem('kavio_firebase_config')
+      } else {
+        return parsed
+      }
     }
   } catch (e) {
     console.error('Failed to parse saved Firebase config', e)
+    try { localStorage.removeItem('kavio_firebase_config') } catch (_) {}
   }
 
   return {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCrU4DL_8xWnCTxR2tZ6jjkHfysnmfZ0Ns",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "gen-lang-client-0731211118.firebaseapp.com",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0731211118",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gen-lang-client-0731211118.firebasestorage.app",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1097982274898",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1097982274898:web:59939771464f15b331de8b",
-    databaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-09bff8b7-febf-4d2b-8f14-8d69d279f13d"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAyq8wv4TTKGaGHmsdC-oWoM0t-MT4G6Yg",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "kavio-edu-app.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "kavio-edu-app",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "kavio-edu-app.firebasestorage.app",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "790981928166",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:790981928166:web:b27c655b64d4e4836e0727",
+    databaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "(default)"
   }
 }
 
@@ -149,21 +156,20 @@ export const deleteModuleFromFirebase = async (moduleId) => {
   }
 }
 
-// Seed All Modules (Bulk Upload / Backup Sync) with Timeout
+// Seed All Modules (Bulk Upload / Backup Sync) with Robust Chunking
 export const seedAllModulesToFirebase = async (modulesList) => {
   if (!Array.isArray(modulesList) || modulesList.length === 0) return false
   try {
-    const batch = writeBatch(db)
-    modulesList.forEach(m => {
-      const ref = doc(db, 'modules', m.id)
-      batch.set(ref, m, { merge: true })
-    })
-
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Firebase timeout (5s)')), 5000)
-    )
-
-    await Promise.race([batch.commit(), timeoutPromise])
+    const chunkSize = 20
+    for (let i = 0; i < modulesList.length; i += chunkSize) {
+      const chunk = modulesList.slice(i, i + chunkSize)
+      const batch = writeBatch(db)
+      chunk.forEach(m => {
+        const ref = doc(db, 'modules', m.id)
+        batch.set(ref, m, { merge: true })
+      })
+      await batch.commit()
+    }
     return true
   } catch (e) {
     console.error('Error seeding modules to Firebase:', e)

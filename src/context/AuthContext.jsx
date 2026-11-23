@@ -117,7 +117,8 @@ export const AuthProvider = ({ children }) => {
       return true
     } catch (err) {
       console.error('[Login Error - Fail Closed]:', err)
-      throw new Error('Gagal mengamankan sesi ke cloud server. Periksa koneksi internet Anda.')
+      const detail = err?.message || 'Periksa koneksi internet Anda.'
+      throw new Error(`Gagal mengamankan sesi ke cloud server: ${detail}`)
     }
   }
 

@@ -27,24 +27,15 @@ export default function ExitConfirmModal({ isOpen, onClose, onConfirm }) {
           className="fixed inset-0 z-[999999] flex items-center justify-center p-4"
           data-lenis-prevent="true"
         >
-        {/* Backdrop Blur Overlay */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+        {/* Backdrop Solid Dimmed Overlay */}
+        <div
           onClick={onClose}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
+          className="fixed inset-0 bg-black/50"
         />
 
-        {/* macOS Elastic Spring Dialog Window */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.84, scaleY: 0.74, scaleX: 0.90, y: 36 }}
-          animate={{ opacity: 1, scale: 1, scaleY: 1, scaleX: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.86, scaleY: 0.78, scaleX: 0.92, y: 24 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 280, mass: 0.85 }}
-          style={{ transformOrigin: '50% 80%' }}
-          className="relative bg-white rounded-2xl border border-fluent-border shadow-2xl max-w-sm w-full p-6 text-center overflow-hidden z-10 will-change-transform"
+        {/* Modal Dialog Window */}
+        <div
+          className="relative bg-white rounded-2xl border border-fluent-border shadow-2xl max-w-sm w-full p-6 text-center overflow-hidden z-10"
         >
           {/* Close button icon */}
           <button
@@ -91,7 +82,7 @@ export default function ExitConfirmModal({ isOpen, onClose, onConfirm }) {
               Tutup
             </button>
           </div>
-        </motion.div>
+        </div>
       </div>
       )}
     </AnimatePresence>

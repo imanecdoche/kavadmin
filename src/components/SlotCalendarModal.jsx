@@ -18,6 +18,7 @@ import {
   Award
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Badge } from '@/components/ui/badge'
 import {
   DAYS_INDONESIAN,
   TIME_SLOTS_LIST,
@@ -174,35 +175,21 @@ export default function SlotCalendarModal({
     window.open(url, '_blank')
   }
 
-  if (!isOpen) return null
-
   return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
-      <motion.div
-        data-lenis-prevent="true"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        onClick={onClose}
-        className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
-      >
-        <motion.div
+      {isOpen && (
+        <div
+          key="slot-calendar-backdrop"
           data-lenis-prevent="true"
-          initial={{ opacity: 0, scale: 0.82, scaleY: 0.72, scaleX: 0.90, y: 48 }}
-          animate={{ opacity: 1, scale: 1, scaleY: 1, scaleX: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.84, scaleY: 0.74, scaleX: 0.92, y: 38 }}
-          transition={{
-            type: 'spring',
-            damping: 25,
-            stiffness: 280,
-            mass: 0.85,
-            opacity: { duration: 0.22, ease: 'easeOut' }
-          }}
-          style={{ transformOrigin: '50% 85%' }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-fluent border border-fluent-border shadow-fluent-modal w-full max-w-4xl flex flex-col max-h-[92vh] overflow-hidden my-auto will-change-transform"
+          onClick={onClose}
+          className="fixed inset-0 top-0 left-0 w-screen h-screen z-50 bg-black/50 flex overflow-hidden"
         >
+          <div
+            key="slot-calendar-window"
+            data-lenis-prevent="true"
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 w-screen h-screen max-w-none max-h-none rounded-none border-none bg-white flex flex-col overflow-hidden z-10"
+          >
           {/* Modal Header */}
           <div className="p-4 sm:px-6 sm:py-4 border-b border-fluent-border bg-gradient-to-r from-fluent-subtle via-white to-fluent-subtle/50 flex items-center justify-between gap-3 flex-shrink-0">
             <div className="flex items-center space-x-3">
@@ -395,24 +382,27 @@ export default function SlotCalendarModal({
                                 <Clock className="w-3.5 h-3.5 mr-1" />
                                 {session.timeLabel}
                               </span>
-                              <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                              <Badge variant="outline" className="text-[10px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 border-slate-200">
                                 Sesi {session.sessionNumber < 10 ? `0${session.sessionNumber}` : session.sessionNumber} / {totalQuota < 10 ? `0${totalQuota}` : totalQuota}
-                              </span>
+                              </Badge>
                             </div>
 
                             <div className="flex items-center space-x-1.5">
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-fluent-blue border border-blue-200">
+                              <Badge variant="default" className="text-[10px] font-bold px-1.5 py-0.5">
                                 Paket {session.packageType}
-                              </span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                                session.status === 'SELESAI'
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : session.status === 'PROSES'
-                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : 'bg-slate-100 text-slate-600 border-slate-200'
-                              }`}>
+                              </Badge>
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  session.status === 'SELESAI'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : session.status === 'PROSES'
+                                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                      : 'bg-slate-100 text-slate-600 border-slate-200'
+                                }`}
+                              >
                                 {session.status}
-                              </span>
+                              </Badge>
                             </div>
                           </div>
 
@@ -523,8 +513,9 @@ export default function SlotCalendarModal({
             </div>
 
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
+      )}
     </AnimatePresence>,
     document.body
   ) : null

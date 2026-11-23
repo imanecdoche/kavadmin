@@ -1,0 +1,365 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Background Circle Radial Gradient -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#EFF6FF" />
+      <stop offset="100%" stop-color="#DBEAFE" stop-opacity="0.6" />
+    </radialGradient>
+
+    <!-- Blueprint Grid Pattern -->
+    <pattern id="blueprintGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#60A5FA" stroke-width="0.75" stroke-opacity="0.4" />
+    </pattern>
+
+    <!-- Drop Shadow Filter for Elements -->
+    <filter id="vectorShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.12" />
+    </filter>
+  </defs>
+
+  <!-- 1. BACKGROUND ENVIRONMENT -->
+  <circle cx="250" cy="250" r="215" fill="url(#bgGlow)" />
+  <!-- Subtle Blueprint Circle Dotted Orbit -->
+  <circle cx="250" cy="250" r="215" stroke="#93C5FD" stroke-width="2" stroke-dasharray="6 6" fill="none" />
+  
+  <!-- Subtle Construction Blueprint Crosshairs -->
+  <path d="M 250 20 L 250 35 M 250 465 L 250 480 M 20 250 L 35 250 M 465 250 L 480 250" stroke="#93C5FD" stroke-width="3" stroke-linecap="round" />
+
+  <!-- 2. CHARACTER BODY & TORSO (Upper Body) -->
+  <g id="body-torso">
+    <!-- Inner Shirt (Navy/Slate) -->
+    <path 
+      d="M 160 480 L 160 375 Q 185 315 220 295 L 280 295 Q 315 315 340 375 L 340 480 Z" 
+      fill="#1E293B" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- Safety Vest - Left Panel (High-Vis Orange) -->
+    <path 
+      d="M 160 480 L 160 375 Q 185 315 220 295 L 235 295 L 230 480 Z" 
+      fill="#F97316" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+    <!-- Left Vest Reflective Neon Yellow-Green Stripes -->
+    <path d="M 175 350 L 227 330" stroke="#CCFBF1" stroke-width="10" stroke-linecap="round" />
+    <path d="M 175 350 L 227 330" stroke="#FACC15" stroke-width="4" stroke-linecap="round" />
+    <path d="M 162 430 L 231 430" stroke="#CCFBF1" stroke-width="10" stroke-linecap="round" />
+    <path d="M 162 430 L 231 430" stroke="#FACC15" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Safety Vest - Right Panel (High-Vis Orange) -->
+    <path 
+      d="M 340 480 L 340 375 Q 315 315 280 295 L 265 295 L 270 480 Z" 
+      fill="#F97316" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+    <!-- Right Vest Reflective Neon Yellow-Green Stripes -->
+    <path d="M 325 350 L 273 330" stroke="#CCFBF1" stroke-width="10" stroke-linecap="round" />
+    <path d="M 325 350 L 273 330" stroke="#FACC15" stroke-width="4" stroke-linecap="round" />
+    <path d="M 338 430 L 269 430" stroke="#CCFBF1" stroke-width="10" stroke-linecap="round" />
+    <path d="M 338 430 L 269 430" stroke="#FACC15" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Arms / Sleeves -->
+    <!-- Left Arm -->
+    <path 
+      d="M 160 375 Q 120 400 135 460 L 155 465 Q 170 420 185 390 Z" 
+      fill="#EA580C" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+    <!-- Right Arm -->
+    <path 
+      d="M 340 375 Q 380 400 365 460 L 345 465 Q 330 420 315 390 Z" 
+      fill="#EA580C" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+  </g>
+
+  <!-- 3. NECK & HEAD -->
+  <g id="neck-and-head">
+    <!-- Neck -->
+    <path 
+      d="M 226 245 L 226 295 Q 250 305 274 295 L 274 245 Z" 
+      fill="#FBBF24" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+    <!-- Neck Shadow -->
+    <path d="M 226 245 Q 250 262 274 245 L 274 256 Q 250 273 226 256 Z" fill="#D97706" opacity="0.3" />
+
+    <!-- Ears -->
+    <!-- Left Ear -->
+    <ellipse cx="180" cy="195" rx="11" ry="15" fill="#FDE68A" stroke="#0F172A" stroke-width="4" />
+    <path d="M 182 191 Q 176 195 181 200" stroke="#0F172A" stroke-width="3" stroke-linecap="round" fill="none" />
+    <!-- Right Ear -->
+    <ellipse cx="320" cy="195" rx="11" ry="15" fill="#FDE68A" stroke="#0F172A" stroke-width="4" />
+    <path d="M 318 191 Q 324 195 319 200" stroke="#0F172A" stroke-width="3" stroke-linecap="round" fill="none" />
+
+    <!-- Hair Back / Sideburns -->
+    <path d="M 183 175 L 182 210 Q 192 195 190 170 Z" fill="#475569" stroke="#0F172A" stroke-width="3" />
+    <path d="M 317 175 L 318 210 Q 308 195 310 170 Z" fill="#475569" stroke="#0F172A" stroke-width="3" />
+
+    <!-- Face Shape -->
+    <path 
+      d="M 186 160 C 182 220 196 258 250 258 C 304 258 318 220 314 160 Z" 
+      fill="#FDE68A" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- Cute Blush Marks -->
+    <ellipse cx="206" cy="214" rx="10" ry="5" fill="#F87171" opacity="0.4" />
+    <ellipse cx="294" cy="214" rx="10" ry="5" fill="#F87171" opacity="0.4" />
+
+    <!-- 4. CONFUSED FACIAL EXPRESSION -->
+    <!-- Left Eyebrow (High Arched, Perplexed) -->
+    <path 
+      d="M 200 162 Q 218 145 236 158" 
+      stroke="#0F172A" 
+      stroke-width="5" 
+      stroke-linecap="round" 
+      fill="none" 
+    />
+    <!-- Right Eyebrow (Furrowed Down, Frustrated/Confused) -->
+    <path 
+      d="M 264 168 Q 282 178 300 168" 
+      stroke="#0F172A" 
+      stroke-width="5" 
+      stroke-linecap="round" 
+      fill="none" 
+    />
+
+    <!-- Left Eye (Wide open, staring down-right at blueprint) -->
+    <ellipse cx="218" cy="186" rx="14" ry="16" fill="#FFFFFF" stroke="#0F172A" stroke-width="3.5" />
+    <circle cx="222" cy="190" r="7.5" fill="#0F172A" />
+    <circle cx="224.5" cy="187.5" r="2.5" fill="#FFFFFF" />
+
+    <!-- Right Eye (Squinting/Bewildered, staring down-left at blueprint) -->
+    <ellipse cx="282" cy="188" rx="13" ry="14" fill="#FFFFFF" stroke="#0F172A" stroke-width="3.5" />
+    <circle cx="278" cy="192" r="7" fill="#0F172A" />
+    <circle cx="280.5" cy="189.5" r="2" fill="#FFFFFF" />
+
+    <!-- Nose (Cartoon style) -->
+    <path d="M 246 190 Q 256 200 248 208 L 254 208" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+    <!-- Confused / Wobbly Squiggly Mouth -->
+    <path 
+      d="M 230 230 Q 238 238 248 232 Q 258 226 268 234" 
+      stroke="#0F172A" 
+      stroke-width="4.5" 
+      stroke-linecap="round" 
+      fill="none" 
+    />
+
+    <!-- Sweat Drop (Cold Sweat of Confusion on Temple) -->
+    <g transform="translate(178, 160)">
+      <path 
+        d="M 12 0 C 12 0 4 12 4 18 C 4 23 7.5 26 12 26 C 16.5 26 20 23 20 18 C 20 12 12 0 12 0 Z" 
+        fill="#38BDF8" 
+        stroke="#0F172A" 
+        stroke-width="2.5" 
+      />
+      <ellipse cx="10" cy="17" rx="2" ry="4" transform="rotate(-20 10 17)" fill="#FFFFFF" opacity="0.8" />
+    </g>
+  </g>
+
+  <!-- 5. SAFETY CONSTRUCTION HARDHAT (Helm Proyek) -->
+  <g id="construction-helmet" filter="url(#vectorShadow)">
+    <!-- Helmet Main Dome -->
+    <path 
+      d="M 172 135 C 168 55 332 55 328 135 Z" 
+      fill="#F59E0B" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+    
+    <!-- Helmet Highlights & Shading -->
+    <!-- Dome Top Highlight Curve -->
+    <path d="M 190 120 C 190 75 310 75 310 120" stroke="#FDE68A" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.8" />
+    <!-- Shadow under curve -->
+    <path d="M 174 130 C 200 138 300 138 326 130 L 328 135 C 300 144 200 144 172 135 Z" fill="#D97706" />
+
+    <!-- Helmet Center Reinforcement Ridge -->
+    <path 
+      d="M 243 64 L 257 64 L 260 135 L 240 135 Z" 
+      fill="#FBBF24" 
+      stroke="#0F172A" 
+      stroke-width="3" 
+      stroke-linejoin="round" 
+    />
+    <line x1="250" y1="67" x2="250" y2="132" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+
+    <!-- Helmet Brim (Pinggiran Helm) -->
+    <path 
+      d="M 152 136 C 152 130 175 125 250 125 C 325 125 348 130 348 136 L 342 148 C 315 156 185 156 158 148 Z" 
+      fill="#F59E0B" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+      stroke-linejoin="round" 
+    />
+    <path d="M 160 146 C 200 152 300 152 340 146" stroke="#D97706" stroke-width="3" fill="none" />
+  </g>
+
+  <!-- 6. THE BLUEPRINT SHEET (Held in front of chest, tilted) -->
+  <g id="blueprint-sheet" transform="rotate(-3 250 380)" filter="url(#vectorShadow)">
+    <!-- Blueprint Paper Body -->
+    <rect 
+      x="105" 
+      y="275" 
+      width="290" 
+      height="180" 
+      rx="6" 
+      fill="#1E40AF" 
+      stroke="#0F172A" 
+      stroke-width="4" 
+    />
+
+    <!-- Paper Grid Texture Overlay -->
+    <rect x="110" y="280" width="280" height="170" fill="url(#blueprintGrid)" />
+
+    <!-- Blueprint Technical Markings & Architectural Layout -->
+    <!-- Outer Border of Blueprint Frame -->
+    <rect x="115" y="285" width="270" height="160" fill="none" stroke="#60A5FA" stroke-width="1.5" stroke-dasharray="2 2" />
+
+    <!-- Blueprint Title Block in Corner -->
+    <rect x="305" y="405" width="75" height="35" fill="#1E3A8A" stroke="#93C5FD" stroke-width="1.5" />
+    <line x1="310" y1="415" x2="370" y2="415" stroke="#93C5FD" stroke-width="1.5" />
+    <line x1="310" y1="425" x2="350" y2="425" stroke="#93C5FD" stroke-width="1.5" />
+    <line x1="310" y1="433" x2="340" y2="433" stroke="#93C5FD" stroke-width="1.5" />
+
+    <!-- CONFUSING BLUEPRINT DIAGRAM (Hilarious upside-down house & impossible stairs) -->
+    <!-- Main Wall Outline -->
+    <rect x="135" y="305" width="150" height="100" fill="none" stroke="#FFFFFF" stroke-width="2.5" />
+    <!-- Interior Dividing Walls -->
+    <line x1="195" y1="305" x2="195" y2="370" stroke="#FFFFFF" stroke-width="2" />
+    <line x1="135" y1="355" x2="195" y2="355" stroke="#FFFFFF" stroke-width="2" />
+    <!-- Door Swing Arc (Impossibly opening outward into a wall) -->
+    <path d="M 195 330 A 25 25 0 0 1 170 355" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="3 3" fill="none" />
+    <line x1="195" y1="330" x2="170" y2="330" stroke="#FFFFFF" stroke-width="2" />
+    
+    <!-- Impossible Stairs (Going Nowhere) -->
+    <path d="M 215 320 L 255 320 M 215 328 L 255 328 M 215 336 L 255 336 M 215 344 L 255 344" stroke="#93C5FD" stroke-width="1.5" />
+    
+    <!-- An Upside Down Roof / Triangular Truss that Makes No Sense -->
+    <path d="M 210 395 L 240 365 L 270 395 Z" stroke="#FDE047" stroke-width="2" fill="none" />
+
+    <!-- Big Confused Question Stamp on Blueprint -->
+    <circle cx="165" cy="380" r="16" fill="#DC2626" opacity="0.9" />
+    <text x="165" y="387" font-family="monospace, sans-serif" font-weight="bold" font-size="20" fill="#FFFFFF" text-anchor="middle">?</text>
+
+    <!-- Technical Dimension Arrows with "?" -->
+    <line x1="135" y1="295" x2="285" y2="295" stroke="#93C5FD" stroke-width="1.5" />
+    <path d="M 135 292 L 135 298 M 285 292 L 285 298" stroke="#93C5FD" stroke-width="1.5" />
+    <text x="210" y="293" font-family="monospace, sans-serif" font-size="10" font-weight="bold" fill="#93C5FD" text-anchor="middle">??? mm</text>
+
+    <!-- Curled Paper Corner Effect (Top Right) -->
+    <path d="M 380 275 L 395 290 L 380 290 Z" fill="#60A5FA" stroke="#0F172A" stroke-width="2" />
+  </g>
+
+  <!-- 7. HANDS GRIPPING BLUEPRINT -->
+  <g id="hands-gripping">
+    <!-- Left Hand (Gripping left border of blueprint) -->
+    <g transform="translate(92, 335)">
+      <!-- Fingers overlapping paper -->
+      <path 
+        d="M 12 10 C 2 10 0 16 0 24 C 0 32 4 45 15 50 C 22 53 30 50 32 42 C 34 35 30 25 30 18 C 30 10 20 10 12 10 Z" 
+        fill="#FDE68A" 
+        stroke="#0F172A" 
+        stroke-width="3.5" 
+      />
+      <!-- Finger Separator Creases -->
+      <path d="M 10 22 L 26 22" stroke="#0F172A" stroke-width="3" stroke-linecap="round" />
+      <path d="M 12 32 L 28 32" stroke="#0F172A" stroke-width="3" stroke-linecap="round" />
+      <path d="M 15 42 L 26 42" stroke="#0F172A" stroke-width="3" stroke-linecap="round" />
+      <!-- Thumb -->
+      <path d="M 24 12 Q 32 5 38 12 Q 36 22 26 22" fill="#FDE68A" stroke="#0F172A" stroke-width="3.5" />
+    </g>
+
+    <!-- Right Hand (Gripping right border of blueprint) -->
+    <g transform="translate(372, 325)">
+      <!-- Fingers overlapping paper -->
+      <path 
+        d="M 28 10 C 38 10 40 16 40 24 C 40 32 36 45 25 50 C 18 53 10 50 8 42 C 6 35 10 25 10 18 C 10 10 20 10 28 10 Z" 
+        fill="#FDE68A" 
+        stroke="#0F172A" 
+        stroke-width="3.5" 
+      />
+      <!-- Finger Separator Creases -->
+      <path d="M 30 22 L 14 22" stroke="#0F172A" stroke-width="3" stroke-linecap="round" />
+      <path d="M 28 32 L 12 32" stroke="#0F172A" stroke-width="3" stroke-linecap="round" />
+      <path d="M 25 42 L 14 42" stroke="#0F172A" stroke-width="3" stroke-linecap="round" />
+      <!-- Thumb -->
+      <path d="M 16 12 Q 8 5 2 12 Q 4 22 14 22" fill="#FDE68A" stroke="#0F172A" stroke-width="3.5" />
+    </g>
+  </g>
+
+  <!-- 8. FLOATING CONFUSION ELEMENTS (Cartoon Question Marks & Motion Sparks) -->
+  <g id="confusion-accents">
+    <!-- Big Floating Question Mark over Right Shoulder -->
+    <g transform="translate(365, 75) rotate(14)">
+      <!-- Soft Shadow -->
+      <path 
+        d="M 15 28 C 12 28 10 26 10 22 C 10 15 16 10 25 10 C 34 10 40 15 40 23 C 40 29 35 34 30 38 C 26 42 24 45 24 50 L 24 53 M 24 64 L 24 67" 
+        stroke="#D97706" 
+        stroke-width="9" 
+        stroke-linecap="round" 
+        fill="none" 
+      />
+      <!-- Main Question Mark -->
+      <path 
+        d="M 15 28 C 12 28 10 26 10 22 C 10 15 16 10 25 10 C 34 10 40 15 40 23 C 40 29 35 34 30 38 C 26 42 24 45 24 50 L 24 53" 
+        stroke="#EA580C" 
+        stroke-width="7" 
+        stroke-linecap="round" 
+        fill="none" 
+      />
+      <circle cx="24" cy="65" r="4.5" fill="#EA580C" />
+      <circle cx="22" cy="63" r="1.5" fill="#FFFFFF" />
+    </g>
+
+    <!-- Small Secondary Floating Question Mark over Left Shoulder -->
+    <g transform="translate(100, 115) rotate(-16)">
+      <path 
+        d="M 10 18 C 8 18 6 16 6 14 C 6 10 10 6 16 6 C 22 6 26 10 26 15 C 26 19 23 22 20 25 C 17 28 16 30 16 33" 
+        stroke="#2563EB" 
+        stroke-width="4.5" 
+        stroke-linecap="round" 
+        fill="none" 
+      />
+      <circle cx="16" cy="41" r="3" fill="#2563EB" />
+    </g>
+
+    <!-- Perplexity / Confusion Spiral Squiggle (Near Head) -->
+    <path 
+      d="M 335 155 Q 345 145 355 155 T 370 150" 
+      stroke="#64748B" 
+      stroke-width="3" 
+      stroke-linecap="round" 
+      fill="none" 
+    />
+    <path 
+      d="M 135 170 Q 145 162 155 172" 
+      stroke="#64748B" 
+      stroke-width="2.5" 
+      stroke-linecap="round" 
+      fill="none" 
+    />
+
+    <!-- Confusion Little Crosses/Sparks -->
+    <!-- Left Cross -->
+    <path d="M 125 95 L 135 105 M 135 95 L 125 105" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" />
+    <!-- Right Star -->
+    <path d="M 405 130 L 415 140 M 415 130 L 405 140" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" />
+  </g>
+</svg>

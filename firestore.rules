@@ -1,28 +1,150 @@
 rules_version = '2';
+
+// ===============================================================
+// Kavadmin - Cloud Firestore Security Rules
+// ===============================================================
+// Application Architecture:
+// Kavadmin operates under a localized passcode gate ('200805') and
+// single active session verification mechanism. Cloud Firestore is
+// accessed directly by the web administration client and Flutter app.
+//
+// Assumed Data Models:
+//
+// 1. Collection: /system_auth/{docId}
+//    - Primary Document: 'system_auth/global_session'
+//    - Fields:
+//        activeSessionId: string (session token identifier)
+//        lastLoginAt: timestamp / serverTimestamp
+//        platform: string ('web', 'android', etc.)
+//        clientIp: string (optional)
+//
+// 2. Collection: /students/{studentId}
+//    - Fields:
+//        id: string (student ID)
+//        name: string (student full name)
+//        parentName: string (parent/guardian name)
+//        phone / parentPhone: string
+//        programTier: string ('SEED', 'GROW', 'BOOST', 'MASTER')
+//        durationMonths: number / int
+//        sessionSlot: string / list of slots
+//        masterInvoiceId: string
+//        totalBill: number
+//        paidAmount: number
+//        remainingAmount: number
+//        paymentStatus: string
+//        isPaidOff: bool
+//        isActive: bool
+//        createdAt: timestamp
+//
+// 3. Collection: /invoices/{invoiceId}
+//    - Fields:
+//        id: string
+//        studentId: string
+//        invoiceNumber: string (e.g., 'INV/KEEN/YYYYMM/XXXX')
+//        studentName: string
+//        parentName: string
+//        programTier: string
+//        durationMonths: number
+//        subtotal, discountValue, discountAmount: number
+//        taxPercent, taxAmount, grandTotal: number
+//        paidAmount, remainingAmount: number
+//        status: string ('PAID', 'PARTIAL', 'UNPAID')
+//        createdAt: timestamp
+//
+// 4. Collection: /receipts/{receiptId}
+//    - Fields:
+//        id: string
+//        receiptNumber: string (e.g., 'KW/KEEN/YYYYMM/XXXX')
+//        invoiceId: string
+//        studentId: string
+//        receiptIndex: number
+//        paymentDate: string / timestamp
+//        payerName: string
+//        studentName: string
+//        amountPaid: number
+//        description: string
+//        createdAt: timestamp
+//
+// 5. Collection: /modules/{moduleId}
+//    - Fields:
+//        id: string
+//        code: string
+//        title: string
+//        level: string (CEFR A1 - C2)
+//        sessionNumber: number
+//        description, syllabus, exercises: map / string / list
+//        createdAt: timestamp
+//
+// 6. Collection: /reports/{reportId}
+//    - Fields:
+//        id: string
+//        studentId: string
+//        studentName: string
+//        parentName: string
+//        scores: map (fluency, grammar, listening, vocabulary)
+//        overallScore: number
+//        grade: string
+//        evaluatorName: string
+//        createdAt: timestamp
+//
+// 7. Collection: /roadmaps/{roadmapId}
+//    - Fields:
+//        id: string
+//        studentId: string
+//        studentName: string
+//        programTier: string
+//        sessions: list of session objects
+//        createdAt: timestamp
+// ===============================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Koleksi Laporan Rapor Siswa (Reports)
-    match /reports/{reportId} {
-      // Membaca diperbolehkan secara publik jika mengakses ID dokumen valid (untuk wali murid)
-      allow read: if true;
-      // Menulis/Mengubah/Menghapus
-      allow write: if true;
+
+    // 1. System Auth: Single Active Session Lock
+    // Handles single concurrent session tracking ('system_auth/global_session')
+    match /system_auth/{docId} {
+      allow read, write: if true;
     }
 
-    // Koleksi Siswa (Students)
+    // 2. Students CRM & Billing Ledger
+    // Student profiles, enrollment records, and active learning slots
     match /students/{studentId} {
       allow read, write: if true;
     }
 
-    // Koleksi Modul Pembelajaran (Modules)
+    // 3. Billing Invoices
+    // Official billing invoices and fee statements
+    match /invoices/{invoiceId} {
+      allow read, write: if true;
+    }
+
+    // 4. Payment Receipts (Kuitansi Pembayaran)
+    // Transaction receipts for down payments and installment settlements
+    match /receipts/{receiptId} {
+      allow read, write: if true;
+    }
+
+    // 5. Learning Modules (CEFR A1 - C2)
+    // Curriculum modules, lesson plans, exercises, and answer guides
     match /modules/{moduleId} {
       allow read, write: if true;
     }
 
-    // Koleksi Roadmap Kurikulum (Roadmaps)
+    // 6. Academic Report Cards
+    // Periodic student evaluation reports and progress assessments
+    match /reports/{reportId} {
+      allow read, write: if true;
+    }
+
+    // 7. Student Learning Roadmaps
+    // Personalized learning trajectories and curriculum session matrices
     match /roadmaps/{roadmapId} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if true;
+    }
+
+    // Default Deny: All unmatched collections and documents are locked
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

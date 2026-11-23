@@ -47,7 +47,8 @@ export default function SessionCard({
   return (
     <div
       onClick={() => !readOnly && onClick && onClick(session)}
-      className={`group text-left transition-colors ${!readOnly ? 'cursor-pointer hover:bg-slate-50/50 p-1 -m-1 rounded' : ''}`}
+      className={`group text-left transition-colors break-inside-avoid ${!readOnly ? 'cursor-pointer hover:bg-slate-50/50 p-1 -m-1 rounded' : ''}`}
+      style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
     >
       {/* Row 1: Metadata Sesi */}
       <div className="flex items-center space-x-2 text-xs leading-none whitespace-nowrap overflow-hidden">

@@ -19,6 +19,7 @@ export default function CursorTooltip() {
 
   const tooltipRef = useRef(null)
   const currentTargetRef = useRef(null)
+  const lastDrawTimeRef = useRef(0)
 
   useEffect(() => {
     // Helper to determine if an element is an icon-only button or has tooltip intent
@@ -65,6 +66,9 @@ export default function CursorTooltip() {
       if (match && match.text) {
         const { el, text } = match
         currentTargetRef.current = el
+        const now = Date.now()
+        const isWarmHandoff = now - lastDrawTimeRef.current <= 150
+        lastDrawTimeRef.current = now
 
         // Suppress native browser tooltip by temporarily removing 'title'
         if (el.hasAttribute('title')) {
@@ -76,7 +80,8 @@ export default function CursorTooltip() {
           visible: true,
           text: text,
           x: e.clientX,
-          y: e.clientY
+          y: e.clientY,
+          warm: isWarmHandoff,
         })
       }
     }
@@ -86,6 +91,7 @@ export default function CursorTooltip() {
         // Quick verification that cursor is still inside or over the target
         const match = getTooltipText(e.target)
         if (match && match.text) {
+          lastDrawTimeRef.current = Date.now()
           setTooltip(prev => ({
             ...prev,
             visible: true,
@@ -101,6 +107,7 @@ export default function CursorTooltip() {
 
     const hideTooltip = () => {
       if (currentTargetRef.current) {
+        lastDrawTimeRef.current = Date.now()
         // Restore title if cached
         if (currentTargetRef.current.hasAttribute('data-cached-title')) {
           const cached = currentTargetRef.current.getAttribute('data-cached-title')
@@ -184,9 +191,12 @@ export default function CursorTooltip() {
         zIndex: 99999,
         willChange: 'transform'
       }}
-      className="no-print select-none transition-none"
+      className="no-print select-none transition-transform duration-75 ease-[cubic-bezier(0.22,1,0.36,1)]"
     >
-      <div className="bg-slate-900/95 text-slate-50 text-[14px] font-semibold px-3.5 py-1.5 rounded-fluent shadow-fluent-modal border border-slate-700/80 backdrop-blur-md whitespace-nowrap leading-snug animate-fadeIn">
+      <div
+        key={tooltip.warm ? 'warm' : tooltip.text}
+        className="bg-neutral-900/95 text-neutral-50 text-xs font-medium px-2.5 py-1 rounded-md shadow-md border border-neutral-800 backdrop-blur-sm whitespace-nowrap leading-snug origin-center animate-reanimated-tooltip"
+      >
         {tooltip.text}
       </div>
     </div>

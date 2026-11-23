@@ -1,16 +1,23 @@
 import jsPDF from 'jspdf'
-import { toPng } from 'html-to-image'
+import * as htmlToImage from 'html-to-image'
 
 /**
- * Ekspor elemen HTML ke PDF dengan penyesuaian dimensi otomatis
+ * 🚀 Document Export Engine
+ * Mesin render ekspor dokumen HTML ke PDF dan PNG resolusi tinggi menggunakan jsPDF + html-to-image.
+ * 
+ * Keunggulan arsitektur:
+ * - Native Browser SVG foreignObject: Menghilangkan 100% bug teks dobel/overlapping glyphs yang dialami html2canvas.
+ * - Retina Sharp 2x: Kualitas cetak sangat tajam dan presisi.
+ * - Anti-Transform Corruption: Me-reset transform CSS saat rendering agar elemen di dalam wrapper tetap 100% akurat.
+ * 
  * @param {string|HTMLElement} elementIdOrEl - ID atribut elemen DOM atau node HTML yang ingin dicetak
  * @param {string} filename - Nama file output tanpa ekstensi
- * @param {Object} options - Opsi format ('a4' untuk standar 210x297mm atau 'continuous' untuk 1 halaman panjang)
+ * @param {Object} options - Opsi format ('a4', 'a5', 'continuous', orientation, scale)
  */
 export const exportElementToPdf = async (
   elementIdOrEl,
   filename = 'Dokumen_KavioEdu',
-  options = { mode: 'a4', orientation: 'portrait' }
+  options = { mode: 'a4', orientation: 'portrait', scale: 2 }
 ) => {
   const element = typeof elementIdOrEl === 'string'
     ? document.getElementById(elementIdOrEl)
@@ -25,42 +32,80 @@ export const exportElementToPdf = async (
   try {
     if (document.fonts) await document.fonts.ready
 
-    const dataUrl = await toPng(element, {
-      quality: 1.0,
-      pixelRatio: 2,
-      backgroundColor: '#ffffff',
+    const pixelRatio = options.scale || 2
+    const imgData = await htmlToImage.toPng(element, {
+      pixelRatio,
+      quality: 0.98,
+      backgroundColor: options.backgroundColor || '#ffffff',
       cacheBust: true,
+      style: {
+        transform: 'none',
+        margin: '0',
+        boxShadow: 'none',
+        ...(options.style || {})
+      }
     })
 
+    // Dapatkan rasio aspek dimensi natural dari gambar render
     const img = new Image()
-    img.src = dataUrl
-    await new Promise((resolve) => {
+    await new Promise((resolve, reject) => {
       img.onload = resolve
+      img.onerror = reject
+      img.src = imgData
     })
 
-    const pdfWidth = 210 // Standar lebar A4 (mm)
-    let pdfHeight = 297  // Default tinggi A4 (mm)
+    const naturalWidth = img.naturalWidth || img.width || (element.offsetWidth * pixelRatio)
+    const naturalHeight = img.naturalHeight || img.height || (element.offsetHeight * pixelRatio)
+
+    const isLandscape = (options.orientation || 'portrait') === 'landscape'
+    const format = String(options.format || 'a4').toLowerCase()
+    let pageWidth = 210
+    let pageHeight = 297
+
+    if (format === 'a5') {
+      pageWidth = isLandscape ? 210 : 148
+      pageHeight = isLandscape ? 148 : 210
+    } else {
+      // Default A4
+      pageWidth = isLandscape ? 297 : 210
+      pageHeight = isLandscape ? 210 : 297
+    }
 
     let pdf
     if (options.mode === 'continuous') {
-      // 1 Halaman panjang utuh proporsional (cocok untuk Roadmap & Log panjang)
-      pdfHeight = (img.height * pdfWidth) / img.width
+      // 1 Halaman panjang utuh proporsional (Roadmap panjang)
+      const renderHeight = (naturalHeight * pageWidth) / naturalWidth
       pdf = new jsPDF({
-        orientation: options.orientation || 'portrait',
+        orientation: isLandscape ? 'landscape' : 'portrait',
         unit: 'mm',
-        format: [pdfWidth, pdfHeight],
+        format: [pageWidth, renderHeight],
       })
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST')
+      pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, renderHeight, undefined, 'FAST')
     } else {
-      // Standar Fixed A4 1 Halaman Pas (cocok untuk Invoice, Kwitansi, Rapor)
+      // Standar Fixed 1 Halaman Pas Edge-to-Edge (100% Memenuhi Kertas A4/A5 tanpa ruang sisa)
       pdf = new jsPDF({
-        orientation: options.orientation || 'portrait',
+        orientation: isLandscape ? 'landscape' : 'portrait',
         unit: 'mm',
-        format: 'a4',
+        format: format === 'a5' ? 'a5' : 'a4',
       })
-      const imgHeight = (img.height * pdfWidth) / img.width
-      const renderHeight = Math.min(imgHeight, 297)
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, renderHeight, undefined, 'FAST')
+
+      if (options.fit === 'contain') {
+        let renderWidth = pageWidth
+        let renderHeight = (naturalHeight * pageWidth) / naturalWidth
+
+        if (renderHeight > pageHeight) {
+          const scaleFactor = pageHeight / renderHeight
+          renderWidth = pageWidth * scaleFactor
+          renderHeight = pageHeight
+        }
+
+        const xOffset = (pageWidth - renderWidth) / 2
+        const yOffset = (pageHeight - renderHeight) / 2
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, renderWidth, renderHeight, undefined, 'FAST')
+      } else {
+        // Default: Pas 100% Edge-to-Edge (0, 0, pageWidth, pageHeight) tanpa sisa ruang / letterboxing
+        pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST')
+      }
     }
 
     const sanitizedFilename = String(filename || 'Dokumen_KavioEdu').replace(/[^a-zA-Z0-9_-]/g, '_')
@@ -72,11 +117,16 @@ export const exportElementToPdf = async (
 }
 
 /**
- * Ekspor elemen HTML ke gambar PNG resolusi tinggi
+ * Ekspor elemen HTML ke gambar PNG resolusi tinggi menggunakan html-to-image
  * @param {string|HTMLElement} elementIdOrEl
  * @param {string} filename
+ * @param {Object} options
  */
-export const exportElementToPng = async (elementIdOrEl, filename = 'Dokumen_KavioEdu') => {
+export const exportElementToPng = async (
+  elementIdOrEl,
+  filename = 'Dokumen_KavioEdu',
+  options = { scale: 2 }
+) => {
   const element = typeof elementIdOrEl === 'string'
     ? document.getElementById(elementIdOrEl)
     : elementIdOrEl
@@ -89,11 +139,15 @@ export const exportElementToPng = async (elementIdOrEl, filename = 'Dokumen_Kavi
   try {
     if (document.fonts) await document.fonts.ready
 
-    const dataUrl = await toPng(element, {
-      quality: 1.0,
-      pixelRatio: 2,
-      backgroundColor: '#ffffff',
+    const dataUrl = await htmlToImage.toPng(element, {
+      pixelRatio: options.scale || 2,
+      quality: 0.98,
+      backgroundColor: options.backgroundColor || '#ffffff',
       cacheBust: true,
+      style: {
+        transform: 'none',
+        margin: '0',
+      }
     })
 
     const link = document.createElement('a')
@@ -103,5 +157,6 @@ export const exportElementToPng = async (elementIdOrEl, filename = 'Dokumen_Kavi
     link.click()
   } catch (error) {
     console.error('[Export PNG Exception]:', error)
+    alert('Gagal mengunduh gambar PNG.')
   }
 }
