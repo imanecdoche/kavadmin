@@ -15,6 +15,7 @@ import PublicRoadmapViewer from './components/roadmap/PublicRoadmapViewer'
 import CertificateStudio from './components/certificate/CertificateStudio'
 import PublicCertificateViewer from './components/certificate/PublicCertificateViewer'
 import PublicVerificationPage from './components/certificate/PublicVerificationPage'
+import PublicRegistrationPage from './pages/PublicRegistrationPage'
 import LandingPage from './pages/LandingPage'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import CursorTooltip from './components/CursorTooltip'
@@ -58,6 +59,11 @@ function AppContent() {
   const [publicRoadmapData, setPublicRoadmapData] = useState(() => parseRoadmapShareLink())
   const [publicCertificateData, setPublicCertificateData] = useState(() => parseCertificateShareLink())
   const [verificationReq, setVerificationReq] = useState(() => parseVerificationUrl())
+  const [isRegisterRoute, setIsRegisterRoute] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const pathname = window.location.pathname.toLowerCase()
+    return pathname.startsWith('/register') || pathname.startsWith('/daftar')
+  })
   const [isAdminRoute, setIsAdminRoute] = useState(() => {
     if (typeof window === 'undefined') return false
     const pathname = window.location.pathname.toLowerCase()
@@ -68,10 +74,18 @@ function AppContent() {
   const navigateToAdmin = () => {
     window.history.pushState({}, '', '/admin')
     setIsAdminRoute(true)
+    setIsRegisterRoute(false)
   }
 
   const navigateToLanding = () => {
     window.history.pushState({}, '', '/')
+    setIsAdminRoute(false)
+    setIsRegisterRoute(false)
+  }
+
+  const navigateToRegister = () => {
+    window.history.pushState({}, '', '/register')
+    setIsRegisterRoute(true)
     setIsAdminRoute(false)
   }
 
@@ -79,6 +93,7 @@ function AppContent() {
     const url = id ? `/verify?id=${encodeURIComponent(id)}` : '/verify'
     window.history.pushState({ id }, '', url)
     setVerificationReq({ isVerifyRequest: true, queryId: id || '' })
+    setIsRegisterRoute(false)
   }
 
   // Browser navigation and popstate listener
@@ -91,6 +106,7 @@ function AppContent() {
       setVerificationReq(parseVerificationUrl())
       const pathname = window.location.pathname.toLowerCase()
       setIsAdminRoute(pathname.startsWith('/admin') || pathname.startsWith('/dashboard'))
+      setIsRegisterRoute(pathname.startsWith('/register') || pathname.startsWith('/daftar'))
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -564,22 +580,36 @@ function AppContent() {
           window.history.pushState({}, '', '/')
           setVerificationReq(null)
           setIsAdminRoute(false)
+          setIsRegisterRoute(false)
         }}
       />
     )
   }
 
-  // 5. Landing Page for Root Domain (PT Kavio Investama Global)
+  // 5. Public Registration Page (/register or /daftar)
+  if (isRegisterRoute) {
+    return (
+      <PublicRegistrationPage
+        onBackToHome={() => {
+          window.history.pushState({}, '', '/')
+          setIsRegisterRoute(false)
+        }}
+      />
+    )
+  }
+
+  // 6. Landing Page for Root Domain (PT Kavio Investama Global)
   if (!isAdminRoute) {
     return (
       <LandingPage
         onNavigateAdmin={navigateToAdmin}
         onNavigateVerify={navigateToVerify}
+        onNavigateRegister={navigateToRegister}
       />
     )
   }
 
-  // 6. Auth gate check for Admin Route (/admin)
+  // 7. Auth gate check for Admin Route (/admin)
   if (isLoading) {
     return (
       <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center text-slate-400">
