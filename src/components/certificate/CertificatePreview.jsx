@@ -117,17 +117,27 @@ export default function CertificatePreview({ certificateData, previewRef }) {
       <div className="pt-4 relative z-10">
         <div className="w-full border-t border-slate-300 mb-6" />
         <div className="flex items-end justify-between">
-          {/* Info Keaslian / Verifikasi */}
-          <div className="text-left space-y-1">
-            <p className="text-[11px] font-bold text-slate-900">
-              Dokumen Resmi Terverifikasi
-            </p>
-            <p className="text-[10px] text-slate-500 max-w-xs leading-normal">
-              Sertifikat diterbitkan secara sah oleh Kavio Edu Management dan terdaftar dalam basis data akademik resmi.
-            </p>
-            <p className="text-[9.5px] font-mono text-slate-400 mt-1">
-              Security Hash: {verificationHash}
-            </p>
+          {/* Info Keaslian / Verifikasi & QR Code */}
+          <div className="text-left flex items-center gap-3.5">
+            <div className="w-16 h-16 bg-white p-1 border border-slate-300 rounded shadow-sm shrink-0 flex items-center justify-center">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://kavioid.vercel.app/verify?id=${verificationHash || documentId || 'REG-KAV-2026-081'}`)}`}
+                alt="Scan to Verify Credential"
+                className="w-full h-full object-contain"
+                crossOrigin="anonymous"
+              />
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-[11px] font-bold text-slate-900">
+                Scan to Verify Credential
+              </p>
+              <p className="text-[9.5px] text-slate-500 max-w-[210px] leading-tight">
+                Pindai untuk memvalidasi keaslian dokumen pada basis data PT Kavio Investama Global.
+              </p>
+              <p className="text-[9px] font-mono font-semibold text-slate-600 mt-0.5">
+                ID: {verificationHash || documentId}
+              </p>
+            </div>
           </div>
 
           {/* Stempel & TTD Founder */}

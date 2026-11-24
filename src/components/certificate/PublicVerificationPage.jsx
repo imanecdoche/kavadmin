@@ -13,30 +13,42 @@ import {
   Printer
 } from 'lucide-react'
 import { logoSvg, stempelKavioEduPng, ttdFatihPng } from '../../assets'
-import { lookupCertificate } from '../../utils/verificationRegistry'
+import { lookupCertificate, lookupCertificateAsync } from '../../utils/verificationRegistry'
 
 export default function PublicVerificationPage({ initialId = '', onBack = null }) {
   const [searchQuery, setSearchQuery] = useState(initialId || '')
   const [certData, setCertData] = useState(null)
   const [hasSearched, setHasSearched] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const idToLookup = initialId || new URLSearchParams(window.location.search).get('id') || 'REG-KAV-2026-081'
     if (idToLookup) {
       setSearchQuery(idToLookup)
-      const found = lookupCertificate(idToLookup)
-      setCertData(found)
-      setHasSearched(true)
+      const fast = lookupCertificate(idToLookup)
+      if (fast) {
+        setCertData(fast)
+        setHasSearched(true)
+      } else {
+        setIsLoading(true)
+        lookupCertificateAsync(idToLookup).then(result => {
+          setCertData(result)
+          setHasSearched(true)
+          setIsLoading(false)
+        })
+      }
     }
   }, [initialId])
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
-    const found = lookupCertificate(searchQuery.trim())
+    setIsLoading(true)
+    const found = await lookupCertificateAsync(searchQuery.trim())
     setCertData(found)
     setHasSearched(true)
+    setIsLoading(false)
 
     const newUrl = `${window.location.origin}/verify?id=${encodeURIComponent(searchQuery.trim())}`
     window.history.pushState({ id: searchQuery.trim() }, '', newUrl)
@@ -115,7 +127,15 @@ export default function PublicVerificationPage({ initialId = '', onBack = null }
         </div>
 
         {/* Verification Result */}
-        {certData ? (
+        {isLoading ? (
+          <div className="bg-white border border-slate-300 rounded p-8 text-center max-w-md mx-auto space-y-3 shadow-sm">
+            <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Memverifikasi Kredensial...</h3>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Menghubungkan ke pangkalan data akademik resmi PT Kavio Investama Global.
+            </p>
+          </div>
+        ) : certData ? (
           <div className="bg-white border border-slate-300 rounded shadow-sm divide-y divide-slate-200">
             {/* Status Header */}
             <div className="p-4 sm:p-5 bg-emerald-50/70 border-b border-emerald-200 flex items-start gap-3.5">
